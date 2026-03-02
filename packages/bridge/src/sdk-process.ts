@@ -10,6 +10,11 @@ import {
   type ProcessStatus,
   type PermissionMode,
 } from "./parser.js";
+import {
+  getClaudeOAuthCredentials,
+  isTokenExpired,
+  getValidClaudeAccessToken,
+} from "./usage.js";
 
 // Tools that are auto-approved in acceptEdits mode
 export const ACCEPT_EDITS_AUTO_APPROVE = new Set([
@@ -118,33 +123,50 @@ export function buildSessionRule(toolName: string, input: Record<string, unknown
 }
 
 /**
- * Check if Claude CLI is authenticated without triggering macOS keychain dialog.
- * Reads auth state from disk-level config via `claude auth status`.
+ * Check if Claude CLI is authenticated and ensure the access token is valid.
+ * If the token is expired, automatically refreshes it using the refresh token.
  * Returns authenticated=false with a message when login is required.
  */
-function checkClaudeAuth(): { authenticated: boolean; message?: string } {
+async function checkClaudeAuth(): Promise<{ authenticated: boolean; message?: string }> {
   // Skip auth check when using API key directly
   if (process.env.ANTHROPIC_API_KEY) {
     return { authenticated: true };
   }
-  // Check credentials file on disk (Claude Code v2.x)
-  // Avoids spawning heavy `claude auth status` process
-  const credPath = join(homedir(), ".claude", ".credentials.json");
   try {
-    const raw = readFileSync(credPath, "utf-8");
-    const payload = JSON.parse(raw) as Record<string, unknown>;
-    const oauth = payload.claudeAiOauth as Record<string, unknown> | undefined;
-    if (oauth?.accessToken) {
+    const creds = await getClaudeOAuthCredentials();
+    if (!creds.accessToken) {
+      return {
+        authenticated: false,
+        message: "Claude credentials found but no access token. Please run: claude auth login",
+      };
+    }
+    // If token is not expired, we're good
+    if (!isTokenExpired(creds.expiresAt)) {
       return { authenticated: true };
+    }
+    // Token is expired — attempt refresh before starting the SDK
+    console.log("[sdk-process] Access token expired, attempting refresh...");
+    if (!creds.refreshToken) {
+      return {
+        authenticated: false,
+        message: "Claude access token expired and no refresh token available. Please run: claude auth login",
+      };
+    }
+    await getValidClaudeAccessToken();
+    console.log("[sdk-process] Access token refreshed successfully");
+    return { authenticated: true };
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    // Distinguish between missing credentials and refresh failure
+    if (detail.includes("not found")) {
+      return {
+        authenticated: false,
+        message: "Claude credentials not found (~/.claude/.credentials.json). Please run: claude auth login",
+      };
     }
     return {
       authenticated: false,
-      message: "Claude credentials found but no access token. Please run: claude auth login",
-    };
-  } catch {
-    return {
-      authenticated: false,
-      message: "Claude credentials not found (~/.claude/.credentials.json). Please run: claude auth login",
+      message: `Claude auth failed: ${detail}`,
     };
   }
 }
@@ -424,22 +446,41 @@ export class SdkProcess extends EventEmitter<SdkProcessEvents> {
 
     this.setStatus("starting");
 
-    // Pre-check Claude auth before starting the SDK to prevent macOS keychain
-    // dialog from appearing when auth is expired. The dialog appears because
-    // Claude CLI tries to read the OAuth token from the keychain, and running
-    // as a launchd service (non-interactive) triggers a GUI prompt.
-    const authCheck = checkClaudeAuth();
-    if (!authCheck.authenticated) {
-      console.log(`[sdk-process] Auth pre-check failed: ${authCheck.message}`);
-      this.emitMessage({
-        type: "error",
-        message: authCheck.message ?? "Claude is not authenticated. Please run: claude auth login",
-      });
-      this.setStatus("idle");
-      this.emit("exit", 1);
-      return;
-    }
+    // Pre-check Claude auth (async: refreshes expired tokens) then start SDK.
+    this.startAfterAuthCheck(projectPath, options);
+  }
 
+  private startAfterAuthCheck(projectPath: string, options?: StartOptions): void {
+    checkClaudeAuth()
+      .then((authCheck) => {
+        if (this.stopped) return; // Cancelled while awaiting auth
+
+        if (!authCheck.authenticated) {
+          console.log(`[sdk-process] Auth pre-check failed: ${authCheck.message}`);
+          this.emitMessage({
+            type: "error",
+            message: authCheck.message ?? "Claude is not authenticated. Please run: claude auth login",
+          });
+          this.setStatus("idle");
+          this.emit("exit", 1);
+          return;
+        }
+
+        this.startSdkQuery(projectPath, options);
+      })
+      .catch((err) => {
+        if (this.stopped) return;
+        console.error("[sdk-process] Auth check error:", err);
+        this.emitMessage({
+          type: "error",
+          message: `Auth check failed: ${err instanceof Error ? err.message : String(err)}`,
+        });
+        this.setStatus("idle");
+        this.emit("exit", 1);
+      });
+  }
+
+  private startSdkQuery(projectPath: string, options?: StartOptions): void {
     console.log(`[sdk-process] Starting SDK query (cwd: ${projectPath}, mode: ${options?.permissionMode ?? "default"})`);
 
     // In -p mode with --input-format stream-json, Claude CLI won't emit

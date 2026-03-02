@@ -62,7 +62,7 @@ interface RefreshedClaudeToken {
  * instead of the macOS Keychain ("Claude Code-credentials" service)
  * used in earlier versions.
  */
-async function getClaudeOAuthCredentials(): Promise<ClaudeOAuthCredentials> {
+export async function getClaudeOAuthCredentials(): Promise<ClaudeOAuthCredentials> {
   const credPath = join(homedir(), ".claude", ".credentials.json");
   let raw: string;
   try {
@@ -87,7 +87,7 @@ async function getClaudeOAuthCredentials(): Promise<ClaudeOAuthCredentials> {
   }
 }
 
-function isTokenExpired(expiresAt?: number): boolean {
+export function isTokenExpired(expiresAt?: number): boolean {
   if (typeof expiresAt !== "number" || !Number.isFinite(expiresAt)) {
     return false;
   }
@@ -156,7 +156,7 @@ async function refreshClaudeAccessToken(refreshToken: string): Promise<Refreshed
   };
 }
 
-async function getValidClaudeAccessToken(): Promise<{ accessToken: string; refreshToken?: string }> {
+export async function getValidClaudeAccessToken(): Promise<{ accessToken: string; refreshToken?: string }> {
   const creds = await getClaudeOAuthCredentials();
   if (creds.accessToken && !isTokenExpired(creds.expiresAt)) {
     return { accessToken: creds.accessToken, refreshToken: creds.refreshToken };
