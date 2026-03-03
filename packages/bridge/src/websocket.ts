@@ -833,6 +833,20 @@ export class BridgeWebSocketServer {
           }
           this.send(ws, { type: "history", messages: session.history, sessionId: msg.sessionId } as Record<string, unknown>);
           this.send(ws, { type: "status", status: session.status, sessionId: msg.sessionId } as Record<string, unknown>);
+
+          // Send cached slash commands so the client can restore them even when
+          // the original init/supported_commands message was evicted from the
+          // in-memory history (MAX_HISTORY_PER_SESSION overflow).
+          const cached = this.sessionManager.getCachedCommands(session.projectPath);
+          if (cached && cached.slashCommands.length > 0) {
+            this.send(ws, {
+              type: "system",
+              subtype: "supported_commands",
+              sessionId: msg.sessionId,
+              slashCommands: cached.slashCommands,
+              skills: cached.skills,
+            });
+          }
         } else {
           this.send(ws, { type: "error", message: `Session ${msg.sessionId} not found` });
         }

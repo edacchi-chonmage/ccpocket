@@ -329,9 +329,13 @@ export class SessionManager {
             session.history.push(msg);
           }
           if (session.history.length > MAX_HISTORY_PER_SESSION) {
-            // Protect user_input messages from eviction so they remain
-            // visible when the client requests history after reconnecting.
-            const idx = session.history.findIndex(m => m.type !== "user_input");
+            // Protect user_input and system messages from eviction so they
+            // remain available when the client requests history after
+            // reconnecting. System messages carry slash commands, permission
+            // modes, and other metadata needed to restore client state.
+            const idx = session.history.findIndex(
+              m => m.type !== "user_input" && m.type !== "system",
+            );
             if (idx >= 0) {
               session.history.splice(idx, 1);
             } else {
