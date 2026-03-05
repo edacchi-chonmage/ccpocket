@@ -28,16 +28,16 @@ import type { PromptHistoryBackupStore } from "./prompt-history-backup.js";
 // ---- Available model lists (delivered to clients via session_list) ----
 
 const CLAUDE_MODELS: string[] = [
-  "claude-sonnet-4-5",
-  "claude-opus-4",
+  "claude-opus-4-6",
+  "claude-sonnet-4-6",
   "claude-haiku-4-5",
 ];
 
 const CODEX_MODELS: string[] = [
+  "gpt-5.4",
   "gpt-5.3-codex",
   "gpt-5.3-codex-spark",
   "gpt-5.2-codex",
-  "gpt-5.1-codex-max",
 ];
 
 // ---- Codex mode mapping helpers ----

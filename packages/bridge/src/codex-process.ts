@@ -660,7 +660,7 @@ export class CodexProcess extends EventEmitter<CodexProcessEvents> {
         // Always send collaborationMode so the server switches modes correctly.
         // Omitting it causes the server to persist the previous turn's mode.
         const modeSettings: Record<string, unknown> = {
-          model: options?.model || this.startModel || "gpt-5.3-codex",
+          model: options?.model || this.startModel || "gpt-5.4",
         };
         if (this._collaborationMode === "plan") {
           modeSettings.reasoning_effort = "medium";

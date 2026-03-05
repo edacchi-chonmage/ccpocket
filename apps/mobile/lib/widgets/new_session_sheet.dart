@@ -214,16 +214,16 @@ enum _WorktreeMode {
 
 /// Fallback Codex models when Bridge hasn't delivered a list yet.
 const _defaultCodexModels = <String>[
+  'gpt-5.4',
   'gpt-5.3-codex',
   'gpt-5.3-codex-spark',
   'gpt-5.2-codex',
-  'gpt-5.1-codex-max',
 ];
 
 /// Fallback Claude models when Bridge hasn't delivered a list yet.
 const _defaultClaudeModels = <String>[
-  'claude-sonnet-4-5',
-  'claude-opus-4',
+  'claude-opus-4-6',
+  'claude-sonnet-4-6',
   'claude-haiku-4-5',
 ];
 
