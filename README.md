@@ -43,11 +43,9 @@ A QR code will appear in your terminal. The server listens on `ws://0.0.0.0:8765
 
 ### 2. Install the Mobile App
 
-<a href="https://play.google.com/store/apps/details?id=com.k9i.ccpocket">
-  <img alt="Get it on Google Play" src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" height="80">
-</a>
-
-iOS: Coming soon
+<div align="center">
+<a href="https://apps.apple.com/us/app/cc-pocket-dev-agent-remote/id6759188790"><img height="40" alt="Download on the App Store" src="docs/images/app-store-badge.svg" /></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://play.google.com/store/apps/details?id=com.k9i.ccpocket"><img height="40" alt="Get it on Google Play" src="docs/images/google-play-badge-en.svg" /></a>
+</div>
 
 ### 3. Connect
 
