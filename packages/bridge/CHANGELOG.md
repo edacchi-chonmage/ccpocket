@@ -2,6 +2,15 @@
 
 All notable changes to `@ccpocket/bridge` will be documented in this file.
 
+## [1.12.0] - 2026-03-08
+
+### Added
+- `errorCode` field on error messages for structured client-side display (`auth_login_required`, `auth_token_expired`, `auth_api_error`, `path_not_allowed`)
+
+### Changed
+- Auth and path-not-allowed error messages now include clear problem descriptions and remedy instructions (e.g. `claude auth login`) so users can self-resolve without checking server logs
+- Dev script unsets `CLAUDECODE` env var to allow E2E testing inside a Claude Code session
+
 ## [1.11.1] - 2026-03-07
 
 ### Fixed
