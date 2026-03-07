@@ -52,7 +52,7 @@ class InAppReviewService {
     ),
     ReviewMetric(
       key: _keyApprovalActions,
-      label: 'approvals',
+      label: 'approval_actions',
       target: minApprovalActions,
     ),
     ReviewMetric(key: _keyUsageDays, label: 'usage_days', target: minUsageDays),
@@ -89,12 +89,12 @@ class InAppReviewService {
     switch (message.type) {
       case 'approve':
       case 'approve_always':
+      case 'answer':
         unawaited(_increment(_keyApprovalActions));
         unawaited(_markUsageDay());
         return;
       case 'start':
       case 'input':
-      case 'answer':
       case 'resume':
         unawaited(_markUsageDay());
         return;
