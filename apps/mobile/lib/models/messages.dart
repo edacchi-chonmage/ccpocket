@@ -1540,6 +1540,8 @@ class ClientMessage {
   final Map<String, dynamic> _json;
   ClientMessage._(this._json);
 
+  String get type => _json['type'] as String;
+
   factory ClientMessage.start(
     String projectPath, {
     String? sessionId,

@@ -12,6 +12,8 @@ import '../models/messages.dart';
 import 'bridge_service_base.dart';
 
 class BridgeService implements BridgeServiceBase {
+  void Function(ClientMessage message)? onOutgoingMessage;
+
   WebSocketChannel? _channel;
   StreamSubscription? _channelSub;
   final _messageController = StreamController<ServerMessage>.broadcast();
@@ -322,6 +324,7 @@ class BridgeService implements BridgeServiceBase {
 
   @override
   void send(ClientMessage message) {
+    onOutgoingMessage?.call(message);
     if (_channel != null && isConnected) {
       _channel!.sink.add(message.toJson());
     } else {

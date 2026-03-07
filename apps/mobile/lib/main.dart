@@ -41,6 +41,7 @@ import 'services/bridge_service.dart';
 import 'services/connection_url_parser.dart';
 import 'services/database_service.dart';
 import 'services/draft_service.dart';
+import 'services/in_app_review_service.dart';
 import 'services/machine_manager_service.dart';
 import 'services/notification_service.dart';
 import 'services/prompt_history_service.dart';
@@ -127,6 +128,8 @@ void main() async {
 
   final bridge = BridgeService();
   final draftService = DraftService(prefs);
+  final inAppReviewService = InAppReviewService(prefs: prefs);
+  await inAppReviewService.attachToBridge(bridge);
   StoreScreenshotState.draftService = draftService;
   final dbService = DatabaseService();
   final promptHistoryService = PromptHistoryService(dbService);
@@ -137,6 +140,7 @@ void main() async {
         RepositoryProvider<BridgeService>.value(value: bridge),
         RepositoryProvider<DatabaseService>.value(value: dbService),
         RepositoryProvider<DraftService>.value(value: draftService),
+        RepositoryProvider<InAppReviewService>.value(value: inAppReviewService),
         RepositoryProvider<PromptHistoryService>.value(
           value: promptHistoryService,
         ),
