@@ -500,15 +500,12 @@ export async function checkScreenRecording(): Promise<CheckResult> {
 }
 
 /**
- * Check if Claude Code credentials file exists on disk.
+ * Check if Claude Code credentials are available.
  *
- * Claude Code v2.x stores OAuth credentials in ~/.claude/.credentials.json
- * (previously used macOS Keychain "Claude Code-credentials" service).
- * This check reads the file instead of accessing the keychain, avoiding
- * the macOS iCloudHelper keychain dialog.
+ * Checks ~/.claude/.credentials.json first, then falls back to
+ * macOS Keychain ("Claude Code-credentials" service).
  */
 export async function checkKeychainAccess(): Promise<CheckResult> {
-  // Function name kept for backwards-compat with test mocks / report structure.
   const credPath = join(homedir(), ".claude", ".credentials.json");
   if (existsSync(credPath)) {
     return {
@@ -516,6 +513,20 @@ export async function checkKeychainAccess(): Promise<CheckResult> {
       status: "pass",
       message: "Claude Code credentials found (~/.claude/.credentials.json)",
     };
+  }
+  // Fallback: check macOS Keychain
+  if (process.platform === "darwin") {
+    try {
+      const { execFileSync } = await import("node:child_process");
+      execFileSync("security", ["find-generic-password", "-s", "Claude Code-credentials"], { stdio: "ignore" });
+      return {
+        name: "Keychain access",
+        status: "pass",
+        message: "Claude Code credentials found (macOS Keychain)",
+      };
+    } catch {
+      // Not in Keychain either
+    }
   }
   return {
     name: "Keychain access",

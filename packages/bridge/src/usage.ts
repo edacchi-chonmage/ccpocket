@@ -1,6 +1,10 @@
+import { execFile } from "node:child_process";
 import { readdir, readFile, writeFile, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
 
 // ── Types ──
 
@@ -56,20 +60,38 @@ interface RefreshedClaudeToken {
 }
 
 /**
- * Read Claude OAuth credentials from ~/.claude/.credentials.json.
- *
- * Claude Code v2.x stores credentials as a plain JSON file on disk
- * instead of the macOS Keychain ("Claude Code-credentials" service)
- * used in earlier versions.
+ * Read Claude OAuth credentials from ~/.claude/.credentials.json,
+ * falling back to macOS Keychain ("Claude Code-credentials" service)
+ * for environments where credentials are stored there instead.
  */
 export async function getClaudeOAuthCredentials(): Promise<ClaudeOAuthCredentials> {
+  // 1. Try file-based credentials first
   const credPath = join(homedir(), ".claude", ".credentials.json");
-  let raw: string;
+  let raw: string | undefined;
   try {
     raw = await readFile(credPath, "utf-8");
   } catch {
+    // File not found — will try Keychain below
+  }
+
+  // 2. Fallback to macOS Keychain
+  if (!raw && process.platform === "darwin") {
+    try {
+      const { stdout } = await execFileAsync("security", [
+        "find-generic-password",
+        "-s", "Claude Code-credentials",
+        "-w",
+      ]);
+      raw = stdout.trim();
+    } catch {
+      // Keychain entry not found either
+    }
+  }
+
+  if (!raw) {
     throw new Error("Claude Code credentials file not found (~/.claude/.credentials.json)");
   }
+
   try {
     const payload: ClaudeOAuthPayload = JSON.parse(raw);
     const oauth = payload.claudeAiOauth;
