@@ -588,7 +588,7 @@ class _InputTextField extends StatelessWidget {
         ),
       ),
       enabled: status != ProcessStatus.starting,
-      autofillHints: const [],
+      autofillHints: null,
       maxLines: 6,
       minLines: 1,
       keyboardType: TextInputType.multiline,
