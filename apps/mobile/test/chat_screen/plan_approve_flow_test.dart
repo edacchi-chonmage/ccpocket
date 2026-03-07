@@ -66,9 +66,9 @@ void main() {
         findsOneWidget,
       );
 
-      // Plan mode still active (inPlanMode not reset by approve)
+      // ExitPlanMode approval should stop plan-mode UI immediately.
       final statusLine2 = $.tester.widget<StatusLine>(find.byType(StatusLine));
-      expect(statusLine2.inPlanMode, isTrue);
+      expect(statusLine2.inPlanMode, isFalse);
     });
 
     patrolWidgetTest('J2: Plan reject with feedback triggers re-plan cycle', (

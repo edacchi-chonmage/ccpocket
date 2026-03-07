@@ -481,6 +481,7 @@ class ChatSessionCubit extends Cubit<ChatSessionState> {
     Map<String, dynamic>? updatedInput,
     bool clearContext = false,
   }) {
+    final isExitPlanApproval = _isExitPlanApproval(toolUseId);
     logger.info(
       '[session:$sessionId] approve toolUseId=$toolUseId'
       '${clearContext ? ' clearContext' : ''}',
@@ -494,21 +495,31 @@ class ChatSessionCubit extends Cubit<ChatSessionState> {
         sessionId: sessionId,
       ),
     );
-    _emitNextApprovalOrNone(toolUseId);
+    _emitNextApprovalOrNone(
+      toolUseId,
+      exitPlanModeResolved: isExitPlanApproval,
+    );
   }
 
   /// Approve a tool and always allow it in the future.
   void approveAlways(String toolUseId) {
+    final isExitPlanApproval = _isExitPlanApproval(toolUseId);
     _respondedToolUseIds.add(toolUseId);
     _bridge.send(ClientMessage.approveAlways(toolUseId, sessionId: sessionId));
-    _emitNextApprovalOrNone(toolUseId);
+    _emitNextApprovalOrNone(
+      toolUseId,
+      exitPlanModeResolved: isExitPlanApproval,
+    );
   }
 
   /// Find next pending permission after resolving [resolvedToolUseId].
   ///
   /// Searches entries for PermissionRequestMessage that haven't been resolved
   /// by a corresponding ToolResultMessage.
-  void _emitNextApprovalOrNone(String resolvedToolUseId) {
+  void _emitNextApprovalOrNone(
+    String resolvedToolUseId, {
+    bool exitPlanModeResolved = false,
+  }) {
     final pendingPermissions = <String, PermissionRequestMessage>{};
     final resolvedIds = <String>{resolvedToolUseId, ..._respondedToolUseIds};
 
@@ -536,11 +547,37 @@ class ChatSessionCubit extends Cubit<ChatSessionState> {
             toolUseId: next.toolUseId,
             request: next,
           ),
+          inPlanMode: next.toolName == 'ExitPlanMode'
+              ? true
+              : (exitPlanModeResolved ? false : state.inPlanMode),
         ),
       );
     } else {
-      emit(state.copyWith(approval: const ApprovalState.none()));
+      emit(
+        state.copyWith(
+          approval: const ApprovalState.none(),
+          inPlanMode: exitPlanModeResolved ? false : state.inPlanMode,
+        ),
+      );
     }
+  }
+
+  bool _isExitPlanApproval(String toolUseId) {
+    final approval = state.approval;
+    if (approval is ApprovalPermission &&
+        approval.toolUseId == toolUseId &&
+        approval.request.toolName == 'ExitPlanMode') {
+      return true;
+    }
+
+    for (final entry in state.entries.reversed) {
+      if (entry is! ServerChatEntry) continue;
+      final msg = entry.message;
+      if (msg is PermissionRequestMessage && msg.toolUseId == toolUseId) {
+        return msg.toolName == 'ExitPlanMode';
+      }
+    }
+    return false;
   }
 
   /// Reject a pending tool execution.

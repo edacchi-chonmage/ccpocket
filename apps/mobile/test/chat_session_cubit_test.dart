@@ -172,6 +172,49 @@ void main() {
       expect(mockBridge.sentMessages, hasLength(1));
     });
 
+    test('approving ExitPlanMode clears inPlanMode immediately', () async {
+      final cubit = createCubit('s1');
+      addTearDown(cubit.close);
+      await Future.microtask(() {});
+
+      mockBridge.emitMessage(
+        AssistantServerMessage(
+          message: AssistantMessage(
+            id: 'plan-msg',
+            role: 'assistant',
+            content: [
+              const TextContent(text: 'Plan ready'),
+              const ToolUseContent(
+                id: 'tool-exit-1',
+                name: 'EnterPlanMode',
+                input: {},
+              ),
+            ],
+            model: 'claude',
+          ),
+        ),
+        sessionId: 's1',
+      );
+      await Future.microtask(() {});
+      mockBridge.emitMessage(
+        const PermissionRequestMessage(
+          toolUseId: 'tool-exit-1',
+          toolName: 'ExitPlanMode',
+          input: {'plan': 'Implementation Plan'},
+        ),
+        sessionId: 's1',
+      );
+      await Future.microtask(() {});
+
+      expect(cubit.state.inPlanMode, isTrue);
+      expect(cubit.state.approval, isA<ApprovalPermission>());
+
+      cubit.approve('tool-exit-1');
+
+      expect(cubit.state.approval, isA<ApprovalNone>());
+      expect(cubit.state.inPlanMode, isFalse);
+    });
+
     test('reject clears approval and plan mode', () async {
       final cubit = createCubit('s1');
       addTearDown(cubit.close);
