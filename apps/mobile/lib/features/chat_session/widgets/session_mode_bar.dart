@@ -319,8 +319,13 @@ void showPermissionModeMenu(BuildContext context, ChatSessionCubit chatCubit) {
                     : null,
                 onTap: () {
                   Navigator.pop(sheetContext);
+                  if (mode == currentMode) return;
                   HapticFeedback.lightImpact();
-                  chatCubit.setPermissionMode(mode);
+                  if (chatCubit.isCodex) {
+                    _confirmPermissionModeChange(context, chatCubit, mode);
+                  } else {
+                    chatCubit.setPermissionMode(mode);
+                  }
                 },
               ),
             const SizedBox(height: 8),
@@ -329,6 +334,44 @@ void showPermissionModeMenu(BuildContext context, ChatSessionCubit chatCubit) {
       );
     },
   );
+}
+
+/// Show confirmation dialog before changing permission mode for Codex sessions,
+/// because the change requires a session restart (like sandbox mode).
+Future<void> _confirmPermissionModeChange(
+  BuildContext context,
+  ChatSessionCubit chatCubit,
+  PermissionMode mode,
+) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) {
+      final cs = Theme.of(dialogContext).colorScheme;
+      return AlertDialog(
+        title: const Text('Change Permission Mode'),
+        content: Text(
+          'Switching to ${mode.label} will restart the session. '
+          'Your conversation will be preserved.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: mode == PermissionMode.bypassPermissions
+                ? FilledButton.styleFrom(backgroundColor: cs.error)
+                : null,
+            child: const Text('Restart'),
+          ),
+        ],
+      );
+    },
+  );
+  if (confirmed == true) {
+    chatCubit.setPermissionMode(mode);
+  }
 }
 
 void showSandboxModeMenu(BuildContext context, ChatSessionCubit chatCubit) {

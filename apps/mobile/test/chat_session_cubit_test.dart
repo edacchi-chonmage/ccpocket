@@ -483,4 +483,99 @@ void main() {
       expect(streamingCubit.state.isStreaming, false);
     });
   });
+
+  group('Permission mode initialization', () {
+    test(
+      'cubit created with initialPermissionMode reflects it immediately',
+      () {
+        final cubit = ChatSessionCubit(
+          sessionId: 'pm-test',
+          bridge: mockBridge,
+          streamingCubit: streamingCubit,
+          initialPermissionMode: PermissionMode.bypassPermissions,
+        );
+        addTearDown(cubit.close);
+
+        expect(cubit.state.permissionMode, PermissionMode.bypassPermissions);
+      },
+    );
+
+    test(
+      'cubit created with null initialPermissionMode defaults to defaultMode',
+      () {
+        final cubit = ChatSessionCubit(
+          sessionId: 'pm-null',
+          bridge: mockBridge,
+          streamingCubit: streamingCubit,
+        );
+        addTearDown(cubit.close);
+
+        expect(cubit.state.permissionMode, PermissionMode.defaultMode);
+      },
+    );
+
+    test(
+      'session_created message with permissionMode updates cubit state',
+      () async {
+        // Simulate the bug scenario: cubit created with null (default)
+        // but server knows the correct permissionMode.
+        final cubit = ChatSessionCubit(
+          sessionId: 'pm-update',
+          bridge: mockBridge,
+          streamingCubit: streamingCubit,
+        );
+        addTearDown(cubit.close);
+        await Future.microtask(() {});
+
+        // Initially default
+        expect(cubit.state.permissionMode, PermissionMode.defaultMode);
+
+        // Server sends session_created with bypassPermissions
+        const sessionCreated = SystemMessage(
+          subtype: 'session_created',
+          sessionId: 'pm-update',
+          permissionMode: 'bypassPermissions',
+        );
+        mockBridge.emitMessage(sessionCreated, sessionId: 'pm-update');
+        await Future.microtask(() {});
+
+        expect(cubit.state.permissionMode, PermissionMode.bypassPermissions);
+      },
+    );
+
+    test(
+      'history message preserves initial permissionMode (does not reset)',
+      () async {
+        // Cubit correctly initialized with bypassPermissions
+        final cubit = ChatSessionCubit(
+          sessionId: 'pm-history',
+          bridge: mockBridge,
+          streamingCubit: streamingCubit,
+          initialPermissionMode: PermissionMode.bypassPermissions,
+        );
+        addTearDown(cubit.close);
+        await Future.microtask(() {});
+
+        // History message arrives (no permissionMode field)
+        final historyMsg = HistoryMessage(
+          messages: [
+            const StatusMessage(status: ProcessStatus.idle),
+            AssistantServerMessage(
+              message: AssistantMessage(
+                id: 'a1',
+                role: 'assistant',
+                content: [TextContent(text: 'Hello!')],
+                model: 'gpt-5-codex',
+              ),
+            ),
+          ],
+        );
+        mockBridge.emitMessage(historyMsg, sessionId: 'pm-history');
+        await Future.microtask(() {});
+
+        // permissionMode should NOT be reset to default
+        expect(cubit.state.permissionMode, PermissionMode.bypassPermissions);
+      },
+    );
+  });
 }

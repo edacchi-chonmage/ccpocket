@@ -153,6 +153,7 @@ class _SessionListScreenState extends State<SessionListScreen>
               gitBranch: _pendingResumeGitBranch,
               worktreePath: msg.worktreePath,
               provider: msg.provider == 'codex' ? Provider.codex : null,
+              permissionMode: msg.permissionMode,
               sandboxMode: msg.sandboxMode,
             );
           }
@@ -870,7 +871,11 @@ class _SessionListScreenState extends State<SessionListScreen>
     context.read<BridgeService>().resumeSession(
       session.sessionId,
       resumeProjectPath,
-      permissionMode: !isCodex ? permissionMode : null,
+      permissionMode: isCodex
+          ? (session.codexApprovalPolicy == 'never'
+              ? 'bypassPermissions'
+              : 'acceptEdits')
+          : permissionMode,
       effort: !isCodex ? effort : null,
       maxTurns: !isCodex ? claudeDefaults?.claudeMaxTurns : null,
       maxBudgetUsd: !isCodex ? claudeDefaults?.claudeMaxBudgetUsd : null,
@@ -914,7 +919,7 @@ class _SessionListScreenState extends State<SessionListScreen>
     context.read<BridgeService>().resumeSession(
       session.sessionId,
       resumeProjectPath,
-      permissionMode: !isCodex ? edited.permissionMode.value : null,
+      permissionMode: edited.permissionMode.value,
       effort: !isCodex ? edited.claudeEffort?.value : null,
       maxTurns: !isCodex ? edited.claudeMaxTurns : null,
       maxBudgetUsd: !isCodex ? edited.claudeMaxBudgetUsd : null,

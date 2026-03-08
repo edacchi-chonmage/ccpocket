@@ -318,6 +318,7 @@ export class BridgeWebSocketServer {
               provider,
               projectPath: msg.projectPath,
               ...(provider === "claude" && msg.permissionMode ? { permissionMode: msg.permissionMode } : {}),
+              ...(provider === "codex" && msg.permissionMode ? { permissionMode: msg.permissionMode } : {}),
               ...(provider === "codex" && msg.sandboxMode ? { sandboxMode: msg.sandboxMode } : {}),
               ...(cached ? { slashCommands: cached.slashCommands, skills: cached.skills } : {}),
               ...(createdSession?.worktreePath ? {
@@ -541,12 +542,134 @@ export class BridgeWebSocketServer {
           return;
         }
         if (session.provider === "codex") {
-          const codexProcess = session.process as CodexProcess;
-          const approval = permissionModeToApprovalPolicy(msg.mode);
-          const collaboration = msg.mode === "plan" ? "plan" : "default";
-          console.log(`[ws] set_permission_mode(codex): mode=${msg.mode} → approval=${approval}, collaboration=${collaboration}`);
-          codexProcess.setApprovalPolicy(approval);
-          codexProcess.setCollaborationMode(collaboration);
+          // Permission mode for Codex requires a session restart (like sandbox mode).
+          // approvalPolicy and collaborationMode are thread-level settings that
+          // only take effect reliably at thread/start or thread/resume time.
+          const newApproval = permissionModeToApprovalPolicy(msg.mode);
+          const newCollaboration: "plan" | "default" = msg.mode === "plan" ? "plan" : "default";
+          const currentApproval = (session.process as CodexProcess).approvalPolicy;
+          const currentCollaboration = (session.process as CodexProcess).collaborationMode;
+          if (newApproval === currentApproval && newCollaboration === currentCollaboration) {
+            break; // No change needed
+          }
+          console.log(`[ws] set_permission_mode(codex): mode=${msg.mode} → approval=${newApproval}, collaboration=${newCollaboration} (restart)`);
+
+          const oldSessionId = session.id;
+          const threadId = session.claudeSessionId;
+          const projectPath = session.projectPath;
+          const oldSettings = session.codexSettings ?? {};
+          const worktreePath = session.worktreePath;
+          const worktreeBranch = session.worktreeBranch;
+          const sessionName = session.name;
+
+          this.sessionManager.destroy(oldSessionId);
+          console.log(`[ws] Permission mode change: destroyed session ${oldSessionId}`);
+
+          const hasUserMessages = session.history?.some(
+            (m: Record<string, unknown>) => m.type === "user_input" || m.type === "assistant",
+          ) || (session.pastMessages && session.pastMessages.length > 0);
+          if (!threadId || !hasUserMessages) {
+            const newId = this.sessionManager.create(
+              projectPath,
+              undefined,
+              undefined,
+              worktreePath ? { existingWorktreePath: worktreePath, worktreeBranch } : undefined,
+              "codex",
+              {
+                approvalPolicy: newApproval,
+                sandboxMode: oldSettings.sandboxMode as "workspace-write" | "danger-full-access" | undefined,
+                model: oldSettings.model,
+                modelReasoningEffort: oldSettings.modelReasoningEffort as "minimal" | "low" | "medium" | "high" | "xhigh" | undefined,
+                networkAccessEnabled: oldSettings.networkAccessEnabled as boolean | undefined,
+                webSearchMode: oldSettings.webSearchMode as "disabled" | "cached" | "live" | undefined,
+                collaborationMode: newCollaboration,
+              },
+            );
+            const newSession = this.sessionManager.get(newId);
+            if (newSession && sessionName) newSession.name = sessionName;
+            this.broadcast({
+              type: "system",
+              subtype: "session_created",
+              sessionId: newId,
+              provider: "codex",
+              projectPath,
+              permissionMode: msg.mode,
+              ...(oldSettings.sandboxMode ? { sandboxMode: sandboxModeToExternal(oldSettings.sandboxMode) } : {}),
+              sourceSessionId: oldSessionId,
+              ...(newSession?.worktreePath ? { worktreePath: newSession.worktreePath, worktreeBranch: newSession.worktreeBranch } : {}),
+            });
+            this.broadcastSessionList();
+            console.log(`[ws] Permission mode change (no thread): created new session ${newId} (mode=${msg.mode})`);
+            break;
+          }
+
+          // Worktree resolution
+          const wtMapping = this.worktreeStore.get(threadId);
+          const effectiveProjectPath = wtMapping?.projectPath ?? projectPath;
+          let worktreeOpts: { useWorktree?: boolean; worktreeBranch?: string; existingWorktreePath?: string } | undefined;
+          if (wtMapping) {
+            if (worktreeExists(wtMapping.worktreePath)) {
+              worktreeOpts = { existingWorktreePath: wtMapping.worktreePath, worktreeBranch: wtMapping.worktreeBranch };
+            } else {
+              worktreeOpts = { useWorktree: true, worktreeBranch: wtMapping.worktreeBranch };
+            }
+          } else if (worktreePath) {
+            worktreeOpts = { existingWorktreePath: worktreePath, worktreeBranch };
+          }
+
+          getCodexSessionHistory(threadId).then((pastMessages) => {
+            const newId = this.sessionManager.create(
+              effectiveProjectPath,
+              undefined,
+              pastMessages,
+              worktreeOpts,
+              "codex",
+              {
+                threadId,
+                approvalPolicy: newApproval,
+                sandboxMode: oldSettings.sandboxMode as "workspace-write" | "danger-full-access" | undefined,
+                model: oldSettings.model,
+                modelReasoningEffort: oldSettings.modelReasoningEffort as "minimal" | "low" | "medium" | "high" | "xhigh" | undefined,
+                networkAccessEnabled: oldSettings.networkAccessEnabled as boolean | undefined,
+                webSearchMode: oldSettings.webSearchMode as "disabled" | "cached" | "live" | undefined,
+                collaborationMode: newCollaboration,
+              },
+            );
+
+            const newSession = this.sessionManager.get(newId);
+            if (newSession && sessionName) {
+              newSession.name = sessionName;
+            }
+
+            void this.loadAndSetSessionName(newSession, "codex", effectiveProjectPath, threadId).then(() => {
+              this.broadcast({
+                type: "system",
+                subtype: "session_created",
+                sessionId: newId,
+                provider: "codex",
+                projectPath: effectiveProjectPath,
+                permissionMode: msg.mode,
+                ...(oldSettings.sandboxMode ? { sandboxMode: sandboxModeToExternal(oldSettings.sandboxMode) } : {}),
+                sourceSessionId: oldSessionId,
+                ...(newSession?.worktreePath ? {
+                  worktreePath: newSession.worktreePath,
+                  worktreeBranch: newSession.worktreeBranch,
+                } : {}),
+              });
+              this.broadcastSessionList();
+            });
+
+            this.debugEvents.set(newId, []);
+            this.recordDebugEvent(newId, {
+              direction: "internal" as const,
+              channel: "bridge" as const,
+              type: "permission_mode_changed",
+              detail: `mode=${msg.mode} approval=${newApproval} collaboration=${newCollaboration} thread=${threadId} oldSession=${oldSessionId}`,
+            });
+            console.log(`[ws] Permission mode change: created new session ${newId} (thread=${threadId}, mode=${msg.mode})`);
+          }).catch((err) => {
+            this.send(ws, { type: "error", message: `Failed to restart session for permission mode change: ${err}` });
+          });
           break;
         }
         (session.process as SdkProcess).setPermissionMode(msg.mode).catch((err) => {
@@ -1123,6 +1246,7 @@ export class BridgeWebSocketServer {
                 provider: "codex",
                 projectPath: effectiveProjectPath,
                 ...(createdSession?.codexSettings?.sandboxMode ? { sandboxMode: sandboxModeToExternal(createdSession.codexSettings.sandboxMode) } : {}),
+                ...(msg.permissionMode ? { permissionMode: msg.permissionMode } : {}),
                 ...(createdSession?.worktreePath ? {
                   worktreePath: createdSession.worktreePath,
                   worktreeBranch: createdSession.worktreeBranch,
