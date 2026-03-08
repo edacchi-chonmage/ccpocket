@@ -2,6 +2,15 @@
 
 All notable changes to `@ccpocket/bridge` will be documented in this file.
 
+## [1.13.0] - 2026-03-08
+
+### Added
+- Claude OAuth authentication status endpoint — settings screen can display login state and trigger re-authentication without leaving the app (experimental)
+
+### Fixed
+- Usage API returning persistent 429 errors — refresh OAuth token on rate-limit responses (not just on 401), resolving stale-token rate limits
+- Auth status check no longer probes the upstream API, eliminating redundant requests that could trigger rate limits when opening the settings screen
+
 ## [1.12.0] - 2026-03-08
 
 ### Added
