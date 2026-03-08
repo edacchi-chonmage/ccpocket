@@ -20,6 +20,13 @@ export interface UsageInfo {
   error?: string;
 }
 
+export interface ClaudeAuthStatus {
+  authenticated: boolean;
+  source: "api_key" | "oauth" | "none";
+  message?: string;
+  errorCode?: "auth_login_required" | "auth_api_error";
+}
+
 // ── Claude Code ──
 
 interface ClaudeOAuthPayload {
@@ -198,6 +205,130 @@ export async function getValidClaudeAccessToken(): Promise<{ accessToken: string
     // If Keychain update fails, continue with in-memory token for this request.
   }
   return { accessToken: refreshed.accessToken, refreshToken: updatedCreds.refreshToken };
+}
+
+interface ClaudeAuthProbeResult {
+  ok: boolean;
+  status?: number;
+  detail?: string;
+}
+
+async function probeClaudeAccessToken(token: string): Promise<ClaudeAuthProbeResult> {
+  const res = await fetch("https://api.anthropic.com/api/oauth/usage", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "anthropic-beta": "oauth-2025-04-20",
+    },
+  });
+
+  if (res.ok) {
+    return { ok: true };
+  }
+
+  return {
+    ok: false,
+    status: res.status,
+    detail: `API Error: ${res.status} ${res.statusText}`,
+  };
+}
+
+/**
+ * Verify that the stored Claude OAuth access token is still accepted upstream.
+ * This catches revoked/invalid sessions that have not yet reached expiresAt.
+ *
+ * Returns ok=false only for confirmed auth failures (401/403) or refresh errors.
+ * Transient upstream/network failures are tolerated so normal query startup can
+ * decide how to surface them.
+ */
+export async function validateClaudeAccessToken(): Promise<ClaudeAuthProbeResult> {
+  const creds = await getClaudeOAuthCredentials();
+  if (!creds.accessToken) {
+    return { ok: false, detail: "No OAuth access token in Claude Code credentials" };
+  }
+
+  const initial = await probeClaudeAccessToken(creds.accessToken);
+  if (initial.ok) {
+    return initial;
+  }
+
+  if (initial.status !== 401 && initial.status !== 403) {
+    return { ok: true };
+  }
+
+  if (!creds.refreshToken) {
+    return initial;
+  }
+
+  const refreshed = await refreshClaudeAccessToken(creds.refreshToken);
+  const updatedCreds: ClaudeOAuthCredentials = {
+    accessToken: refreshed.accessToken,
+    refreshToken: refreshed.refreshToken ?? creds.refreshToken,
+    expiresAt: refreshed.expiresAt ?? creds.expiresAt,
+  };
+
+  try {
+    await saveClaudeOAuthCredentials(updatedCreds);
+  } catch {
+    // Continue even if we cannot persist; the refreshed token is still valid
+    // for this process.
+  }
+
+  return probeClaudeAccessToken(refreshed.accessToken);
+}
+
+export async function getClaudeAuthStatus(): Promise<ClaudeAuthStatus> {
+  if (process.env.ANTHROPIC_API_KEY) {
+    return {
+      authenticated: true,
+      source: "api_key",
+      message: "Authenticated with ANTHROPIC_API_KEY.",
+    };
+  }
+
+  try {
+    const creds = await getClaudeOAuthCredentials();
+    if (!creds.accessToken) {
+      return {
+        authenticated: false,
+        source: "none",
+        message: "Claude Code credentials exist, but no access token was found.",
+        errorCode: "auth_login_required",
+      };
+    }
+
+    const validation = await validateClaudeAccessToken();
+    if (validation.ok) {
+      return {
+        authenticated: true,
+        source: "oauth",
+        message: "Claude Code is authenticated.",
+      };
+    }
+
+    return {
+      authenticated: false,
+      source: "none",
+      message: validation.detail ?? "Claude Code authentication failed.",
+      errorCode: "auth_api_error",
+    };
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    if (detail.includes("not found")) {
+      return {
+        authenticated: false,
+        source: "none",
+        message: "Claude Code is not logged in on this machine.",
+        errorCode: "auth_login_required",
+      };
+    }
+
+    return {
+      authenticated: false,
+      source: "none",
+      message: detail,
+      errorCode: "auth_api_error",
+    };
+  }
 }
 
 export async function fetchClaudeUsage(): Promise<UsageInfo> {

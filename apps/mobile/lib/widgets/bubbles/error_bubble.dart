@@ -1,7 +1,10 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../features/settings/settings_focus_controller.dart';
 import '../../models/messages.dart';
+import '../../router/app_router.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_theme.dart';
 
@@ -37,6 +40,12 @@ String? _copyableCommand(String? errorCode) {
     'auth_api_error' => 'claude auth login',
     _ => null,
   };
+}
+
+bool _isClaudeAuthError(String? errorCode) {
+  return errorCode == 'auth_login_required' ||
+      errorCode == 'auth_token_expired' ||
+      errorCode == 'auth_api_error';
 }
 
 class ErrorBubble extends StatelessWidget {
@@ -123,6 +132,22 @@ class ErrorBubble extends StatelessWidget {
         if (hint != null) ...[
           const SizedBox(height: 8),
           _buildHint(context, appColors, hint),
+        ],
+        if (_isClaudeAuthError(message.errorCode)) ...[
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                SettingsFocusController.instance.request(
+                  SettingsFocusSection.claudeAuth,
+                );
+                context.router.navigate(const SettingsRoute());
+              },
+              icon: const Icon(Icons.settings_outlined, size: 16),
+              label: const Text('Open Settings'),
+            ),
+          ),
         ],
       ],
     );

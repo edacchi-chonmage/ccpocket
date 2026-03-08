@@ -6,32 +6,106 @@ import 'package:shorebird_code_push/shorebird_code_push.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../providers/machine_manager_cubit.dart';
 import '../../router/app_router.dart';
 import '../../services/bridge_service.dart';
 import '../../services/database_service.dart';
+import '../../models/machine.dart';
+import 'settings_focus_controller.dart';
 import 'state/settings_cubit.dart';
 import 'state/settings_state.dart';
 import 'widgets/app_locale_bottom_sheet.dart';
+import 'widgets/claude_auth_section.dart';
 import 'widgets/speech_locale_bottom_sheet.dart';
 import 'widgets/theme_bottom_sheet.dart';
 import 'widgets/backup_section.dart';
 import 'widgets/usage_section.dart';
 
 @RoutePage()
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  final _claudeAuthKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    SettingsFocusController.instance.addListener(_handleFocusRequest);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _handleFocusRequest());
+  }
+
+  @override
+  void dispose() {
+    SettingsFocusController.instance.removeListener(_handleFocusRequest);
+    super.dispose();
+  }
+
+  void _handleFocusRequest() {
+    if (!mounted) return;
+    if (SettingsFocusController.instance.pendingSection !=
+        SettingsFocusSection.claudeAuth) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final context = _claudeAuthKey.currentContext;
+      if (context == null) return;
+      await Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+        alignment: 0.08,
+      );
+      SettingsFocusController.instance.clear(SettingsFocusSection.claudeAuth);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l = AppLocalizations.of(context);
+    final bridge = context.read<BridgeService>();
 
     return Scaffold(
       appBar: AppBar(title: Text(l.settingsTitle)),
       body: BlocBuilder<SettingsCubit, SettingsState>(
         builder: (context, state) {
+          final machine = _activeMachine(context, state.activeMachineId);
           return ListView(
             children: [
+              // ── Bridge ──
+              const _SectionHeader(title: 'Bridge'),
+              Card(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: Icon(Icons.computer_outlined, color: cs.primary),
+                      title: const Text('Connected machine'),
+                      subtitle: Text(
+                        machine?.displayName ??
+                            (bridge.lastUrl ?? 'Not connected'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // ── Claude Authentication ──
+              const _SectionHeader(title: 'Claude Authentication'),
+              ClaudeAuthSection(
+                key: _claudeAuthKey,
+                bridgeService: bridge,
+                activeMachineName: machine?.displayName,
+              ),
+              const SizedBox(height: 8),
+
               // ── General ──
               _SectionHeader(title: l.sectionGeneral),
               Card(
@@ -200,12 +274,12 @@ class SettingsScreen extends StatelessWidget {
               const SizedBox(height: 8),
 
               // ── Usage ──
-              UsageSection(bridgeService: context.read<BridgeService>()),
+              UsageSection(bridgeService: bridge),
               const SizedBox(height: 8),
 
               // ── Backup ──
               BackupSection(
-                bridgeService: context.read<BridgeService>(),
+                bridgeService: bridge,
                 databaseService: context.read<DatabaseService>(),
               ),
               const SizedBox(height: 8),
@@ -323,6 +397,17 @@ class SettingsScreen extends StatelessWidget {
       case ThemeMode.dark:
         return l.themeDark;
     }
+  }
+
+  Machine? _activeMachine(BuildContext context, String? activeMachineId) {
+    if (activeMachineId == null) return null;
+    final machines = context.read<MachineManagerCubit>().state.machines;
+    for (final item in machines) {
+      if (item.machine.id == activeMachineId) {
+        return item.machine;
+      }
+    }
+    return null;
   }
 }
 

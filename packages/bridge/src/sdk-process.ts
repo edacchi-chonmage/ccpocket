@@ -14,6 +14,7 @@ import {
   getClaudeOAuthCredentials,
   isTokenExpired,
   getValidClaudeAccessToken,
+  validateClaudeAccessToken,
 } from "./usage.js";
 
 // Tools that are auto-approved in acceptEdits mode
@@ -188,6 +189,10 @@ async function checkClaudeAuth(): Promise<AuthCheckResult> {
     }
     // If token is not expired, we're good
     if (!isTokenExpired(creds.expiresAt)) {
+      const validation = await validateClaudeAccessToken();
+      if (!validation.ok) {
+        return buildAuthError("general", validation.detail);
+      }
       return { authenticated: true };
     }
     // Token is expired — attempt refresh before starting the SDK
@@ -196,6 +201,10 @@ async function checkClaudeAuth(): Promise<AuthCheckResult> {
       return buildAuthError("token_expired");
     }
     await getValidClaudeAccessToken();
+    const validation = await validateClaudeAccessToken();
+    if (!validation.ok) {
+      return buildAuthError("general", validation.detail);
+    }
     console.log("[sdk-process] Access token refreshed successfully");
     return { authenticated: true };
   } catch (err) {
