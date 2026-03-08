@@ -16,10 +16,13 @@ class UsageSection extends StatefulWidget {
 }
 
 class _UsageSectionState extends State<UsageSection> {
+  static const _autoRefreshCooldown = Duration(minutes: 2);
+
   List<UsageInfo>? _providers;
   bool _loading = false;
   StreamSubscription<UsageResultMessage>? _sub;
   StreamSubscription<BridgeConnectionState>? _connSub;
+  DateTime? _lastFetchAt;
 
   @override
   void initState() {
@@ -39,10 +42,10 @@ class _UsageSectionState extends State<UsageSection> {
     });
     _connSub = widget.bridgeService.connectionStatus.listen((state) {
       if (mounted && state == BridgeConnectionState.connected) {
-        _fetchUsage();
+        _fetchUsage(onlyIfMissing: true);
       }
     });
-    _fetchUsage();
+    _fetchUsage(onlyIfMissing: true);
   }
 
   @override
@@ -52,8 +55,19 @@ class _UsageSectionState extends State<UsageSection> {
     super.dispose();
   }
 
-  void _fetchUsage() {
+  void _fetchUsage({bool onlyIfMissing = false, bool force = false}) {
     if (!widget.bridgeService.isConnected) return;
+    if (_loading) return;
+    if (!force && onlyIfMissing && _providers != null) return;
+
+    final now = DateTime.now();
+    if (!force &&
+        _lastFetchAt != null &&
+        now.difference(_lastFetchAt!) < _autoRefreshCooldown) {
+      return;
+    }
+
+    _lastFetchAt = now;
     setState(() => _loading = true);
     widget.bridgeService.requestUsage();
   }
@@ -91,7 +105,7 @@ class _UsageSectionState extends State<UsageSection> {
                 )
               else if (isConnected)
                 GestureDetector(
-                  onTap: _fetchUsage,
+                  onTap: () => _fetchUsage(force: true),
                   child: Icon(
                     Icons.refresh,
                     size: 18,
