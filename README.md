@@ -119,6 +119,46 @@ In the app, choose a project and permission mode, then start a Claude Code or Co
 
 You can also enable **Worktree** to isolate a session in its own git worktree.
 
+## Worktree Support
+
+When starting a session, you can enable **Worktree** to automatically create a [git worktree](https://git-scm.com/docs/git-worktree) with its own branch and directory. This lets you run multiple sessions in parallel on the same project without conflicts.
+
+### `.gtrconfig` Compatibility
+
+CC Pocket's Bridge Server is partially compatible with the [`.gtrconfig`](https://github.com/coderabbitai/git-worktree-runner?tab=readme-ov-file#team-configuration-gtrconfig) format used by [git-worktree-runner](https://github.com/coderabbitai/git-worktree-runner). If your project has a `.gtrconfig` file, the Bridge Server will use it when creating worktrees.
+
+| Section | Key | Description |
+|---------|-----|-------------|
+| `[copy]` | `include` | Glob patterns for files to copy (e.g. `.env`, config files) |
+| `[copy]` | `exclude` | Glob patterns to exclude from copy |
+| `[copy]` | `includeDirs` | Directory names to copy recursively |
+| `[copy]` | `excludeDirs` | Directory names to exclude |
+| `[hooks]` | `postCreate` | Shell command to run after worktree creation |
+| `[hooks]` | `preRemove` | Shell command to run before worktree deletion |
+
+**Tip:** Adding `.claude/settings.local.json` to the `[copy] include` list is especially recommended. This carries over your MCP server configuration and permission settings to each worktree session automatically.
+
+<details>
+<summary>Example <code>.gtrconfig</code></summary>
+
+```ini
+[copy]
+# Claude Code settings (MCP servers, permissions, additional directories)
+include = .claude/settings.local.json
+
+# Environment-specific config
+include = apps/mobile/android/local.properties
+
+# Speed up worktree setup by copying node_modules
+includeDirs = node_modules
+
+[hooks]
+# Restore Flutter dependencies after worktree creation
+postCreate = cd apps/mobile && flutter pub get
+```
+
+</details>
+
 ## Ideal Use Cases
 
 - **An always-on Mac mini** running the agent while you monitor from your phone

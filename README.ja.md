@@ -119,6 +119,46 @@ ccpocket-bridge doctor
 
 必要なら **Worktree** を有効にして、セッションごとに独立した git worktree を使えます。
 
+## Worktree サポート
+
+セッション開始時に **Worktree** を有効にすると、[git worktree](https://git-scm.com/docs/git-worktree) で独立したブランチ・ディレクトリが自動的に作成されます。同じプロジェクトで複数のセッションを競合なく並行して実行できます。
+
+### `.gtrconfig` との互換性
+
+CC Pocket の Bridge Server は、[git-worktree-runner](https://github.com/coderabbitai/git-worktree-runner) が使う [`.gtrconfig`](https://github.com/coderabbitai/git-worktree-runner?tab=readme-ov-file#team-configuration-gtrconfig) 形式と一部互換性があります。プロジェクトに `.gtrconfig` ファイルがあれば、worktree 作成時にその設定が使われます。
+
+| セクション | キー | 説明 |
+|-----------|------|------|
+| `[copy]` | `include` | コピーするファイルの glob パターン（`.env` や設定ファイル等） |
+| `[copy]` | `exclude` | コピーから除外する glob パターン |
+| `[copy]` | `includeDirs` | 再帰的にコピーするディレクトリ名 |
+| `[copy]` | `excludeDirs` | 除外するディレクトリ名 |
+| `[hooks]` | `postCreate` | worktree 作成後に実行するシェルコマンド |
+| `[hooks]` | `preRemove` | worktree 削除前に実行するシェルコマンド |
+
+**Tips:** `.claude/settings.local.json` を `[copy] include` に含めるのが特におすすめです。MCP サーバー設定やパーミッション設定が各 worktree セッションに自動的に引き継がれます。
+
+<details>
+<summary><code>.gtrconfig</code> の設定例</summary>
+
+```ini
+[copy]
+# Claude Code の設定（MCP サーバー、パーミッション、追加ディレクトリ）
+include = .claude/settings.local.json
+
+# 環境固有の設定
+include = apps/mobile/android/local.properties
+
+# node_modules をコピーして worktree 構築を高速化
+includeDirs = node_modules
+
+[hooks]
+# worktree 作成後に Flutter の依存関係を復元
+postCreate = cd apps/mobile && flutter pub get
+```
+
+</details>
+
 ## 典型的な使い方
 
 - **常時稼働の Mac mini** 上でエージェントを動かし、スマホから様子を見る
