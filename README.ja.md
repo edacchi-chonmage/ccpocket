@@ -119,45 +119,76 @@ ccpocket-bridge doctor
 
 必要なら **Worktree** を有効にして、セッションごとに独立した git worktree を使えます。
 
-## Worktree サポート
+## プロジェクト設定 (`.ccpocket.toml`)
+
+プロジェクトルートに `.ccpocket.toml` を配置すると、Bridge Server の worktree やサンドボックスの動作をプロジェクトごとに設定できます。
+
+ユーザー共通のデフォルトとして `~/.ccpocket.toml` も利用可能です。プロジェクトレベルの設定がグローバル設定より優先されます。
+
+### Worktree
 
 セッション開始時に **Worktree** を有効にすると、[git worktree](https://git-scm.com/docs/git-worktree) で独立したブランチ・ディレクトリが自動的に作成されます。同じプロジェクトで複数のセッションを競合なく並行して実行できます。
 
-### `.gtrconfig` との互換性
-
-CC Pocket の Bridge Server は、[git-worktree-runner](https://github.com/coderabbitai/git-worktree-runner) が使う [`.gtrconfig`](https://github.com/coderabbitai/git-worktree-runner?tab=readme-ov-file#team-configuration-gtrconfig) 形式と一部互換性があります。プロジェクトに `.gtrconfig` ファイルがあれば、worktree 作成時にその設定が使われます。
+`[worktree]` セクションでファイルコピーとライフサイクルフックを設定します:
 
 | セクション | キー | 説明 |
 |-----------|------|------|
-| `[copy]` | `include` | コピーするファイルの glob パターン（`.env` や設定ファイル等） |
-| `[copy]` | `exclude` | コピーから除外する glob パターン |
-| `[copy]` | `includeDirs` | 再帰的にコピーするディレクトリ名 |
-| `[copy]` | `excludeDirs` | 除外するディレクトリ名 |
-| `[hooks]` | `postCreate` | worktree 作成後に実行するシェルコマンド |
-| `[hooks]` | `preRemove` | worktree 削除前に実行するシェルコマンド |
+| `[worktree.copy]` | `include` | コピーするファイルの glob パターン（`.env` や設定ファイル等） |
+| `[worktree.copy]` | `exclude` | コピーから除外する glob パターン |
+| `[worktree.copy]` | `includeDirs` | 再帰的にコピーするディレクトリ名 |
+| `[worktree.copy]` | `excludeDirs` | 除外するディレクトリ名 |
+| `[worktree.hooks]` | `postCreate` | worktree 作成後に実行するシェルコマンド |
+| `[worktree.hooks]` | `preRemove` | worktree 削除前に実行するシェルコマンド |
 
-**Tips:** `.claude/settings.local.json` を `[copy] include` に含めるのが特におすすめです。MCP サーバー設定やパーミッション設定が各 worktree セッションに自動的に引き継がれます。
+**Tips:** `.claude/settings.local.json` を `include` に含めるのが特におすすめです。MCP サーバー設定やパーミッション設定が各 worktree セッションに自動的に引き継がれます。
+
+### Sandbox (Claude Code)
+
+`[sandbox]` セクションでは、アプリからサンドボックスモードを有効にした際の Claude Code の OS レベルサンドボックス動作を設定します。
+
+| セクション | キー | 説明 |
+|-----------|------|------|
+| `[sandbox]` | `autoAllowBash` | サンドボックス内の bash コマンドを自動承認（デフォルト: `true`） |
+| `[sandbox]` | `allowUnsandboxedCommands` | 特定コマンドをサンドボックス外で実行許可（デフォルト: `false`） |
+| `[sandbox.network]` | `allowLocalBinding` | ローカルポートへのバインドを許可 |
+| `[sandbox.network]` | `allowedDomains` | 許可するネットワークドメインのリスト |
+| `[sandbox.network]` | `allowUnixSockets` | 許可する Unix ソケットパスのリスト |
+| `[sandbox.network]` | `allowAllUnixSockets` | すべての Unix ソケット接続を許可 |
+| `[sandbox.filesystem]` | `allowWrite` | 書き込みを許可する追加パス |
+| `[sandbox.filesystem]` | `denyWrite` | 書き込みを拒否するパス |
+| `[sandbox.filesystem]` | `denyRead` | 読み取りを拒否するパス |
 
 <details>
-<summary><code>.gtrconfig</code> の設定例</summary>
+<summary><code>.ccpocket.toml</code> の設定例</summary>
 
-```ini
-[copy]
+```toml
+[worktree.copy]
 # Claude Code の設定（MCP サーバー、パーミッション、追加ディレクトリ）
-include = .claude/settings.local.json
+include = [".claude/settings.local.json"]
 
 # 環境固有の設定
-include = apps/mobile/android/local.properties
+# include = ["apps/mobile/android/local.properties"]
 
 # node_modules をコピーして worktree 構築を高速化
-includeDirs = node_modules
+includeDirs = ["node_modules"]
 
-[hooks]
+[worktree.hooks]
 # worktree 作成後に Flutter の依存関係を復元
-postCreate = cd apps/mobile && flutter pub get
+postCreate = "cd apps/mobile && flutter pub get"
+
+[sandbox]
+autoAllowBash = true
+
+[sandbox.network]
+# 開発サーバーがローカルポートにバインドできるようにする
+allowLocalBinding = true
 ```
 
 </details>
+
+### `.gtrconfig` との互換性
+
+プロジェクトに [git-worktree-runner](https://github.com/coderabbitai/git-worktree-runner) の [`.gtrconfig`](https://github.com/coderabbitai/git-worktree-runner?tab=readme-ov-file#team-configuration-gtrconfig) がすでにある場合、Bridge Server は worktree 設定としてそのまま読み込みます。両方のファイルが存在する場合は `.ccpocket.toml` が優先されます。
 
 ## 典型的な使い方
 
