@@ -2,6 +2,14 @@
 
 All notable changes to `@ccpocket/bridge` will be documented in this file.
 
+## [1.14.0] - 2026-03-11
+
+### Added
+- Codex Skills (Prompts) support — fetch full skill metadata (description, defaultPrompt, brandColor) via `skills/list` RPC and forward to Flutter client as `skillMetadata`
+- Send `SkillUserInput` (`{ type: "skill", name, path }`) when a Codex skill is selected, enabling proper skill loading and execution
+- Handle `skills/changed` notification for automatic skill re-fetching
+- Cache skill metadata alongside slash commands for session restore
+
 ## [1.13.2] - 2026-03-11
 
 ### Fixed
