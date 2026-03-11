@@ -2,6 +2,20 @@
 
 All notable changes to `@ccpocket/bridge` will be documented in this file.
 
+## [1.16.0] - 2026-03-12
+
+### Added
+- Linux (systemd) support for `setup` / `setup --uninstall` commands — auto-detects OS and registers appropriate service (launchd on macOS, systemd on Linux)
+- `checkSystemdService` in `doctor` command for Linux service health check
+- Resolves full `npx` path at setup time so nvm/mise/volta-managed Node.js works under systemd
+
+### Changed
+- `setup` command now uses dynamic imports with `platform()` branching instead of static launchd import
+- Unsupported platforms (e.g. Windows) get a clear error message
+
+### Removed
+- `claude auth login` feature removed (refactor: remove claude auth login feature)
+
 ## [1.15.0] - 2026-03-12
 
 ### Added
