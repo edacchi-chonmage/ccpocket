@@ -2,6 +2,17 @@
 
 All notable changes to `@ccpocket/bridge` will be documented in this file.
 
+## [1.15.0] - 2026-03-12
+
+### Added
+- Claude Code sandbox support — pass sandbox enabled/disabled state from mobile client to Claude SDK via `query()` options
+- Claude sandbox mode toggle — changing sandbox restarts the session with the new setting (sandbox is a query-level config)
+- `.ccpocket.toml` configuration file support with `[worktree]` section, prioritized over legacy `.gtrconfig`
+- `smol-toml` dependency for TOML parsing
+
+### Changed
+- Simplified permission/sandbox mode forwarding — both Claude and Codex sessions now use unified message handling
+
 ## [1.14.0] - 2026-03-11
 
 ### Added
