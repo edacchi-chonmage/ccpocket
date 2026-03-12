@@ -1,4 +1,6 @@
-ccpocket lets you start and run Claude Code and Codex sessions entirely from your phone. No laptop needed — just open the app, pick a project, and code from anywhere.
+AI coding agents can now write entire features autonomously. Your job? Approve, answer, review. That doesn't need a laptop — it needs your phone.
+
+ccpocket lets you start Claude Code and Codex sessions from your phone, make decisions on the go, and ship code from anywhere.
 
 This app is not affiliated with, endorsed by, or associated with Anthropic or OpenAI.
 

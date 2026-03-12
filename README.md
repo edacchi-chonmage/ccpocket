@@ -1,6 +1,6 @@
 # CC Pocket
 
-CC Pocket lets you start and run Claude Code and Codex sessions entirely from your phone. No laptop needed to begin — just open the app, pick a project, and code from anywhere.
+CC Pocket lets you start and run Claude Code and Codex sessions entirely from your phone. No laptop needed — just open the app, pick a project, and code from anywhere.
 
 [日本語版 README](README.ja.md)
 
@@ -9,6 +9,14 @@ CC Pocket lets you start and run Claude Code and Codex sessions entirely from yo
 </p>
 
 CC Pocket is not affiliated with, endorsed by, or associated with Anthropic or OpenAI.
+
+## Why CC Pocket?
+
+AI coding agents are getting autonomous enough to write entire features on their own. Your role shifts from writing code to making decisions — approve this tool, answer that question, review the diff.
+
+Decisions don't need a keyboard. They need a screen and a thumb.
+
+CC Pocket is built for this workflow: start a session from your phone, let your mac's Claude Code or Codex do the heavy lifting, and make decisions from wherever you are.
 
 ## Who It's For
 
