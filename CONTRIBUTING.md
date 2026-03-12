@@ -42,8 +42,33 @@ In addition to Prompt Requests, regular Issues are always welcome.
 
 ## Pull Requests
 
-Pull Requests are also accepted, but please open an Issue first to discuss the approach.
-For larger changes, sharing as a Prompt Request may be smoother.
+### Environment-Dependent PRs — Especially Welcome
+
+We develop primarily on macOS and don't always have easy access to Linux, WSL, or Windows environments.
+If you can **test on a platform we can't**, your PR is especially valuable.
+
+Examples:
+
+- Linux / systemd integration fixes
+- WSL-specific workarounds
+- Cross-platform compatibility improvements
+
+For these cases, please include:
+
+- What platform and version you tested on
+- Steps to reproduce the issue (if it's a fix)
+- Test results or logs
+
+### Other PRs
+
+For changes that don't require a specific environment, we recommend opening a **Prompt Request** or **Issue** first.
+
+If you do send a PR, we may close it and re-implement the change ourselves to fit the codebase's conventions and architecture. In that case:
+
+- Your contribution will be credited via `Co-authored-by` in the commit
+- We'll comment on the PR explaining what we incorporated and what we adjusted
+
+This isn't a rejection of your work — it's how we maintain consistency while honoring your contribution.
 
 ## Security
 
@@ -68,6 +93,30 @@ If you discover a vulnerability, please report it privately via [GitHub Security
 1. **Issue を作成する** — [Prompt Request テンプレート](https://github.com/K9i-0/ccpocket/issues/new?template=prompt_request.yml) を使用
 2. **プロンプトと結果を記載する** — 実際に使ったプロンプト、実現できたこと、スクリーンショットなど
 3. **メンテナが検証・適用する** — プロンプトを再実行し、必要に応じて調整してマージ
+
+### Pull Request
+
+#### 環境依存の PR — 特に歓迎
+
+開発は主に macOS で行っており、Linux・WSL・Windows 環境を常に手元で用意できるわけではありません。
+**メンテナが検証しづらいプラットフォームでテストできる方からの PR** は特に歓迎します。
+
+例:
+
+- Linux / systemd 関連の修正
+- WSL 固有のワークアラウンド
+- クロスプラットフォーム互換性の改善
+
+#### その他の PR
+
+環境依存でない変更は、先に **Prompt Request** や **Issue** で相談いただくのがスムーズです。
+
+PR を送っていただいた場合でも、コードベースの規約やアーキテクチャに合わせるため、クローズした上でメンテナ側で再実装することがあります。その際は:
+
+- コミットに `Co-authored-by` を付与して貢献をクレジットします
+- PR コメントで、何を取り込み何を調整したかを説明します
+
+これは PR の否定ではなく、一貫性を保ちつつ貢献を活かすための運用です。
 
 ### バグ報告・機能提案
 
