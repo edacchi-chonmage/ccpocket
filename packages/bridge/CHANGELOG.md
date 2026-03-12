@@ -2,6 +2,16 @@
 
 All notable changes to `@ccpocket/bridge` will be documented in this file.
 
+## [1.17.0] - 2026-03-12
+
+### Added
+- Auto-enable `loginctl enable-linger` on systemd setup to keep the Bridge Server running after logout (SSH disconnect etc.)
+  - Idempotent: skips if linger is already enabled
+  - Graceful fallback: prints manual command if `loginctl` fails
+
+### Removed
+- Unused `@openai/codex-sdk` dependency
+
 ## [1.16.0] - 2026-03-12
 
 ### Added
