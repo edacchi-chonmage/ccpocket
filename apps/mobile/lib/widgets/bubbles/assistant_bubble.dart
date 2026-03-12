@@ -318,6 +318,7 @@ class _ToolUseTileState extends State<ToolUseTile> {
         }
       }
     }
+    // Unknown saved value (e.g. corrupt storage) → fall back to default
     _expansion = _defaultExpansion;
   }
 
@@ -395,13 +396,7 @@ class _ToolUseTileState extends State<ToolUseTile> {
   }
 
   ToolUseExpansion get _defaultExpansion =>
-      (widget.name == 'Edit' ||
-          widget.name == 'FileEdit' ||
-          widget.name == 'MultiEdit' ||
-          widget.name == 'Write' ||
-          widget.name == 'NotebookEdit')
-      ? ToolUseExpansion.expanded
-      : ToolUseExpansion.collapsed;
+      _isEditTool ? ToolUseExpansion.expanded : ToolUseExpansion.collapsed;
 
   void _persistExpandedState() {
     PageStorage.maybeOf(
