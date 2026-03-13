@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.37.0] - 2026-03-13
+
+### Added
+- iOS-style swipe actions with Slidable (replacing Dismissible)
+- Dynamic line-number column width in diff view
+- Line-number width test mock scenario
+
 ## [1.36.0] - 2026-03-13
 
 ### Added
