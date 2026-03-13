@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/messages.dart';
@@ -962,30 +963,34 @@ class _RecentProjectsSection extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         for (final project in projects)
-          Dismissible(
+          Slidable(
             key: ValueKey('project_${project.path}'),
-            direction: onProjectRemoved != null
-                ? DismissDirection.endToStart
-                : DismissDirection.none,
-            background: const SizedBox.shrink(),
-            secondaryBackground: Container(
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.only(right: 24),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.error,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.delete_outline,
-                color: Theme.of(context).colorScheme.onError,
-              ),
-            ),
-            confirmDismiss: (_) async {
-              await onProjectRemoved?.call(project.path);
-              // Always return false — removal is handled by the callback
-              // which updates state and removes the item from the list.
-              return false;
-            },
+            endActionPane: onProjectRemoved != null
+                ? ActionPane(
+                    motion: const BehindMotion(),
+                    extentRatio: 0.18,
+                    children: [
+                      CustomSlidableAction(
+                        onPressed: (_) => onProjectRemoved?.call(project.path),
+                        backgroundColor: Colors.transparent,
+                        padding: EdgeInsets.zero,
+                        child: Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.error,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.delete_outline,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : null,
             child: _ProjectTile(
               project: project,
               appColors: appColors,
@@ -1333,28 +1338,32 @@ class _OptionsSection extends StatelessWidget {
               fontSize: 13,
               color: Theme.of(context).colorScheme.onSurface,
             ),
-            items: (provider == Provider.claude
-                    ? SandboxMode.values.reversed
-                    : SandboxMode.values)
-                .map((m) {
-              final isClaude = provider == Provider.claude;
-              final icon = m == SandboxMode.on
-                  ? Icons.shield_outlined
-                  : (isClaude ? Icons.code : Icons.warning_amber);
-              final label = isClaude
-                  ? (m == SandboxMode.on ? 'Sandbox (Safe Mode)' : 'Standard')
-                  : m.label;
-              return DropdownMenuItem(
-                value: m,
-                child: Row(
-                  children: [
-                    Icon(icon, size: 16),
-                    const SizedBox(width: 8),
-                    Text(label, style: const TextStyle(fontSize: 13)),
-                  ],
-                ),
-              );
-            }).toList(),
+            items:
+                (provider == Provider.claude
+                        ? SandboxMode.values.reversed
+                        : SandboxMode.values)
+                    .map((m) {
+                      final isClaude = provider == Provider.claude;
+                      final icon = m == SandboxMode.on
+                          ? Icons.shield_outlined
+                          : (isClaude ? Icons.code : Icons.warning_amber);
+                      final label = isClaude
+                          ? (m == SandboxMode.on
+                                ? 'Sandbox (Safe Mode)'
+                                : 'Standard')
+                          : m.label;
+                      return DropdownMenuItem(
+                        value: m,
+                        child: Row(
+                          children: [
+                            Icon(icon, size: 16),
+                            const SizedBox(width: 8),
+                            Text(label, style: const TextStyle(fontSize: 13)),
+                          ],
+                        ),
+                      );
+                    })
+                    .toList(),
             onChanged: (value) {
               if (value != null) onSandboxModeChanged(value);
             },

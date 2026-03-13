@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 import '../../../services/prompt_history_service.dart';
 import '../../../utils/command_parser.dart';
@@ -28,18 +29,34 @@ class PromptHistoryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return Dismissible(
+    return Slidable(
       key: ValueKey('prompt_history_dismiss_${entry.id}'),
-      direction: entry.isFavorite
-          ? DismissDirection.none
-          : DismissDirection.endToStart,
-      onDismissed: (_) => onDelete(),
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        color: cs.error,
-        child: Icon(Icons.delete, color: cs.onError),
-      ),
+      endActionPane: entry.isFavorite
+          ? null
+          : ActionPane(
+              motion: const BehindMotion(),
+              extentRatio: 0.18,
+              children: [
+                CustomSlidableAction(
+                  onPressed: (_) => onDelete(),
+                  backgroundColor: Colors.transparent,
+                  padding: EdgeInsets.zero,
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: cs.error,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+                  ),
+                ),
+              ],
+            ),
       child: ListTile(
         key: ValueKey('prompt_history_item_${entry.id}'),
         onTap: () {
