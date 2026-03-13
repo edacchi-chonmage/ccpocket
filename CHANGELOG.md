@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.38.0] - 2026-03-13
+
+### Added
+- Bridge update banner when server version is outdated
+
+### Changed
+- Removed stop button from running session card
+
 ## [1.37.1] - 2026-03-13
 
 ### Changed
