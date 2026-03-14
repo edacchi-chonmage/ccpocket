@@ -82,10 +82,10 @@ ${envBlock}
     </dict>
 
     <key>RunAtLoad</key>
-    <false/>
+    <true/>
 
     <key>KeepAlive</key>
-    <false/>
+    <true/>
 
     <key>StandardOutPath</key>
     <string>/tmp/ccpocket-bridge.log</string>
