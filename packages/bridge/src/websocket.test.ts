@@ -536,7 +536,8 @@ describe("BridgeWebSocketServer resume/get_history flow", () => {
     expect(bundle.type).toBe("debug_bundle");
     expect(bundle.sessionId).toBe(sessionId);
     expect(bundle.session.provider).toBe("claude");
-    expect(bundle.historySummary).toContain("001. running");
+    // History may contain a system/tip (git_not_available) before the running status
+    expect(bundle.historySummary.some((s: string) => s.includes("running"))).toBe(true);
     expect(Array.isArray(bundle.debugTrace)).toBe(true);
     expect(typeof bundle.traceFilePath).toBe("string");
     expect(typeof bundle.savedBundlePath).toBe("string");

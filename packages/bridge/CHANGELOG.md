@@ -2,6 +2,16 @@
 
 All notable changes to `@ccpocket/bridge` will be documented in this file.
 
+## [1.20.0] - 2026-03-14
+
+### Added
+- Gentle tip message when project has no git repository (persisted in session history)
+- Categorized `errorCode` for git-related diff errors (`git_not_available`)
+
+### Changed
+- Non-git projects return empty file list instead of error on `list_files`
+- Diff errors for non-git projects use user-friendly message instead of raw git error
+
 ## [1.19.0] - 2026-03-14
 
 ### Added
