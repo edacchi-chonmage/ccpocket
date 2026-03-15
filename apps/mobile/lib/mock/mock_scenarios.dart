@@ -578,9 +578,7 @@ final _askUserSingleMultiSelect = MockScenario(
     // --- Dummy conversation to make chat area scrollable ---
     MockStep(
       delay: const Duration(milliseconds: 500),
-      message: const UserInputMessage(
-        text: 'VNCビューアの改善点を洗い出して、優先度をつけて',
-      ),
+      message: const UserInputMessage(text: 'VNCビューアの改善点を洗い出して、優先度をつけて'),
     ),
     MockStep(
       delay: const Duration(milliseconds: 700),
@@ -589,10 +587,7 @@ final _askUserSingleMultiSelect = MockScenario(
           id: 'mock-ms-pre-1',
           role: 'assistant',
           content: [
-            const TextContent(
-              text:
-                  'VNCビューアの現在の実装を確認します。まず関連ファイルを見てみましょう。',
-            ),
+            const TextContent(text: 'VNCビューアの現在の実装を確認します。まず関連ファイルを見てみましょう。'),
             const ToolUseContent(
               id: 'tool-ms-pre-glob-1',
               name: 'Glob',
@@ -621,9 +616,7 @@ final _askUserSingleMultiSelect = MockScenario(
           id: 'mock-ms-pre-2',
           role: 'assistant',
           content: [
-            const TextContent(
-              text: 'VNCビューアの実装を読みます。',
-            ),
+            const TextContent(text: 'VNCビューアの実装を読みます。'),
             const ToolUseContent(
               id: 'tool-ms-pre-read-1',
               name: 'Read',

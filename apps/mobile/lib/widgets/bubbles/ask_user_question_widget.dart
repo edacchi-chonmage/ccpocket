@@ -382,8 +382,10 @@ class _AskUserQuestionWidgetState extends State<AskUserQuestionWidget> {
                   if (_isMultiQuestion)
                     Text(
                       '${_currentPage + 1}/$totalPages',
-                      style:
-                          TextStyle(fontSize: 11, color: appColors.subtleText),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: appColors.subtleText,
+                      ),
                     ),
                 ],
               ),

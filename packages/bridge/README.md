@@ -31,6 +31,7 @@ ccpocket-bridge
 | `BRIDGE_HOST` | `0.0.0.0` | Bind address |
 | `BRIDGE_API_KEY` | (none) | API key authentication (enabled when set) |
 | `BRIDGE_DEMO_MODE` | (none) | Demo mode: hide Tailscale IPs and API key from QR code / logs |
+| `BRIDGE_RECORDING` | (none) | Enable session recording for debugging (enabled when set) |
 
 ```bash
 # Example: custom port with API key

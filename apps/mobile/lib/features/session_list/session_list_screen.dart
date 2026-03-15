@@ -716,9 +716,10 @@ class _SessionListScreenState extends State<SessionListScreen>
       if (newName == null || !mounted) return;
       final effectiveName = newName.isEmpty ? null : newName;
       // Optimistically update the local state for instant UI feedback
-      context
-          .read<SessionListCubit>()
-          .updateSessionName(session.sessionId, effectiveName);
+      context.read<SessionListCubit>().updateSessionName(
+        session.sessionId,
+        effectiveName,
+      );
       context.read<BridgeService>().renameSession(
         sessionId: session.sessionId,
         name: effectiveName,

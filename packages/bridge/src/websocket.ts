@@ -92,7 +92,7 @@ export class BridgeWebSocketServer {
   private galleryStore: GalleryStore | null;
   private projectHistory: ProjectHistory | null;
   private debugTraceStore: DebugTraceStore;
-  private recordingStore: RecordingStore;
+  private recordingStore: RecordingStore | null;
   private worktreeStore: WorktreeStore;
   private pushRelay: PushRelayClient;
   private promptHistoryBackup: PromptHistoryBackupStore | null;
@@ -113,7 +113,7 @@ export class BridgeWebSocketServer {
     this.galleryStore = galleryStore ?? null;
     this.projectHistory = projectHistory ?? null;
     this.debugTraceStore = debugTraceStore ?? new DebugTraceStore();
-    this.recordingStore = recordingStore ?? new RecordingStore();
+    this.recordingStore = recordingStore ?? null;
     this.worktreeStore = new WorktreeStore();
     this.pushRelay = new PushRelayClient({ firebaseAuth });
     this.promptHistoryBackup = promptHistoryBackup ?? null;
@@ -122,9 +122,11 @@ export class BridgeWebSocketServer {
     void this.debugTraceStore.init().catch((err) => {
       console.error("[ws] Failed to initialize debug trace store:", err);
     });
-    void this.recordingStore.init().catch((err) => {
-      console.error("[ws] Failed to initialize recording store:", err);
-    });
+    if (this.recordingStore) {
+      void this.recordingStore.init().catch((err) => {
+        console.error("[ws] Failed to initialize recording store:", err);
+      });
+    }
     void this.archiveStore.init().catch((err) => {
       console.error("[ws] Failed to initialize archive store:", err);
     });
@@ -254,7 +256,7 @@ export class BridgeWebSocketServer {
         type: msg.type,
         detail: this.summarizeClientMessage(msg),
       });
-      this.recordingStore.record(incomingSessionId, "incoming", msg);
+      this.recordingStore?.record(incomingSessionId, "incoming", msg);
     }
 
     switch (msg.type) {
@@ -345,7 +347,7 @@ export class BridgeWebSocketServer {
             type: "session_created",
             detail: `provider=${provider} projectPath=${msg.projectPath}`,
           });
-          this.recordingStore.saveMeta(sessionId, {
+          this.recordingStore?.saveMeta(sessionId, {
             bridgeSessionId: sessionId,
             projectPath: msg.projectPath,
             createdAt: new Date().toISOString(),
@@ -1430,12 +1432,17 @@ export class BridgeWebSocketServer {
       }
 
       case "list_recordings": {
-        void this.recordingStore.listRecordings().then(async (recordings) => {
+        if (!this.recordingStore) {
+          this.send(ws, { type: "recording_list", recordings: [] } as Record<string, unknown>);
+          break;
+        }
+        const store = this.recordingStore;
+        void store.listRecordings().then(async (recordings) => {
           // First pass: extract info from JSONL for recordings missing firstPrompt
           // This covers both meta-less legacy recordings and new ones where sessions-index hasn't indexed yet
           await Promise.all(
             recordings.map(async (rec) => {
-              const info = await this.recordingStore.extractInfoFromJsonl(rec.name);
+              const info = await store.extractInfoFromJsonl(rec.name);
               if (info.firstPrompt && !rec.firstPrompt) rec.firstPrompt = info.firstPrompt;
               if (info.lastPrompt && !rec.lastPrompt) rec.lastPrompt = info.lastPrompt;
               // Backfill meta for legacy recordings
@@ -1481,6 +1488,10 @@ export class BridgeWebSocketServer {
       }
 
       case "get_recording": {
+        if (!this.recordingStore) {
+          this.send(ws, { type: "error", message: "Recording is not enabled on this server" });
+          break;
+        }
         void this.recordingStore.getRecordingContent(msg.sessionId).then((content) => {
           if (content !== null) {
             this.send(ws, { type: "recording_content", sessionId: msg.sessionId, content } as Record<string, unknown>);
@@ -1934,13 +1945,13 @@ export class BridgeWebSocketServer {
       type: msg.type,
       detail: this.summarizeServerMessage(msg),
     });
-    this.recordingStore.record(sessionId, "outgoing", msg);
+    this.recordingStore?.record(sessionId, "outgoing", msg);
 
     // Update recording meta with claudeSessionId when it becomes available
     if ((msg.type === "system" || msg.type === "result") && "sessionId" in msg && msg.sessionId) {
       const session = this.sessionManager.get(sessionId);
       if (session) {
-        this.recordingStore.saveMeta(sessionId, {
+        this.recordingStore?.saveMeta(sessionId, {
           bridgeSessionId: sessionId,
           claudeSessionId: msg.sessionId as string,
           projectPath: session.projectPath,

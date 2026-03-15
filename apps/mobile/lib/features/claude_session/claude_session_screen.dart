@@ -674,55 +674,57 @@ class _ChatScreenBody extends HookWidget {
                             child: SingleChildScrollView(
                               reverse: true,
                               child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (askToolUseId != null && askInput != null)
-                                  AskUserQuestionWidget(
-                                    toolUseId: askToolUseId,
-                                    input: askInput,
-                                    onAnswer: answerQuestion,
-                                    scrollable: false,
-                                  ),
-                                if (pendingToolUseId != null)
-                                  ApprovalBar(
-                                    key: ValueKey('approval_$pendingToolUseId'),
-                                    appColors: appColors,
-                                    pendingPermission: pendingPermission,
-                                    isPlanApproval: isPlanApproval,
-                                    planFeedbackController:
-                                        planFeedbackController,
-                                    onApprove: approveToolUse,
-                                    onReject: rejectToolUse,
-                                    onApproveAlways: approveAlwaysToolUse,
-                                    onApproveClearContext: isPlanApproval
-                                        ? approveWithClearContext
-                                        : null,
-                                    onViewPlan: isPlanApproval
-                                        ? () async {
-                                            final originalText =
-                                                _extractPlanText(
-                                                  sessionState.entries,
-                                                );
-                                            if (originalText == null) return;
-                                            final current =
-                                                editedPlanText.value ??
-                                                originalText;
-                                            final edited =
-                                                await showPlanDetailSheet(
-                                                  context,
-                                                  current,
-                                                  editable: true,
-                                                );
-                                            if (edited != null) {
-                                              editedPlanText.value = edited;
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (askToolUseId != null && askInput != null)
+                                    AskUserQuestionWidget(
+                                      toolUseId: askToolUseId,
+                                      input: askInput,
+                                      onAnswer: answerQuestion,
+                                      scrollable: false,
+                                    ),
+                                  if (pendingToolUseId != null)
+                                    ApprovalBar(
+                                      key: ValueKey(
+                                        'approval_$pendingToolUseId',
+                                      ),
+                                      appColors: appColors,
+                                      pendingPermission: pendingPermission,
+                                      isPlanApproval: isPlanApproval,
+                                      planFeedbackController:
+                                          planFeedbackController,
+                                      onApprove: approveToolUse,
+                                      onReject: rejectToolUse,
+                                      onApproveAlways: approveAlwaysToolUse,
+                                      onApproveClearContext: isPlanApproval
+                                          ? approveWithClearContext
+                                          : null,
+                                      onViewPlan: isPlanApproval
+                                          ? () async {
+                                              final originalText =
+                                                  _extractPlanText(
+                                                    sessionState.entries,
+                                                  );
+                                              if (originalText == null) return;
+                                              final current =
+                                                  editedPlanText.value ??
+                                                  originalText;
+                                              final edited =
+                                                  await showPlanDetailSheet(
+                                                    context,
+                                                    current,
+                                                    editable: true,
+                                                  );
+                                              if (edited != null) {
+                                                editedPlanText.value = edited;
+                                              }
                                             }
-                                          }
-                                        : null,
-                                  ),
-                              ],
+                                          : null,
+                                    ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
                     topOverlay: const Positioned(
                       top: 0,
                       left: 0,

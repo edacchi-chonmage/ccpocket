@@ -57,8 +57,10 @@ class _BottomOverlayLayoutState extends State<BottomOverlayLayout> {
 
         // Clamp so the padding never exceeds the Stack height
         // (e.g. when keyboard + overlay > available height).
-        final clampedObstruction =
-            bottomObstruction.clamp(0.0, constraints.maxHeight);
+        final clampedObstruction = bottomObstruction.clamp(
+          0.0,
+          constraints.maxHeight,
+        );
 
         return Stack(
           children: [

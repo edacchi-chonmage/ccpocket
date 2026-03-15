@@ -651,79 +651,86 @@ class _CodexChatBody extends HookWidget {
                                 children: [
                                   if (askToolUseId case final askId?
                                       when askInput != null)
-                                if (isMcpApprovalRequestUserInput(askInput))
-                                  ApprovalBar(
-                                    key: ValueKey('approval_ask_$askId'),
-                                    appColors: appColors,
-                                    pendingPermission: PermissionRequestMessage(
-                                      toolUseId: askId,
-                                      toolName: 'AskUserQuestion',
-                                      input: askInput,
+                                    if (isMcpApprovalRequestUserInput(askInput))
+                                      ApprovalBar(
+                                        key: ValueKey('approval_ask_$askId'),
+                                        appColors: appColors,
+                                        pendingPermission:
+                                            PermissionRequestMessage(
+                                              toolUseId: askId,
+                                              toolName: 'AskUserQuestion',
+                                              input: askInput,
+                                            ),
+                                        isPlanApproval: false,
+                                        planApprovalUiMode:
+                                            PlanApprovalUiMode.codex,
+                                        planFeedbackController:
+                                            planFeedbackController,
+                                        onApprove: () => answerQuestion(
+                                          askId,
+                                          mcpApprovalApproveOnce,
+                                        ),
+                                        onReject: () => answerQuestion(
+                                          askId,
+                                          mcpApprovalDeny,
+                                        ),
+                                        onApproveAlways: () => answerQuestion(
+                                          askId,
+                                          mcpApprovalApproveSession,
+                                        ),
+                                      )
+                                    else
+                                      AskUserQuestionWidget(
+                                        toolUseId: askId,
+                                        input: askInput,
+                                        onAnswer: answerQuestion,
+                                        scrollable: false,
+                                      ),
+                                  if (pendingToolUseId != null)
+                                    ApprovalBar(
+                                      key: ValueKey(
+                                        'approval_$pendingToolUseId',
+                                      ),
+                                      appColors: appColors,
+                                      pendingPermission: pendingPermission,
+                                      isPlanApproval: isPlanApproval,
+                                      planApprovalUiMode:
+                                          PlanApprovalUiMode.codex,
+                                      planFeedbackController:
+                                          planFeedbackController,
+                                      onApprove: approveToolUse,
+                                      onReject: rejectToolUse,
+                                      onApproveAlways: approveAlwaysToolUse,
+                                      onApproveClearContext: isPlanApproval
+                                          ? approveWithClearContext
+                                          : null,
+                                      onViewPlan: isPlanApproval
+                                          ? () async {
+                                              final originalText =
+                                                  _extractPlanText(
+                                                    pendingPermission,
+                                                    sessionState.entries,
+                                                  );
+                                              if (originalText == null) return;
+                                              final current =
+                                                  editedPlanText.value ??
+                                                  originalText;
+                                              final edited =
+                                                  await showPlanDetailSheet(
+                                                    context,
+                                                    current,
+                                                    editable: true,
+                                                  );
+                                              if (edited != null) {
+                                                editedPlanText.value = edited;
+                                              }
+                                            }
+                                          : null,
                                     ),
-                                    isPlanApproval: false,
-                                    planApprovalUiMode:
-                                        PlanApprovalUiMode.codex,
-                                    planFeedbackController:
-                                        planFeedbackController,
-                                    onApprove: () => answerQuestion(
-                                      askId,
-                                      mcpApprovalApproveOnce,
-                                    ),
-                                    onReject: () =>
-                                        answerQuestion(askId, mcpApprovalDeny),
-                                    onApproveAlways: () => answerQuestion(
-                                      askId,
-                                      mcpApprovalApproveSession,
-                                    ),
-                                  )
-                                else
-                                  AskUserQuestionWidget(
-                                    toolUseId: askId,
-                                    input: askInput,
-                                    onAnswer: answerQuestion,
-                                    scrollable: false,
-                                  ),
-                              if (pendingToolUseId != null)
-                                ApprovalBar(
-                                  key: ValueKey('approval_$pendingToolUseId'),
-                                  appColors: appColors,
-                                  pendingPermission: pendingPermission,
-                                  isPlanApproval: isPlanApproval,
-                                  planApprovalUiMode: PlanApprovalUiMode.codex,
-                                  planFeedbackController:
-                                      planFeedbackController,
-                                  onApprove: approveToolUse,
-                                  onReject: rejectToolUse,
-                                  onApproveAlways: approveAlwaysToolUse,
-                                  onApproveClearContext: isPlanApproval
-                                      ? approveWithClearContext
-                                      : null,
-                                  onViewPlan: isPlanApproval
-                                      ? () async {
-                                          final originalText = _extractPlanText(
-                                            pendingPermission,
-                                            sessionState.entries,
-                                          );
-                                          if (originalText == null) return;
-                                          final current =
-                                              editedPlanText.value ??
-                                              originalText;
-                                          final edited =
-                                              await showPlanDetailSheet(
-                                                context,
-                                                current,
-                                                editable: true,
-                                              );
-                                          if (edited != null) {
-                                            editedPlanText.value = edited;
-                                          }
-                                        }
-                                      : null,
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
-                        ),
                     topOverlay: const Positioned(
                       top: 0,
                       left: 0,

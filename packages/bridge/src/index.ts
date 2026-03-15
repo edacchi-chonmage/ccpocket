@@ -47,7 +47,8 @@ export async function startServer() {
   const galleryStore = new GalleryStore();
   const projectHistory = new ProjectHistory();
   const debugTraceStore = new DebugTraceStore();
-  const recordingStore = new RecordingStore();
+  const RECORDING_ENABLED = !!process.env.BRIDGE_RECORDING;
+  const recordingStore = RECORDING_ENABLED ? new RecordingStore() : undefined;
   const promptHistoryBackup = new PromptHistoryBackupStore();
   const mdns = new MdnsAdvertiser();
 
@@ -70,11 +71,13 @@ export async function startServer() {
     console.error("[bridge] Failed to initialize debug trace store:", err);
   });
 
-  recordingStore.init().then(() => {
-    console.log("[bridge] Recording store initialized");
-  }).catch((err) => {
-    console.error("[bridge] Failed to initialize recording store:", err);
-  });
+  if (recordingStore) {
+    recordingStore.init().then(() => {
+      console.log("[bridge] Recording enabled");
+    }).catch((err) => {
+      console.error("[bridge] Failed to initialize recording store:", err);
+    });
+  }
 
   promptHistoryBackup.init().then(() => {
     console.log("[bridge] Prompt history backup store initialized");
