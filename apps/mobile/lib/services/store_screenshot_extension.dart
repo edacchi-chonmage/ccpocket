@@ -15,10 +15,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marionette_flutter/marionette_flutter.dart';
 
 import '../features/claude_session/claude_session_screen.dart';
+import '../features/codex_session/codex_session_screen.dart';
 import '../features/diff/diff_screen.dart';
 import '../features/session_list/state/session_list_cubit.dart';
 import '../features/session_list/state/session_list_state.dart';
 import '../features/session_list/widgets/home_content.dart';
+import '../mock/mock_scenarios.dart';
 import '../mock/store_screenshot_data.dart';
 import '../models/messages.dart';
 import '../providers/bridge_cubits.dart';
@@ -97,6 +99,51 @@ void registerStoreScreenshotExtensions() {
       }
       navState.popUntil((route) => route.isFirst);
       return MarionetteExtensionResult.success({'status': 'popped'});
+    },
+  );
+
+  registerMarionetteExtension(
+    name: 'ccpocket.navigateToMockScenario',
+    description:
+        'Navigate directly to a mock scenario chat screen by name. '
+        'Available scenarios: ${mockScenarios.map((s) => s.name).join(", ")}',
+    callback: (params) async {
+      final name = params['scenario'];
+      if (name == null || name.isEmpty) {
+        return MarionetteExtensionResult.invalidParams(
+          'Missing required parameter: scenario',
+        );
+      }
+
+      final navState = StoreScreenshotState.navigatorKey?.currentState;
+      if (navState == null) {
+        return MarionetteExtensionResult.error(
+          1,
+          'Navigator not available yet.',
+        );
+      }
+
+      final scenario = mockScenarios.where((s) => s.name == name).firstOrNull;
+      if (scenario == null) {
+        return MarionetteExtensionResult.invalidParams(
+          'Unknown scenario: $name. '
+          'Available: ${mockScenarios.map((s) => s.name).join(", ")}',
+        );
+      }
+
+      try {
+        navState.push(
+          MaterialPageRoute(
+            builder: (_) => _MockScenarioChatRoute(scenario: scenario),
+          ),
+        );
+        return MarionetteExtensionResult.success({
+          'scenario': name,
+          'status': 'navigated',
+        });
+      } catch (e) {
+        return MarionetteExtensionResult.error(2, 'Navigation failed: $e');
+      }
     },
   );
 }
@@ -681,5 +728,76 @@ class _StoreNewSessionRouteState extends State<_StoreNewSessionRoute> {
     }
 
     return body;
+  }
+}
+
+// =============================================================================
+// Mock Scenario Route (for call_custom_extension navigation)
+// =============================================================================
+
+/// Chat route for mock scenario navigation via custom extension.
+///
+/// Mirrors `_MockChatWrapper` in mock_preview_screen.dart but works
+/// without a parent BuildContext (used by call_custom_extension).
+class _MockScenarioChatRoute extends StatefulWidget {
+  final MockScenario scenario;
+  const _MockScenarioChatRoute({required this.scenario});
+
+  @override
+  State<_MockScenarioChatRoute> createState() => _MockScenarioChatRouteState();
+}
+
+class _MockScenarioChatRouteState extends State<_MockScenarioChatRoute> {
+  late final MockBridgeService _mockService;
+
+  @override
+  void initState() {
+    super.initState();
+    _mockService = MockBridgeService();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _mockService.playScenario(widget.scenario);
+    });
+  }
+
+  @override
+  void dispose() {
+    _mockService.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sessionId =
+        'mock-${widget.scenario.name.toLowerCase().replaceAll(' ', '-')}';
+    return RepositoryProvider<BridgeService>.value(
+      value: _mockService,
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) => ConnectionCubit(
+              BridgeConnectionState.connected,
+              _mockService.connectionStatus,
+            ),
+          ),
+          BlocProvider(
+            create: (_) =>
+                ActiveSessionsCubit(const [], _mockService.sessionList),
+          ),
+          BlocProvider(
+            create: (_) => FileListCubit(const [], _mockService.fileList),
+          ),
+        ],
+        child: switch (widget.scenario.provider) {
+          MockScenarioProvider.codex => CodexSessionScreen(
+            sessionId: sessionId,
+            projectPath: '/mock/preview',
+          ),
+          MockScenarioProvider.claude => ClaudeSessionScreen(
+            sessionId: sessionId,
+            projectPath: '/mock/preview',
+          ),
+        },
+      ),
+    );
   }
 }

@@ -55,9 +55,19 @@ class _BottomOverlayLayoutState extends State<BottomOverlayLayout> {
         );
         final bottomObstruction = _overlayHeight + keyboardInset;
 
+        // Clamp so the padding never exceeds the Stack height
+        // (e.g. when keyboard + overlay > available height).
+        final clampedObstruction =
+            bottomObstruction.clamp(0.0, constraints.maxHeight);
+
         return Stack(
           children: [
-            widget.contentBuilder(bottomObstruction),
+            // Clip chat content above the overlay so messages don't
+            // scroll behind it.
+            Padding(
+              padding: EdgeInsets.only(bottom: clampedObstruction),
+              child: widget.contentBuilder(bottomObstruction),
+            ),
             if (widget.topOverlay != null) widget.topOverlay!,
             if (widget.floatingButtonBuilder != null)
               widget.floatingButtonBuilder!(bottomObstruction),
