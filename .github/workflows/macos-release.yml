@@ -46,21 +46,10 @@ jobs:
       - name: Fetch Developer ID signing files
         run: |
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type MAC_APP_DISTRIBUTION \
+            --type MAC_APP_DIRECT \
             --platform MAC_OS --create
         env:
           BUNDLE_ID: com.k9i.ccpocket
-
-      - name: Fetch Developer ID installer certificate
-        run: |
-          app-store-connect certificates list \
-            --type DEVELOPER_ID_APPLICATION \
-            --certificate-key=@env:CERTIFICATE_PRIVATE_KEY \
-            --save || \
-          app-store-connect certificates create \
-            --type DEVELOPER_ID_APPLICATION \
-            --certificate-key=@env:CERTIFICATE_PRIVATE_KEY \
-            --save
 
       - name: Setup keychain
         run: keychain initialize
