@@ -63,6 +63,7 @@ final List<MockScenario> mockScenarios = [
   _subagentSummary,
   _errorScenario,
   _authErrorScenario,
+  _assistantAuthErrorScenario,
   _fullConversation,
   // Chat session scenarios — Codex
   _codexPlanApproval,
@@ -2087,6 +2088,40 @@ final _authErrorScenario = MockScenario(
             'OAuth token refresh failed: invalid_grant\n\n'
             'Run "claude auth login" on the Bridge machine to re-authenticate.',
         errorCode: 'auth_login_required',
+      ),
+    ),
+    MockStep(
+      delay: const Duration(milliseconds: 1000),
+      message: const StatusMessage(status: ProcessStatus.idle),
+    ),
+  ],
+);
+
+final _assistantAuthErrorScenario = MockScenario(
+  name: 'Assistant Auth Error',
+  icon: Icons.lock_clock_outlined,
+  description:
+      'Auth failure delivered as assistant text should still use auth UI',
+  steps: [
+    MockStep(
+      delay: const Duration(milliseconds: 300),
+      message: const StatusMessage(status: ProcessStatus.running),
+    ),
+    MockStep(
+      delay: const Duration(milliseconds: 800),
+      message: AssistantServerMessage(
+        message: AssistantMessage(
+          id: 'mock-auth-assistant',
+          role: 'assistant',
+          content: [
+            TextContent(
+              text:
+                  'Failed to authenticate. API Error: 401\n'
+                  '{"type":"error","error":{"type":"authentication_error","message":"OAuth token has expired. Please obtain a new token or refresh your existing token."}}',
+            ),
+          ],
+          model: 'claude-opus-4-6',
+        ),
       ),
     ),
     MockStep(

@@ -90,6 +90,39 @@ void main() {
       );
     });
 
+    patrolWidgetTest(
+      'I4b: assistant auth text is promoted to structured auth error',
+      ($) async {
+        await $.pumpWidget(await buildTestChatScreen(bridge: bridge));
+        await pumpN($.tester);
+
+        await emitAndPump($.tester, bridge, [
+          const StatusMessage(status: ProcessStatus.running),
+          AssistantServerMessage(
+            message: AssistantMessage(
+              id: 'auth-assistant',
+              role: 'assistant',
+              model: 'claude-opus-4-6',
+              content: [
+                TextContent(
+                  text:
+                      'Failed to authenticate. API Error: 401\n'
+                      '{"type":"error","error":{"type":"authentication_error","message":"OAuth token has expired. Please obtain a new token or refresh your existing token."}}',
+                ),
+              ],
+            ),
+          ),
+        ]);
+        await pumpN($.tester);
+
+        expect($('Authentication Error'), findsOneWidget);
+        expect(
+          $('Run "claude auth login" on the Bridge machine'),
+          findsOneWidget,
+        );
+      },
+    );
+
     patrolWidgetTest('I5: path_not_allowed error shows path hint', ($) async {
       await $.pumpWidget(await buildTestChatScreen(bridge: bridge));
       await pumpN($.tester);

@@ -11,8 +11,10 @@ import '../../router/app_router.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/markdown_style.dart';
+import '../../utils/structured_error_inference.dart';
 import '../../utils/diff_parser.dart';
 import '../../utils/tool_categories.dart';
+import 'error_bubble.dart';
 import '../plan_detail_sheet.dart';
 import 'inline_edit_diff.dart';
 import 'message_action_bar.dart';
@@ -61,6 +63,18 @@ class _AssistantBubbleState extends State<AssistantBubble> {
     final hasPlanExit = contents.any(
       (c) => c is ToolUseContent && c.name == 'ExitPlanMode',
     );
+    final inferredErrorCode = inferStructuredErrorCode(message: _allText());
+    final hasOnlyTextContent =
+        contents.isNotEmpty && contents.every((c) => c is TextContent);
+
+    if (hasOnlyTextContent && inferredErrorCode != null) {
+      return ErrorBubble(
+        message: ErrorMessage(
+          message: _allText(),
+          errorCode: inferredErrorCode,
+        ),
+      );
+    }
 
     if (hasPlanExit) {
       return _PlanLayout(

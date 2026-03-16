@@ -7,6 +7,7 @@ import '../../models/messages.dart';
 import '../../router/app_router.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/structured_error_inference.dart';
 
 /// Maps errorCode to a localized title for the error bubble header.
 String? _errorTitle(String? errorCode) {
@@ -63,10 +64,14 @@ class ErrorBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appColors = Theme.of(context).extension<AppColors>()!;
-    final title = _errorTitle(message.errorCode);
-    final hint = _errorHint(message.errorCode);
+    final resolvedErrorCode = inferStructuredErrorCode(
+      message: message.message,
+      explicitErrorCode: message.errorCode,
+    );
+    final title = _errorTitle(resolvedErrorCode);
+    final hint = _errorHint(resolvedErrorCode);
     final hasStructured = title != null;
-    final isWarn = _isWarning(message.errorCode);
+    final isWarn = _isWarning(resolvedErrorCode);
 
     final bubbleColor = isWarn
         ? appColors.warningBubble
@@ -152,7 +157,12 @@ class ErrorBubble extends StatelessWidget {
           const SizedBox(height: 8),
           _buildHint(context, textColor, hint),
         ],
-        if (_isClaudeAuthError(message.errorCode)) ...[
+        if (_isClaudeAuthError(
+          inferStructuredErrorCode(
+            message: message.message,
+            explicitErrorCode: message.errorCode,
+          ),
+        )) ...[
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -179,7 +189,12 @@ class ErrorBubble extends StatelessWidget {
   }
 
   Widget _buildHint(BuildContext context, Color textColor, String hint) {
-    final command = _copyableCommand(message.errorCode);
+    final command = _copyableCommand(
+      inferStructuredErrorCode(
+        message: message.message,
+        explicitErrorCode: message.errorCode,
+      ),
+    );
     final child = Container(
       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
       decoration: BoxDecoration(
