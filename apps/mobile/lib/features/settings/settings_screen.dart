@@ -10,6 +10,7 @@ import 'package:shorebird_code_push/shorebird_code_push.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../constants/app_constants.dart';
+import '../../services/app_update_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/machine_manager_cubit.dart';
 import '../../router/app_router.dart';
@@ -397,6 +398,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     // Version
                     const _VersionTile(),
+                    const _AppUpdateTile(),
                     Divider(
                       height: 1,
                       indent: 16,
@@ -686,6 +688,37 @@ class _VersionTileState extends State<_VersionTile> {
           ),
         );
       },
+    );
+  }
+}
+
+/// Shows a download link when a newer macOS version is available.
+///
+/// Only visible on macOS desktop. Reads from [AppUpdateService.cachedUpdate].
+class _AppUpdateTile extends StatelessWidget {
+  const _AppUpdateTile();
+
+  @override
+  Widget build(BuildContext context) {
+    final update = AppUpdateService.instance.cachedUpdate;
+    if (update == null) return const SizedBox.shrink();
+
+    final cs = Theme.of(context).colorScheme;
+    return ListTile(
+      leading: Icon(Icons.upgrade, color: cs.primary),
+      title: Text(
+        'v${update.latestVersion} が利用可能',
+        style: TextStyle(color: cs.primary, fontWeight: FontWeight.w600),
+      ),
+      trailing: TextButton(
+        onPressed: () async {
+          final uri = Uri.parse(update.downloadUrl);
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          }
+        },
+        child: const Text('Download'),
+      ),
     );
   }
 }

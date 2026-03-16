@@ -7,6 +7,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 import '../../../constants/app_constants.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../models/messages.dart';
+import '../../../services/app_update_service.dart';
 import '../../../services/draft_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/session_card.dart';
@@ -15,6 +16,7 @@ import '../state/session_list_state.dart';
 import 'section_header.dart';
 import 'session_filter_bar.dart';
 import 'session_list_empty_state.dart';
+import 'app_update_banner.dart';
 import 'bridge_update_banner.dart';
 import 'session_reconnect_banner.dart';
 
@@ -65,6 +67,8 @@ class HomeContent extends StatefulWidget {
   final bool namedOnly;
   final VoidCallback onToggleProvider;
   final VoidCallback onToggleNamed;
+  final AppUpdateInfo? appUpdateInfo;
+  final VoidCallback? onDismissAppUpdate;
 
   const HomeContent({
     super.key,
@@ -97,6 +101,8 @@ class HomeContent extends StatefulWidget {
     required this.namedOnly,
     required this.onToggleProvider,
     required this.onToggleNamed,
+    this.appUpdateInfo,
+    this.onDismissAppUpdate,
   });
 
   @override
@@ -169,6 +175,14 @@ class _HomeContentState extends State<HomeContent> {
     });
   }
 
+  Widget? _buildAppUpdateBanner() {
+    if (widget.appUpdateInfo == null) return null;
+    return AppUpdateBanner(
+      updateInfo: widget.appUpdateInfo!,
+      onDismiss: widget.onDismissAppUpdate,
+    );
+  }
+
   Widget? _buildUpdateBanner() {
     if (_updateBannerDismissed) return null;
     if (!BridgeUpdateBanner.shouldShow(
@@ -193,6 +207,7 @@ class _HomeContentState extends State<HomeContent> {
     final isReconnecting =
         widget.connectionState == BridgeConnectionState.reconnecting;
     final updateBanner = _buildUpdateBanner();
+    final appUpdateBanner = _buildAppUpdateBanner();
 
     // Compute derived state
     // Exclude running sessions from recent list to avoid duplicates
@@ -237,6 +252,7 @@ class _HomeContentState extends State<HomeContent> {
           children: [
             if (isReconnecting) const SessionReconnectBanner(),
             ?updateBanner,
+            ?appUpdateBanner,
             SectionHeader(
               icon: Icons.history,
               label: 'Recent Sessions',

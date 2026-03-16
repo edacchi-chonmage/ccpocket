@@ -16,6 +16,7 @@ import '../../providers/machine_manager_cubit.dart';
 import '../../providers/unseen_sessions_cubit.dart';
 import '../../providers/server_discovery_cubit.dart';
 import '../../router/app_router.dart';
+import '../../services/app_update_service.dart';
 import '../../services/bridge_service.dart';
 import '../../services/connection_url_parser.dart';
 import '../../services/server_discovery_service.dart';
@@ -124,6 +125,9 @@ class _SessionListScreenState extends State<SessionListScreen>
   StreamSubscription<ServerMessage>? _messageSub;
   final Set<String> _archivingSessionIds = <String>{};
 
+  // macOS app update
+  AppUpdateInfo? _appUpdateInfo;
+
   // Unseen session tracking
   final _unseenCubit = UnseenSessionsCubit();
   StreamSubscription<List<SessionInfo>>? _activeSessionsSub;
@@ -195,6 +199,19 @@ class _SessionListScreenState extends State<SessionListScreen>
     final activeCubit = context.read<ActiveSessionsCubit>();
     _unseenCubit.updateSessions(activeCubit.state);
     _activeSessionsSub = activeCubit.stream.listen(_unseenCubit.updateSessions);
+    _checkAppUpdate();
+  }
+
+  Future<void> _checkAppUpdate() async {
+    final update = await AppUpdateService.instance.checkForUpdate();
+    if (update != null && !AppUpdateService.instance.isDismissedByUser && mounted) {
+      setState(() => _appUpdateInfo = update);
+    }
+  }
+
+  void _dismissAppUpdate() {
+    AppUpdateService.instance.dismissUpdate();
+    setState(() => _appUpdateInfo = null);
   }
 
   void _onDeepLink() {
@@ -1003,7 +1020,12 @@ class _SessionListScreenState extends State<SessionListScreen>
                   actions: [
                     IconButton(
                       key: const ValueKey('settings_button'),
-                      icon: const Icon(Icons.settings),
+                      icon: Badge(
+                        isLabelVisible:
+                            AppUpdateService.instance.cachedUpdate != null,
+                        smallSize: 8,
+                        child: const Icon(Icons.settings),
+                      ),
                       onPressed: () =>
                           context.router.push(const SettingsRoute()),
                       tooltip: l.settings,
@@ -1137,6 +1159,8 @@ class _SessionListScreenState extends State<SessionListScreen>
                           onToggleNamed: () => context
                               .read<SessionListCubit>()
                               .toggleNamedOnly(),
+                          appUpdateInfo: _appUpdateInfo,
+                          onDismissAppUpdate: _dismissAppUpdate,
                         ),
                       )
                     : connectionState == BridgeConnectionState.connecting
