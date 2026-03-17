@@ -2,6 +2,11 @@
 
 All notable changes to `@ccpocket/bridge` will be documented in this file.
 
+## [1.22.1] - 2026-03-17
+
+### Fixed
+- "Invalid message format" error when app sends `refresh_branch` message (missing parser case)
+
 ## [1.22.0] - 2026-03-17
 
 ### Added
