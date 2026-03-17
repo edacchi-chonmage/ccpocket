@@ -45,5 +45,5 @@ That's it — you're ready to go in under 5 minutes.
 • A Mac or Linux machine with Claude Code or Codex CLI installed
 • Network connectivity between your phone and the server (local network or Tailscale recommended)
 
-<b>OPEN SOURCE</b>
+<b>SOURCE CODE</b>
 https://github.com/K9i-0/ccpocket

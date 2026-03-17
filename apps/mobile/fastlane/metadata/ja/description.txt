@@ -45,5 +45,5 @@ Markdown記法と箇条書きの自動補完で快適に入力。クリップボ
 - Claude CodeまたはCodex CLIがインストール済みのMacまたはLinuxマシン
 - スマホとサーバー間のネットワーク接続（ローカルネットワークまたはTailscale推奨）
 
-オープンソース
+ソースコード公開
 https://github.com/K9i-0/ccpocket

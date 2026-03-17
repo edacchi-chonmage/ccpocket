@@ -1,21 +1,71 @@
-MIT License
+Functional Source License, Version 1.1, MIT Future License
 
-Copyright (c) 2026 K9i
+Abbreviation
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+    FSL-1.1-MIT
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Notice
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+    Copyright 2026 K9i
+
+    Licensed under the Functional Source License, Version 1.1 (the "License");
+    you may not use this software except in compliance with the License. You may
+    obtain a copy of the License at
+
+        https://fsl.software/FSL-1.1-MIT.template.md
+
+Terms and Conditions
+
+Licensor:             K9i
+
+Licensed Work:        CC Pocket
+                      The Licensed Work is (c) 2026 K9i.
+
+Additional Use Grant: You may make use of the Licensed Work, provided that you
+                      may not use the Licensed Work for a Competing Use.
+                      A Competing Use is making the Licensed Work available to
+                      third parties as a commercial product or service that
+                      provides substantially the same functionality as the
+                      Licensed Work.
+
+Change Date:          The earlier of 2028-03-17 or a date specified at
+                      https://github.com/K9i-0/ccpocket
+
+Change License:       MIT
+
+For information about alternative licensing arrangements for the Licensed Work,
+please contact the Licensor.
+
+Notice
+
+THE LICENSED WORK IS PROVIDED "AS IS". THE LICENSOR HEREBY DISCLAIMS ALL
+WARRANTIES, WHETHER EXPRESS, IMPLIED, STATUTORY, OR OTHERWISE, WITH RESPECT TO
+THE LICENSED WORK, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+LICENSOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN
+CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE
+LICENSED WORK OR THE USE OR OTHER DEALINGS IN THE LICENSED WORK.
+
+---
+
+Functional Source License, Version 1.1, MIT Future License
+
+Full text: https://fsl.software/FSL-1.1-MIT.template.md
+
+Parameters
+
+  Licensor:             K9i
+  Licensed Work:        CC Pocket (https://github.com/K9i-0/ccpocket)
+  Additional Use Grant: Competing Use is not allowed. "Competing Use" means
+                        making the Licensed Work available to third parties
+                        as a commercial product or service that provides
+                        substantially the same functionality.
+  Change Date:          2028-03-17
+  Change License:       MIT
+
+Summary
+
+  - Use, modify, and distribute for personal and internal purposes: Allowed
+  - Contribute back to this project: Allowed and encouraged
+  - Use as a competing commercial product or service: Not allowed
+  - After the Change Date, the license converts to MIT automatically

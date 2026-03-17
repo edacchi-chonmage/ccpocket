@@ -45,5 +45,5 @@ REQUIREMENTS
 - A Mac or Linux machine with Claude Code or Codex CLI installed
 - Network connectivity between your phone and the server (local network or Tailscale recommended)
 
-OPEN SOURCE
+SOURCE CODE
 https://github.com/K9i-0/ccpocket

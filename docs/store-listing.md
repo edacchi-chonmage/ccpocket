@@ -40,7 +40,7 @@ ccpocket connects to a self-hosted Bridge Server running on your Mac or PC, givi
 - A Mac or PC running the Bridge Server (Node.js v18+)
 - Claude Code CLI and/or Codex CLI installed on the server
 
-ccpocket is open source. Visit https://github.com/K9i-0/ccpocket for more information.
+Source code available at https://github.com/K9i-0/ccpocket
 
 ### Japanese (日本語)
 
@@ -71,7 +71,7 @@ ccpocketは、MacやPC上で動作するセルフホストのBridge Serverに接
 - Bridge Serverを動かすMacまたはPC（Node.js v18以上）
 - サーバーにClaude Code CLIおよび/またはCodex CLIがインストール済み
 
-ccpocketはオープンソースです。詳細は https://github.com/K9i-0/ccpocket をご覧ください。
+ソースコードは https://github.com/K9i-0/ccpocket で公開しています。
 
 ## Category
 
@@ -86,7 +86,7 @@ claude,code,codex,ai,coding,agent,mobile,bridge,ssh,remote
 
 - No violence, nudity, or mature content
 - No user-generated content sharing
-- No in-app purchases
+- In-app purchases (optional Pro plan)
 - No ads
 
 ## Privacy

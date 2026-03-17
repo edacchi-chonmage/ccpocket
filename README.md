@@ -52,7 +52,7 @@ CC Pocket takes a different approach: **sessions start on your phone and run to 
 | Session origin | Start on Mac, hand off to phone | Start on phone |
 | Primary device | Mac (phone joins later) | Phone (Mac runs in background) |
 | Use case | Continue a desktop task on the go | Start coding from anywhere |
-| Setup | Built into Claude Code | Self-hosted Bridge Server (open-source) |
+| Setup | Built into Claude Code | Self-hosted Bridge Server |
 
 **What this means in practice:**
 - You **can** start a brand-new session and run it entirely from your phone
@@ -274,4 +274,4 @@ cd apps/mobile && flutter pub get && cd ../..
 
 ## License
 
-[MIT](LICENSE)
+[FSL-1.1-MIT](LICENSE) — Source available. Converts to MIT on 2028-03-17.
