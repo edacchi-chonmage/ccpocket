@@ -78,7 +78,7 @@ jobs:
       - name: Find and sign app
         id: sign
         run: |
-          APP_PATH="apps/mobile/build/macos/Build/Products/Release/ccpocket.app"
+          APP_PATH="apps/mobile/build/macos/Build/Products/Release/CC Pocket.app"
           echo "app_path=$APP_PATH" >> "$GITHUB_OUTPUT"
 
           # Find Developer ID Application identity
@@ -109,7 +109,7 @@ jobs:
         id: dmg
         run: |
           APP_PATH="${{ steps.sign.outputs.app_path }}"
-          DMG_NAME="ccpocket-macos.dmg"
+          DMG_NAME="CC-Pocket-macos.dmg"
 
           # Create DMG with Applications symlink and styled window
           create-dmg \
@@ -117,7 +117,7 @@ jobs:
             --window-pos 200 120 \
             --window-size 600 400 \
             --icon-size 100 \
-            --icon "ccpocket.app" 150 185 \
+            --icon "CC Pocket.app" 150 185 \
             --app-drop-link 450 185 \
             --no-internet-enable \
             "$DMG_NAME" \
@@ -174,7 +174,7 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           SEMVER="${VERSION%%+*}"
-          VERSIONED_DMG="ccpocket-macos-v${SEMVER}.dmg"
+          VERSIONED_DMG="CC-Pocket-macos-v${SEMVER}.dmg"
           mv "${{ steps.dmg.outputs.dmg_path }}" "$VERSIONED_DMG"
           echo "dmg_path=$VERSIONED_DMG" >> "$GITHUB_OUTPUT"
 
