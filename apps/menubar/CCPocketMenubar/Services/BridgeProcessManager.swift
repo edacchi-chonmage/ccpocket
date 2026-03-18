@@ -61,14 +61,19 @@ final class BridgeProcessManager: Sendable {
         }
     }
 
-    /// Start the Bridge via launchctl.
-    func startService() async throws {
-        try await shell("launchctl start \(serviceLabel)")
+    private var plistPath: String {
+        NSHomeDirectory() + "/Library/LaunchAgents/\(serviceLabel).plist"
     }
 
-    /// Stop the Bridge via launchctl.
+    /// Start the Bridge by loading the launchd service.
+    func startService() async throws {
+        try await shell("launchctl load \(plistPath)")
+    }
+
+    /// Stop the Bridge by unloading the launchd service.
+    /// Using unload (not stop) so KeepAlive doesn't restart the process.
     func stopService() async throws {
-        try await shell("launchctl stop \(serviceLabel)")
+        try await shell("launchctl unload \(plistPath)")
     }
 
     /// Setup (register) the launchd service.
