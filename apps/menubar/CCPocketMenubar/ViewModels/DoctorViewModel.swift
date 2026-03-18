@@ -7,8 +7,24 @@ final class DoctorViewModel: ObservableObject {
     @Published var actionInProgress: String?
     @Published var actionError: String?
 
+    #if DEBUG
+    @Published var mockScenario: MockDoctorScenario?
+    #endif
+
     private let doctorRunner = DoctorRunner()
     private let processManager = BridgeProcessManager()
+
+    init() {
+        #if DEBUG
+        // Pick up mock scenario from launch arguments (set by AppDelegate)
+        if let raw = UserDefaults.standard.string(forKey: "mockDoctorScenario"),
+           let scenario = MockDoctorScenario(rawValue: raw) {
+            mockScenario = scenario
+            // Clear so subsequent launches aren't affected
+            UserDefaults.standard.removeObject(forKey: "mockDoctorScenario")
+        }
+        #endif
+    }
 
     var requiredChecks: [CheckResult] {
         report?.results.filter { $0.category == "required" } ?? []
@@ -29,6 +45,13 @@ final class DoctorViewModel: ObservableObject {
         actionError = nil
 
         Task {
+            #if DEBUG
+            if let mockScenario {
+                report = mockScenario.buildReport()
+                isRunning = false
+                return
+            }
+            #endif
             do {
                 report = try await doctorRunner.runDoctor()
             } catch {
@@ -37,6 +60,13 @@ final class DoctorViewModel: ObservableObject {
             isRunning = false
         }
     }
+
+    #if DEBUG
+    func setMockScenario(_ scenario: MockDoctorScenario?) {
+        mockScenario = scenario
+        report = scenario?.buildReport()
+    }
+    #endif
 
     func setupBridge(port: Int? = nil, apiKey: String? = nil) {
         performAction(String(localized: "Setting up Bridge…")) {
