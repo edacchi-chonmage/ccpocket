@@ -86,65 +86,49 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    // MARK: - Menu Bar Icon (drawn in code)
+    // MARK: - Menu Bar Icon (Drawn in code)
 
-    /// Create "cc" logo icon for the menu bar. Drawn programmatically to avoid
-    /// asset catalog issues. Returns a template image at 18×18 pt (Retina-ready).
+    /// Create "cc" logo icon for the menu bar. Drawn programmatically using strokes 
+    /// with rounded caps to perfectly match the aesthetic of the CC Pocket logo.
     private static func createMenuBarIcon() -> NSImage {
         let size = NSSize(width: 18, height: 18)
         let image = NSImage(size: size, flipped: false) { rect in
-            NSColor.black.setFill()
-
-            // Left C: arc with gap on the right
+            NSColor.clear.setFill()
+            rect.fill()
+            
+            NSColor.black.setStroke()
+            
+            let thickness: CGFloat = 2.16
+            let radius: CGFloat = 4.5
+            let cy: CGFloat = 9.0
+            let gapHalf: CGFloat = 40.4 // Degrees
+            
+            // Left C
             let leftC = NSBezierPath()
-            let cx1: CGFloat = 6.8, cy1: CGFloat = 7.5
-            let outerR1: CGFloat = 5.5, innerR1: CGFloat = 3.5
-            let gapHalf1: CGFloat = 52.0  // degrees
-
-            // Outer arc (counterclockwise from bottom-gap to top-gap)
+            leftC.lineWidth = thickness
+            leftC.lineCapStyle = .round
             leftC.appendArc(
-                withCenter: NSPoint(x: cx1, y: cy1),
-                radius: outerR1,
-                startAngle: -gapHalf1,
-                endAngle: gapHalf1,
-                clockwise: true
-            )
-            // Inner arc back (clockwise)
-            leftC.appendArc(
-                withCenter: NSPoint(x: cx1, y: cy1),
-                radius: innerR1,
-                startAngle: gapHalf1,
-                endAngle: -gapHalf1,
+                withCenter: NSPoint(x: 7.75, y: cy),
+                radius: radius,
+                startAngle: gapHalf,
+                endAngle: -gapHalf,
                 clockwise: false
             )
-            leftC.close()
-            leftC.fill()
-
-            // Right C: arc with gap on the left (mirrored)
+            leftC.stroke()
+            
+            // Right C
             let rightC = NSBezierPath()
-            let cx2: CGFloat = 11.2, cy2: CGFloat = 10.5
-            let outerR2: CGFloat = 5.5, innerR2: CGFloat = 3.5
-            let gapHalf2: CGFloat = 52.0
-
-            // Outer arc (gap faces left = 180°)
+            rightC.lineWidth = thickness
+            rightC.lineCapStyle = .round
             rightC.appendArc(
-                withCenter: NSPoint(x: cx2, y: cy2),
-                radius: outerR2,
-                startAngle: 180 - gapHalf2,
-                endAngle: 180 + gapHalf2,
-                clockwise: true
-            )
-            // Inner arc back
-            rightC.appendArc(
-                withCenter: NSPoint(x: cx2, y: cy2),
-                radius: innerR2,
-                startAngle: 180 + gapHalf2,
-                endAngle: 180 - gapHalf2,
+                withCenter: NSPoint(x: 11.35, y: cy),
+                radius: radius,
+                startAngle: gapHalf,
+                endAngle: -gapHalf,
                 clockwise: false
             )
-            rightC.close()
-            rightC.fill()
-
+            rightC.stroke()
+            
             return true
         }
         image.isTemplate = true
