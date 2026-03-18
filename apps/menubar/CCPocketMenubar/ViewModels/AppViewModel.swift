@@ -63,25 +63,6 @@ final class AppViewModel: ObservableObject {
 
     private let bridgeClient = BridgeClient()
     private let processManager = BridgeProcessManager()
-    private var healthTimer: Timer?
-
-    func startPolling() {
-        checkHealth()
-        healthTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.checkHealth()
-            }
-        }
-    }
-
-    func stopPolling() {
-        healthTimer?.invalidate()
-        healthTimer = nil
-    }
-
-    func onPopoverOpen() {
-        checkHealth()
-    }
 
     func toggleBridge() {
         Task {
@@ -102,7 +83,7 @@ final class AppViewModel: ObservableObject {
         }
     }
 
-    private func checkHealth() {
+    func checkHealth() {
         Task {
             let running = await bridgeClient.isRunning()
             bridgeStatus = running ? .running : .stopped

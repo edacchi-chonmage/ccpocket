@@ -22,7 +22,7 @@ struct QRCodePageView: View {
                     }
                     .padding(20)
                     .frame(maxWidth: .infinity)
-                    .glassEffect(.regular, in: .rect(cornerRadius: 16))
+                    .background(.white.opacity(0.06), in: .rect(cornerRadius: 16))
                 } else {
                     ContentUnavailableView {
                         Label("No Network", systemImage: "wifi.slash")
@@ -69,7 +69,7 @@ struct QRCodePageView: View {
                         }
                     }
                 }
-                .glassEffect(.regular, in: .rect(cornerRadius: 12))
+                .background(.white.opacity(0.06), in: .rect(cornerRadius: 12))
             }
             .padding(16)
         }

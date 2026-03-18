@@ -10,37 +10,38 @@ struct PopoverContentView: View {
     @State private var previousTabIndex = 0
 
     var body: some View {
-        VStack(spacing: 0) {
-            HeaderView(viewModel: viewModel)
-                .padding(.horizontal, 16)
-                .padding(.top, 12)
-                .padding(.bottom, 8)
+        GlassEffectContainer {
+            VStack(spacing: 0) {
+                HeaderView(viewModel: viewModel)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 12)
+                    .padding(.bottom, 8)
 
-            GlassTabBar(selectedTab: $viewModel.selectedTab)
-                .padding(.horizontal, 16)
-                .padding(.bottom, 4)
+                GlassTabBar(selectedTab: $viewModel.selectedTab)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 4)
 
-            // Content area with directional slide transition
-            ZStack {
-                switch viewModel.selectedTab {
-                case .usage:
-                    UsagePageView(viewModel: usageVM, bridgeStatus: viewModel.bridgeStatus)
-                        .transition(slideTransition)
-                case .qrCode:
-                    QRCodePageView(viewModel: qrCodeVM)
-                        .transition(slideTransition)
-                case .doctor:
-                    DoctorPageView(viewModel: doctorVM)
-                        .transition(slideTransition)
+                // Content area with directional slide transition
+                ZStack {
+                    switch viewModel.selectedTab {
+                    case .usage:
+                        UsagePageView(viewModel: usageVM, bridgeStatus: viewModel.bridgeStatus)
+                            .transition(slideTransition)
+                    case .qrCode:
+                        QRCodePageView(viewModel: qrCodeVM)
+                            .transition(slideTransition)
+                    case .doctor:
+                        DoctorPageView(viewModel: doctorVM)
+                            .transition(slideTransition)
+                    }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
+                .animation(.smooth(duration: 0.3), value: viewModel.selectedTab)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .clipped()
-            .animation(.smooth(duration: 0.3), value: viewModel.selectedTab)
+            .frame(width: 380, height: 500)
+            .glassEffect(.regular, in: .rect(cornerRadius: 12))
         }
-        .frame(width: 380, height: 500)
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
         .onChange(of: viewModel.selectedTab) { oldTab, newTab in
             previousTabIndex = oldTab.rawValue
             switch newTab {
@@ -54,16 +55,12 @@ struct PopoverContentView: View {
                 }
             }
         }
-        .onChange(of: viewModel.bridgeStatus) { _, newStatus in
-            if newStatus == .running && viewModel.selectedTab == .usage {
+        .onAppear {
+            // Fetch on popover open instead of polling
+            viewModel.checkHealth()
+            if viewModel.selectedTab == .usage {
                 usageVM.fetchUsage()
             }
-        }
-        .onAppear {
-            usageVM.startAutoRefresh()
-        }
-        .onDisappear {
-            usageVM.stopAutoRefresh()
         }
     }
 

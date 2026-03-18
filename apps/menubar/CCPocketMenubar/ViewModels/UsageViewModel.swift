@@ -8,22 +8,6 @@ final class UsageViewModel: ObservableObject {
     @Published var error: String?
 
     private let bridgeClient = BridgeClient()
-    private var refreshTimer: Timer?
-
-    func startAutoRefresh() {
-        // Don't fetch immediately — let onChange(bridgeStatus) trigger the first fetch
-        // once bridge is confirmed running
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.fetchUsage()
-            }
-        }
-    }
-
-    func stopAutoRefresh() {
-        refreshTimer?.invalidate()
-        refreshTimer = nil
-    }
 
     func fetchUsage() {
         guard !isLoading else { return }

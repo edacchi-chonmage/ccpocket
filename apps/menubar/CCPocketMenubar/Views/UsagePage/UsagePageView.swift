@@ -91,6 +91,6 @@ private struct ProviderUsageCard: View {
             }
         }
         .padding(16)
-        .glassEffect(.regular, in: .rect(cornerRadius: 14))
+        .background(.white.opacity(0.06), in: .rect(cornerRadius: 14))
     }
 }

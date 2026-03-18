@@ -50,7 +50,7 @@ struct DoctorPageView: View {
                             .disabled(viewModel.isRunning)
                         }
                         .padding(14)
-                        .glassEffect(.regular, in: .rect(cornerRadius: 12))
+                        .background(.white.opacity(0.06), in: .rect(cornerRadius: 12))
 
                         // Required checks
                         if !viewModel.requiredChecks.isEmpty {
@@ -122,7 +122,7 @@ struct DoctorPageView: View {
                         .padding(.vertical, 10)
                 }
             }
-            .glassEffect(.regular, in: .rect(cornerRadius: 12))
+            .background(.white.opacity(0.06), in: .rect(cornerRadius: 12))
         }
     }
 
