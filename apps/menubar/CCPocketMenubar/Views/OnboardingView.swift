@@ -288,10 +288,16 @@ struct OnboardingView: View {
 
             let checkPassed = check.status == "pass"
             for entry in commands {
+                #if DEBUG
+                let commandDone = doctorVM.completedCommands.contains(entry.command)
+                let isPassed = checkPassed || commandDone
+                #else
+                let isPassed = checkPassed
+                #endif
                 steps.append(SetupStep(
                     comment: entry.comment,
                     command: entry.command,
-                    isPassed: checkPassed
+                    isPassed: isPassed
                 ))
             }
         }
