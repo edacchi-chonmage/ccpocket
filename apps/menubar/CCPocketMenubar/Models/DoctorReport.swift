@@ -21,6 +21,15 @@ struct CheckResult: Codable, Identifiable {
 
     var id: String { name }
 
+    /// Localized check name (maps Bridge's English name to localized string).
+    var localizedName: String {
+        // The key matches the English name in Localizable.xcstrings
+        let key = String.LocalizationValue(stringLiteral: name)
+        let localized = String(localized: key)
+        // If no translation found, String(localized:) returns the key itself
+        return localized
+    }
+
     var statusIcon: String {
         switch status {
         case "pass": return "checkmark.circle.fill"

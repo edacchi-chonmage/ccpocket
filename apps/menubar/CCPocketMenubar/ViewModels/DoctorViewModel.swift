@@ -39,43 +39,43 @@ final class DoctorViewModel: ObservableObject {
     }
 
     func setupBridge(port: Int? = nil, apiKey: String? = nil) {
-        performAction("Setting up Bridge…") {
+        performAction(String(localized: "Setting up Bridge…")) {
             try await self.processManager.setupService(port: port, apiKey: apiKey)
         }
     }
 
     func uninstallBridge() {
-        performAction("Uninstalling Bridge…") {
+        performAction(String(localized: "Uninstalling Bridge…")) {
             try await self.processManager.uninstallService()
         }
     }
 
     func installNode() {
-        performAction("Installing Node.js…") {
+        performAction(String(localized: "Installing Node.js…")) {
             try await self.processManager.installNodeViaHomebrew()
         }
     }
 
     func installClaudeCode() {
-        performAction("Installing Claude Code…") {
+        performAction(String(localized: "Installing Claude Code…")) {
             try await self.processManager.installClaudeCode()
         }
     }
 
     func installCodex() {
-        performAction("Installing Codex…") {
+        performAction(String(localized: "Installing Codex…")) {
             try await self.processManager.installCodex()
         }
     }
 
     func updateBridge() {
-        performAction("Updating Bridge…") {
+        performAction(String(localized: "Updating Bridge…")) {
             try await self.processManager.installOrUpdateBridge()
         }
     }
 
     func loginProvider(_ providerName: String) {
-        performAction("Opening browser for login…") {
+        performAction(String(localized: "Opening browser for login…")) {
             try await self.processManager.loginProvider(providerName)
         }
     }

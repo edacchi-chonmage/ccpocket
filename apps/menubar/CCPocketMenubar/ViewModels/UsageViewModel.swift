@@ -22,7 +22,7 @@ final class UsageViewModel: ObservableObject {
             } catch {
                 // Only show error if we had no previous data
                 if providers.isEmpty {
-                    self.error = "Failed to load usage data"
+                    self.error = String(localized: "Failed to load usage data")
                 }
             }
             isLoading = false

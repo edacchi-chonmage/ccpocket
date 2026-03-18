@@ -70,7 +70,7 @@ enum BridgeClientError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .httpError:
-            return "Bridge server returned an error"
+            return String(localized: "Bridge server returned an error")
         }
     }
 }

@@ -79,12 +79,12 @@ struct DoctorPageView: View {
 
                         // Required checks
                         if !viewModel.requiredChecks.isEmpty {
-                            checkSection(title: "Required", checks: viewModel.requiredChecks)
+                            checkSection(title: String(localized: "REQUIRED"), checks: viewModel.requiredChecks)
                         }
 
                         // Optional checks
                         if !viewModel.optionalChecks.isEmpty {
-                            checkSection(title: "Optional", checks: viewModel.optionalChecks)
+                            checkSection(title: String(localized: "OPTIONAL"), checks: viewModel.optionalChecks)
                         }
 
                         // Action status
@@ -132,7 +132,6 @@ struct DoctorPageView: View {
             Text(title)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
-                .textCase(.uppercase)
                 .padding(.horizontal, 14)
                 .padding(.bottom, 6)
 

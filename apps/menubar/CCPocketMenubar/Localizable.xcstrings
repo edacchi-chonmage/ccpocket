@@ -1,0 +1,411 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+
+    "Running" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "実行中" } }
+      }
+    },
+    "Stopped" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "停止中" } }
+      }
+    },
+    "Checking…" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "確認中…" } }
+      }
+    },
+
+    "Usage" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "使用状況" } }
+      }
+    },
+    "Connect" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "接続" } }
+      }
+    },
+    "Doctor" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "診断" } }
+      }
+    },
+
+    "Disable Launch at Login" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ログイン時の起動を無効にする" } }
+      }
+    },
+    "Enable Launch at Login" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ログイン時に起動する" } }
+      }
+    },
+    "Stop Bridge" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Bridgeを停止" } }
+      }
+    },
+    "Start Bridge" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Bridgeを起動" } }
+      }
+    },
+    "Quit CC Pocket" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "CC Pocketを終了" } }
+      }
+    },
+
+    "Welcome to CC Pocket" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "CC Pocketへようこそ" } }
+      }
+    },
+    "Manage your Bridge Server, monitor usage, and connect your mobile device — all from the menu bar." : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Bridge Serverの管理、使用状況の確認、モバイル端末との接続 — すべてメニューバーから操作できます。" } }
+      }
+    },
+    "Environment Check" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "環境チェック" } }
+      }
+    },
+    "Let's make sure everything is set up correctly. We'll check for Node.js, CLI tools, and the Bridge service." : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "セットアップが正しく完了しているか確認します。Node.js、CLIツール、Bridgeサービスをチェックします。" } }
+      }
+    },
+    "You're All Set!" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "準備完了！" } }
+      }
+    },
+    "Your environment is ready. You can always re-run Doctor from the Doctor tab if needed." : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "環境の準備ができました。必要に応じて「診断」タブからいつでも再実行できます。" } }
+      }
+    },
+    "Running checks…" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "チェック中…" } }
+      }
+    },
+    "Back" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "戻る" } }
+      }
+    },
+    "Get Started" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "はじめる" } }
+      }
+    },
+    "Continue" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "続ける" } }
+      }
+    },
+    "Continue Anyway" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このまま続ける" } }
+      }
+    },
+    "Open CC Pocket" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "CC Pocketを開く" } }
+      }
+    },
+
+    "Check your environment setup." : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "環境のセットアップ状況を確認します。" } }
+      }
+    },
+    "Run Doctor" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "診断を実行" } }
+      }
+    },
+    "Bridge v%@ available" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Bridge v%@ が利用可能" } }
+      }
+    },
+    "Update" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "更新" } }
+      }
+    },
+    "All checks passed" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "すべてのチェックに合格しました" } }
+      }
+    },
+    "Some checks failed" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "一部のチェックが失敗しました" } }
+      }
+    },
+    "%lld/%lld passed" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%lld/%lld 合格" } }
+      }
+    },
+    "REQUIRED" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "必須" } }
+      }
+    },
+    "OPTIONAL" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "オプション" } }
+      }
+    },
+
+    "Install" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "インストール" } }
+      }
+    },
+    "Login" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ログイン" } }
+      }
+    },
+    "Fix" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "修正" } }
+      }
+    },
+    "Not installed" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "未インストール" } }
+      }
+    },
+    "authenticated" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "認証済み" } }
+      }
+    },
+    "not authenticated" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "未認証" } }
+      }
+    },
+
+    "Scan with CC Pocket app" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "CC Pocketアプリでスキャン" } }
+      }
+    },
+    "No Network" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ネットワークなし" } }
+      }
+    },
+    "No network addresses found." : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ネットワークアドレスが見つかりません。" } }
+      }
+    },
+    "Copy deep link" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ディープリンクをコピー" } }
+      }
+    },
+    "Copy WebSocket URL" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "WebSocket URLをコピー" } }
+      }
+    },
+
+    "Bridge Not Running" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Bridgeが起動していません" } }
+      }
+    },
+    "Start the Bridge Server to view usage data." : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "使用状況を表示するにはBridge Serverを起動してください。" } }
+      }
+    },
+    "Unable to Load" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "読み込めません" } }
+      }
+    },
+    "Retry" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "再試行" } }
+      }
+    },
+    "No usage data available" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "使用状況データがありません" } }
+      }
+    },
+    "resets in %@" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ 後にリセット" } }
+      }
+    },
+
+    "Setting up Bridge…" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Bridgeをセットアップ中…" } }
+      }
+    },
+    "Uninstalling Bridge…" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Bridgeをアンインストール中…" } }
+      }
+    },
+    "Installing Node.js…" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Node.jsをインストール中…" } }
+      }
+    },
+    "Installing Claude Code…" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Claude Codeをインストール中…" } }
+      }
+    },
+    "Installing Codex…" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Codexをインストール中…" } }
+      }
+    },
+    "Updating Bridge…" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Bridgeを更新中…" } }
+      }
+    },
+    "Opening browser for login…" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ブラウザでログイン中…" } }
+      }
+    },
+
+    "Failed to load usage data" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "使用状況データの読み込みに失敗しました" } }
+      }
+    },
+
+    "Homebrew is not installed. Please install it first." : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Homebrewがインストールされていません。先にインストールしてください。" } }
+      }
+    },
+    "Node.js is not installed. Please install it first." : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Node.jsがインストールされていません。先にインストールしてください。" } }
+      }
+    },
+    "Claude Code CLI is not installed." : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Claude Code CLIがインストールされていません。" } }
+      }
+    },
+    "Permission denied. You may need to fix npm permissions." : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "権限がありません。npmのパーミッションを修正する必要があるかもしれません。" } }
+      }
+    },
+    "Network error. Please check your internet connection." : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ネットワークエラーです。インターネット接続を確認してください。" } }
+      }
+    },
+    "Command failed" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "コマンドが失敗しました" } }
+      }
+    },
+    "Bridge server returned an error" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Bridge Serverがエラーを返しました" } }
+      }
+    },
+
+    "Node.js" : {
+      "comment" : "Doctor check name",
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Node.js" } }
+      }
+    },
+    "Git" : {
+      "comment" : "Doctor check name",
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Git" } }
+      }
+    },
+    "CLI providers" : {
+      "comment" : "Doctor check name",
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "CLIプロバイダー" } }
+      }
+    },
+    "npm dependencies" : {
+      "comment" : "Doctor check name",
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "npm依存パッケージ" } }
+      }
+    },
+    "Port availability" : {
+      "comment" : "Doctor check name",
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ポートの空き状況" } }
+      }
+    },
+    "Screen Recording" : {
+      "comment" : "Doctor check name",
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "画面収録" } }
+      }
+    },
+    "Keychain access" : {
+      "comment" : "Doctor check name",
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "キーチェーンアクセス" } }
+      }
+    },
+    "Tailscale" : {
+      "comment" : "Doctor check name / Network label",
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Tailscale" } }
+      }
+    },
+    "Firebase connectivity" : {
+      "comment" : "Doctor check name",
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Firebase接続" } }
+      }
+    },
+    "Data directory" : {
+      "comment" : "Doctor check name",
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "データディレクトリ" } }
+      }
+    },
+    "launchd service" : {
+      "comment" : "Doctor check name",
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "launchdサービス" } }
+      }
+    },
+
+    "LAN" : {
+      "comment" : "Network label",
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "LAN" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

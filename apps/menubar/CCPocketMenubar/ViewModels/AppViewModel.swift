@@ -9,9 +9,9 @@ enum BridgeStatus {
 
     var label: String {
         switch self {
-        case .running: return "Running"
-        case .stopped: return "Stopped"
-        case .checking: return "Checking…"
+        case .running: return String(localized: "Running")
+        case .stopped: return String(localized: "Stopped")
+        case .checking: return String(localized: "Checking…")
         }
     }
 
@@ -41,9 +41,9 @@ enum AppTab: Int, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .usage: return "Usage"
-        case .qrCode: return "Connect"
-        case .doctor: return "Doctor"
+        case .usage: return String(localized: "Usage")
+        case .qrCode: return String(localized: "Connect")
+        case .doctor: return String(localized: "Doctor")
         }
     }
 

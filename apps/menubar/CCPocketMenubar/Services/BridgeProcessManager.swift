@@ -169,26 +169,26 @@ enum ProcessError: LocalizedError {
             let trimmed = output.trimmingCharacters(in: .whitespacesAndNewlines)
 
             if trimmed.contains("command not found: brew") {
-                return "Homebrew is not installed. Please install it first."
+                return String(localized: "Homebrew is not installed. Please install it first.")
             }
             if trimmed.contains("command not found: node") || trimmed.contains("command not found: npm") {
-                return "Node.js is not installed. Please install it first."
+                return String(localized: "Node.js is not installed. Please install it first.")
             }
             if trimmed.contains("command not found: claude") {
-                return "Claude Code CLI is not installed."
+                return String(localized: "Claude Code CLI is not installed.")
             }
             if trimmed.contains("EACCES") || trimmed.contains("permission denied") {
-                return "Permission denied. You may need to fix npm permissions."
+                return String(localized: "Permission denied. You may need to fix npm permissions.")
             }
             if trimmed.contains("ETIMEDOUT") || trimmed.contains("network") {
-                return "Network error. Please check your internet connection."
+                return String(localized: "Network error. Please check your internet connection.")
             }
 
             // Truncate long outputs for readability
             if trimmed.count > 200 {
                 return String(trimmed.suffix(200))
             }
-            return trimmed.isEmpty ? "Command failed" : trimmed
+            return trimmed.isEmpty ? String(localized: "Command failed") : trimmed
         }
     }
 }

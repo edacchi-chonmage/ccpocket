@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AAAA000000000002LOCALIZE /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = AAAA000000000001LOCALIZE /* Localizable.xcstrings */; };
 		0882D7D2A84198AC66E43C85 /* QRCodeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E40A1516D800B52B693BEC2 /* QRCodeViewModel.swift */; };
 		0E6869D3A91A9B8EC833A218 /* BridgeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 660EFDE63E46DB3D442BEC2C /* BridgeClient.swift */; };
 		10C8A59D69B09DB25230CCA5 /* AddressRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8A7700A6EFBA3924929D3AC /* AddressRow.swift */; };
@@ -64,6 +65,7 @@
 		E8A7700A6EFBA3924929D3AC /* AddressRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressRow.swift; sourceTree = "<group>"; };
 		EE8ACC5D95AE60F0DEB8F54B /* ConnectionInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionInfo.swift; sourceTree = "<group>"; };
 		F9F6D9EEF9A4E409D751F651 /* BridgeVersion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BridgeVersion.swift; sourceTree = "<group>"; };
+		AAAA000000000001LOCALIZE /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -110,6 +112,7 @@
 			isa = PBXGroup;
 			children = (
 				B166330BE9C9D32E7DA0457F /* Info.plist */,
+				AAAA000000000001LOCALIZE /* Localizable.xcstrings */,
 				D79F5BFA8018B62F77ECCC5A /* App */,
 				B6B084B77FF2B5A0E1A2D0AD /* Models */,
 				2AD49A8EB8103CF7A883E8E0 /* Resources */,
@@ -232,6 +235,7 @@
 			knownRegions = (
 				Base,
 				en,
+				ja,
 			);
 			mainGroup = 9716F82D5E2C6CE80569D6A9;
 			minimizedProjectReferenceProxies = 1;
@@ -250,6 +254,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C14D35E82B2FAD707FD15969 /* Assets.xcassets in Resources */,
+				AAAA000000000002LOCALIZE /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

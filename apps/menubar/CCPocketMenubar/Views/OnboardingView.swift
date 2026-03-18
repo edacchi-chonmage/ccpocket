@@ -6,11 +6,13 @@ struct OnboardingView: View {
 
     @State private var currentStep = 0
 
-    private let steps: [(icon: String, title: String, description: String)] = [
-        ("hand.wave.fill", "Welcome to CC Pocket", "Manage your Bridge Server, monitor usage, and connect your mobile device — all from the menu bar."),
-        ("stethoscope", "Environment Check", "Let's make sure everything is set up correctly. We'll check for Node.js, CLI tools, and the Bridge service."),
-        ("checkmark.seal.fill", "You're All Set!", "Your environment is ready. You can always re-run Doctor from the Doctor tab if needed."),
-    ]
+    private var steps: [(icon: String, title: String, description: String)] {
+        [
+            ("hand.wave.fill", String(localized: "Welcome to CC Pocket"), String(localized: "Manage your Bridge Server, monitor usage, and connect your mobile device — all from the menu bar.")),
+            ("stethoscope", String(localized: "Environment Check"), String(localized: "Let's make sure everything is set up correctly. We'll check for Node.js, CLI tools, and the Bridge service.")),
+            ("checkmark.seal.fill", String(localized: "You're All Set!"), String(localized: "Your environment is ready. You can always re-run Doctor from the Doctor tab if needed.")),
+        ]
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -67,7 +69,7 @@ struct OnboardingView: View {
                                             .foregroundStyle(checkColor(check.status))
                                             .font(.caption)
 
-                                        Text(check.name)
+                                        Text(check.localizedName)
                                             .font(.caption.weight(.medium))
 
                                         Spacer()

@@ -42,9 +42,9 @@ final class NetworkDiscovery {
                     if ip.hasPrefix("100.") ||
                        name.hasPrefix("utun") ||
                        name.lowercased().contains("tailscale") {
-                        label = "Tailscale"
+                        label = String(localized: "Tailscale")
                     } else {
-                        label = "LAN"
+                        label = String(localized: "LAN")
                     }
 
                     addresses.append(NetworkAddress(ip: ip, label: label))

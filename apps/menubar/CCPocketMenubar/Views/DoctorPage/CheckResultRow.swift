@@ -23,7 +23,7 @@ struct CheckResultRow: View {
                     .font(.body)
                     .contentTransition(.symbolEffect(.replace))
 
-                Text(check.name)
+                Text(check.localizedName)
                     .font(.subheadline.weight(.medium))
 
                 Spacer()
@@ -115,10 +115,10 @@ struct CheckResultRow: View {
     }
 
     private func providerStatus(_ p: ProviderResult) -> String {
-        if !p.installed { return "Not installed" }
+        if !p.installed { return String(localized: "Not installed") }
         var parts: [String] = []
         if let v = p.version { parts.append(v) }
-        parts.append(p.authenticated ? "authenticated" : (p.authMessage ?? "not authenticated"))
+        parts.append(p.authenticated ? String(localized: "authenticated") : (p.authMessage ?? String(localized: "not authenticated")))
         return parts.joined(separator: " · ")
     }
 }
