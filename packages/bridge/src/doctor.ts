@@ -210,7 +210,6 @@ export async function checkDependencies(): Promise<CheckResult> {
   const requiredPackages = [
     "ws",
     "@anthropic-ai/claude-agent-sdk",
-    "@openai/codex-sdk",
     "bonjour-service",
   ];
   const missing: string[] = [];
@@ -612,16 +611,13 @@ function getAllChecks(): CheckDefinition[] {
       run: checkFirebaseConnectivity,
     },
     { name: "Data directory", category: "optional", run: checkDataDirectory },
-    {
-      name: "launchd service",
-      category: "optional",
-      run: checkLaunchdService,
-    },
-    {
-      name: "systemd service",
-      category: "optional",
-      run: checkSystemdService,
-    },
+    // Platform-specific service checks
+    ...(process.platform === "darwin"
+      ? [{ name: "launchd service", category: "optional" as CheckCategory, run: checkLaunchdService }]
+      : []),
+    ...(process.platform === "linux"
+      ? [{ name: "systemd service", category: "optional" as CheckCategory, run: checkSystemdService }]
+      : []),
   ];
 }
 
