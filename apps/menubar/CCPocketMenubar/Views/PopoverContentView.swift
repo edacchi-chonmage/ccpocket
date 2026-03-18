@@ -39,6 +39,8 @@ struct PopoverContentView: View {
             .animation(.smooth(duration: 0.3), value: viewModel.selectedTab)
         }
         .frame(width: 380, height: 500)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
         .onChange(of: viewModel.selectedTab) { oldTab, newTab in
             previousTabIndex = oldTab.rawValue
             switch newTab {
