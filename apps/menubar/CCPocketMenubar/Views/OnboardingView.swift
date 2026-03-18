@@ -363,7 +363,6 @@ struct CommandRow: View {
             Text(command)
                 .font(.system(.caption2, design: .monospaced))
                 .textSelection(.enabled)
-                .lineLimit(2)
 
             Spacer(minLength: 4)
 

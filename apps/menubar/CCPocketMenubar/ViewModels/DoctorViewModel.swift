@@ -216,19 +216,14 @@ final class DoctorViewModel: ObservableObject {
     func setupCommands(for check: CheckResult) -> [(comment: String, command: String)] {
         switch check.name {
         case "Node.js" where check.status != "pass":
-            return [
-                ("Install Homebrew (skip if already installed)", "/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""),
-                ("Install Node.js", "brew install node"),
-            ]
+            return nodeCommands()
 
         case "CLI providers" where check.status != "pass":
             return cliProviderCommands(for: check)
 
         case "Bridge Server" where check.status != "pass",
              "launchd service" where check.status != "pass":
-            return [
-                ("Set up Bridge (install + register as service)", "npx @ccpocket/bridge@latest setup"),
-            ]
+            return bridgeCommands()
 
         default:
             return []
@@ -239,26 +234,30 @@ final class DoctorViewModel: ObservableObject {
     func allSetupCommands(for check: CheckResult) -> [(comment: String, command: String)] {
         switch check.name {
         case "Node.js":
-            return [
-                ("Install Homebrew (skip if already installed)", "/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""),
-                ("Install Node.js", "brew install node"),
-            ]
-
+            return nodeCommands()
         case "CLI providers":
             return cliProviderCommands(for: check)
-
         case "Bridge Server", "launchd service":
-            return [
-                ("Set up Bridge (install + register as service)", "npx @ccpocket/bridge@latest setup"),
-            ]
-
+            return bridgeCommands()
         default:
             return []
         }
     }
 
+    private func nodeCommands() -> [(comment: String, command: String)] {
+        [
+            (String(localized: "Install Homebrew (skip if already installed)"), "/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""),
+            (String(localized: "Install Node.js"), "brew install node"),
+        ]
+    }
+
+    private func bridgeCommands() -> [(comment: String, command: String)] {
+        [
+            (String(localized: "Set up Bridge (install + start service)"), "npx @ccpocket/bridge@latest setup"),
+        ]
+    }
+
     /// Build CLI provider commands. Either provider is sufficient.
-    /// Shows both as options when neither is installed.
     private func cliProviderCommands(for check: CheckResult) -> [(comment: String, command: String)] {
         guard let providers = check.providers else { return [] }
 
@@ -266,22 +265,20 @@ final class DoctorViewModel: ObservableObject {
 
         for provider in providers {
             if provider.installed && !provider.authenticated {
-                // Needs login
                 switch provider.name {
                 case "Claude Code CLI":
-                    commands.append(("Login to Claude Code", "claude login"))
+                    commands.append((String(localized: "Login to Claude Code"), "claude login"))
                 case "Codex CLI":
-                    commands.append(("Login to Codex", "codex login"))
+                    commands.append((String(localized: "Login to Codex"), "codex login"))
                 default:
                     break
                 }
             } else if !provider.installed {
-                // Needs install
                 switch provider.name {
                 case "Claude Code CLI":
-                    commands.append(("Install Claude Code (either one is OK)", "curl -fsSL https://claude.ai/install.sh | bash"))
+                    commands.append((String(localized: "Install Claude Code (either one is OK)"), "curl -fsSL https://claude.ai/install.sh | bash"))
                 case "Codex CLI":
-                    commands.append(("Install Codex (either one is OK)", "npm install -g @openai/codex"))
+                    commands.append((String(localized: "Install Codex (either one is OK)"), "npm install -g @openai/codex"))
                 default:
                     break
                 }
