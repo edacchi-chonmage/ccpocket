@@ -48,8 +48,8 @@ struct HeaderView: View {
             .buttonStyle(.borderless)
             .glassEffect(.regular.interactive(), in: .circle)
             .help(viewModel.launchAtLogin
-                  ? "Disable Launch at Login"
-                  : "Enable Launch at Login")
+                  ? String(localized: "Disable Launch at Login")
+                  : String(localized: "Enable Launch at Login"))
 
             // Start/Stop button
             Button {
@@ -61,7 +61,7 @@ struct HeaderView: View {
             }
             .buttonStyle(.borderless)
             .glassEffect(.regular.interactive(), in: .circle)
-            .help(viewModel.bridgeStatus == .running ? "Stop Bridge" : "Start Bridge")
+            .help(viewModel.bridgeStatus == .running ? String(localized: "Stop Bridge") : String(localized: "Start Bridge"))
             .disabled(viewModel.bridgeStatus == .checking)
 
             // Quit button
@@ -75,7 +75,7 @@ struct HeaderView: View {
             }
             .buttonStyle(.borderless)
             .glassEffect(.regular.interactive(), in: .circle)
-            .help("Quit CC Pocket")
+            .help(String(localized: "Quit CC Pocket"))
         }
     }
 }
