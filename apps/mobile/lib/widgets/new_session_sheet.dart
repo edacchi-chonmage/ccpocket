@@ -1340,6 +1340,7 @@ class _OptionsSection extends StatelessWidget {
               'dialog_${provider == Provider.codex ? "codex_" : ""}permission_mode',
             ),
             initialValue: permissionMode,
+            isExpanded: true,
             decoration: buildInputDecoration(l.permission),
             items: PermissionMode.values
                 .map(
@@ -1370,6 +1371,7 @@ class _OptionsSection extends StatelessWidget {
           DropdownButtonFormField<SandboxMode>(
             key: const ValueKey('dialog_sandbox'),
             initialValue: sandboxMode,
+            isExpanded: true,
             decoration: buildInputDecoration(l.sandbox),
             style: TextStyle(
               fontSize: 13,
@@ -1406,48 +1408,28 @@ class _OptionsSection extends StatelessWidget {
             },
           ),
           const SizedBox(height: 8),
+          provider == Provider.claude
+              ? _PrimaryClaudeOptions(
+                  buildInputDecoration: buildInputDecoration,
+                  claudeModels: claudeModels,
+                  selectedClaudeModel: selectedClaudeModel,
+                  onClaudeModelChanged: onClaudeModelChanged,
+                  claudeEffort: claudeEffort,
+                  onClaudeEffortChanged: onClaudeEffortChanged,
+                )
+              : _PrimaryCodexOptions(
+                  buildInputDecoration: buildInputDecoration,
+                  codexModels: codexModels,
+                  selectedModel: selectedModel,
+                  onSelectedModelChanged: onSelectedModelChanged,
+                  modelReasoningEffort: modelReasoningEffort,
+                  onModelReasoningEffortChanged: onModelReasoningEffortChanged,
+                ),
+          const SizedBox(height: 8),
           // Worktree toggle (shared)
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                FilterChip(
-                  key: const ValueKey('dialog_worktree'),
-                  avatar: useWorktree
-                      ? null
-                      : Icon(
-                          Icons.account_tree_outlined,
-                          size: 16,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                  label: Text(
-                    l.worktree,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: useWorktree
-                          ? Theme.of(context).colorScheme.onPrimaryContainer
-                          : Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                  checkmarkColor: Theme.of(
-                    context,
-                  ).colorScheme.onPrimaryContainer,
-                  selected: useWorktree,
-                  onSelected: onWorktreeToggle,
-                ),
-                const SizedBox(width: 8),
-                Tooltip(
-                  message:
-                      'Creates an isolated git working tree for this session.',
-                  child: Icon(
-                    Icons.info_outline,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
+          _WorktreeToggleTile(
+            useWorktree: useWorktree,
+            onChanged: onWorktreeToggle,
           ),
           if (useWorktree) ...[
             const SizedBox(height: 8),
@@ -1465,15 +1447,10 @@ class _OptionsSection extends StatelessWidget {
           // Advanced section (unified for both providers)
           const SizedBox(height: 8),
           _AdvancedOptions(
-            appColors: appColors,
             provider: provider,
             buildInputDecoration: buildInputDecoration,
             // Claude
             claudeModels: claudeModels,
-            selectedClaudeModel: selectedClaudeModel,
-            onClaudeModelChanged: onClaudeModelChanged,
-            claudeEffort: claudeEffort,
-            onClaudeEffortChanged: onClaudeEffortChanged,
             claudeMaxTurnsController: claudeMaxTurnsController,
             maxTurnsError: maxTurnsError,
             onMaxTurnsChanged: onMaxTurnsChanged,
@@ -1487,11 +1464,6 @@ class _OptionsSection extends StatelessWidget {
             claudePersistSession: claudePersistSession,
             onClaudePersistSessionChanged: onClaudePersistSessionChanged,
             // Codex
-            codexModels: codexModels,
-            selectedModel: selectedModel,
-            onSelectedModelChanged: onSelectedModelChanged,
-            modelReasoningEffort: modelReasoningEffort,
-            onModelReasoningEffortChanged: onModelReasoningEffortChanged,
             webSearchMode: webSearchMode,
             onWebSearchModeChanged: onWebSearchModeChanged,
             networkAccessEnabled: networkAccessEnabled,
@@ -1503,8 +1475,258 @@ class _OptionsSection extends StatelessWidget {
   }
 }
 
+class _WorktreeToggleTile extends StatelessWidget {
+  final bool useWorktree;
+  final ValueChanged<bool> onChanged;
+
+  const _WorktreeToggleTile({
+    required this.useWorktree,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final cs = Theme.of(context).colorScheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: InkWell(
+        key: const ValueKey('dialog_worktree'),
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => onChanged(!useWorktree),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            children: [
+              Icon(
+                Icons.account_tree_outlined,
+                size: 18,
+                color: useWorktree ? cs.primary : cs.onSurfaceVariant,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  l.worktree,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Tooltip(
+                message:
+                    'Creates an isolated git working tree for this session.',
+                child: Icon(
+                  Icons.info_outline,
+                  size: 16,
+                  color: cs.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: 12),
+              IgnorePointer(
+                child: Switch.adaptive(
+                  value: useWorktree,
+                  onChanged: onChanged,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PrimaryClaudeOptions extends StatelessWidget {
+  final InputDecoration Function(
+    String, {
+    String? hintText,
+    Widget? prefixIcon,
+    String? errorText,
+  })
+  buildInputDecoration;
+  final List<String> claudeModels;
+  final String? selectedClaudeModel;
+  final ValueChanged<String?> onClaudeModelChanged;
+  final ClaudeEffort? claudeEffort;
+  final ValueChanged<ClaudeEffort?> onClaudeEffortChanged;
+
+  const _PrimaryClaudeOptions({
+    required this.buildInputDecoration,
+    required this.claudeModels,
+    required this.selectedClaudeModel,
+    required this.onClaudeModelChanged,
+    required this.claudeEffort,
+    required this.onClaudeEffortChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return _ResponsiveOptionRow(
+      leading: DropdownButtonFormField<String?>(
+        key: const ValueKey('dialog_claude_model'),
+        initialValue: selectedClaudeModel,
+        isExpanded: true,
+        decoration: buildInputDecoration(
+          l.model,
+          prefixIcon: const Icon(Icons.psychology_outlined, size: 18),
+        ),
+        style: TextStyle(
+          fontSize: 13,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
+        items: [
+          DropdownMenuItem<String?>(
+            value: null,
+            child: Text(l.defaultLabel, style: const TextStyle(fontSize: 13)),
+          ),
+          for (final model in claudeModels)
+            DropdownMenuItem<String?>(
+              value: model,
+              child: Text(model, style: const TextStyle(fontSize: 13)),
+            ),
+        ],
+        onChanged: onClaudeModelChanged,
+      ),
+      trailing: DropdownButtonFormField<ClaudeEffort?>(
+        key: const ValueKey('dialog_claude_effort'),
+        initialValue: claudeEffort,
+        isExpanded: true,
+        decoration: buildInputDecoration(l.effort),
+        style: TextStyle(
+          fontSize: 13,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
+        items: [
+          DropdownMenuItem<ClaudeEffort?>(
+            value: null,
+            child: Text(l.defaultLabel, style: const TextStyle(fontSize: 13)),
+          ),
+          for (final effort in ClaudeEffort.values)
+            DropdownMenuItem<ClaudeEffort?>(
+              value: effort,
+              child: Text(effort.label, style: const TextStyle(fontSize: 13)),
+            ),
+        ],
+        onChanged: onClaudeEffortChanged,
+      ),
+    );
+  }
+}
+
+class _PrimaryCodexOptions extends StatelessWidget {
+  final InputDecoration Function(
+    String, {
+    String? hintText,
+    Widget? prefixIcon,
+    String? errorText,
+  })
+  buildInputDecoration;
+  final List<String> codexModels;
+  final String? selectedModel;
+  final ValueChanged<String?> onSelectedModelChanged;
+  final ReasoningEffort? modelReasoningEffort;
+  final ValueChanged<ReasoningEffort?> onModelReasoningEffortChanged;
+
+  const _PrimaryCodexOptions({
+    required this.buildInputDecoration,
+    required this.codexModels,
+    required this.selectedModel,
+    required this.onSelectedModelChanged,
+    required this.modelReasoningEffort,
+    required this.onModelReasoningEffortChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return _ResponsiveOptionRow(
+      leading: DropdownButtonFormField<String?>(
+        key: const ValueKey('dialog_codex_model'),
+        initialValue: selectedModel,
+        isExpanded: true,
+        decoration: buildInputDecoration(
+          l.model,
+          prefixIcon: const Icon(Icons.psychology_outlined, size: 18),
+        ),
+        style: TextStyle(
+          fontSize: 13,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
+        items: [
+          DropdownMenuItem<String?>(
+            value: null,
+            child: Text(l.defaultLabel, style: const TextStyle(fontSize: 13)),
+          ),
+          for (final model in codexModels)
+            DropdownMenuItem<String?>(
+              value: model,
+              child: Text(model, style: const TextStyle(fontSize: 13)),
+            ),
+        ],
+        onChanged: onSelectedModelChanged,
+      ),
+      trailing: DropdownButtonFormField<ReasoningEffort?>(
+        key: const ValueKey('dialog_codex_reasoning_effort'),
+        initialValue: modelReasoningEffort,
+        isExpanded: true,
+        decoration: buildInputDecoration(l.reasoning),
+        style: TextStyle(
+          fontSize: 13,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
+        items: [
+          DropdownMenuItem<ReasoningEffort?>(
+            value: null,
+            child: Text(l.defaultLabel, style: const TextStyle(fontSize: 13)),
+          ),
+          for (final effort in ReasoningEffort.values)
+            DropdownMenuItem<ReasoningEffort?>(
+              value: effort,
+              child: Text(effort.label, style: const TextStyle(fontSize: 13)),
+            ),
+        ],
+        onChanged: onModelReasoningEffortChanged,
+      ),
+    );
+  }
+}
+
+class _ResponsiveOptionRow extends StatelessWidget {
+  final Widget leading;
+  final Widget trailing;
+
+  const _ResponsiveOptionRow({required this.leading, required this.trailing});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 480) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [leading, const SizedBox(height: 8), trailing],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: leading),
+            const SizedBox(width: 12),
+            Expanded(child: trailing),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class _AdvancedOptions extends StatelessWidget {
-  final AppColors appColors;
   final Provider provider;
   final InputDecoration Function(
     String, {
@@ -1516,10 +1738,6 @@ class _AdvancedOptions extends StatelessWidget {
 
   // Claude
   final List<String> claudeModels;
-  final String? selectedClaudeModel;
-  final ValueChanged<String?> onClaudeModelChanged;
-  final ClaudeEffort? claudeEffort;
-  final ValueChanged<ClaudeEffort?> onClaudeEffortChanged;
   final TextEditingController claudeMaxTurnsController;
   final String? maxTurnsError;
   final VoidCallback onMaxTurnsChanged;
@@ -1534,25 +1752,15 @@ class _AdvancedOptions extends StatelessWidget {
   final ValueChanged<bool> onClaudePersistSessionChanged;
 
   // Codex
-  final List<String> codexModels;
-  final String? selectedModel;
-  final ValueChanged<String?> onSelectedModelChanged;
-  final ReasoningEffort? modelReasoningEffort;
-  final ValueChanged<ReasoningEffort?> onModelReasoningEffortChanged;
   final WebSearchMode? webSearchMode;
   final ValueChanged<WebSearchMode?> onWebSearchModeChanged;
   final bool networkAccessEnabled;
   final ValueChanged<bool> onNetworkAccessChanged;
 
   const _AdvancedOptions({
-    required this.appColors,
     required this.provider,
     required this.buildInputDecoration,
     required this.claudeModels,
-    required this.selectedClaudeModel,
-    required this.onClaudeModelChanged,
-    required this.claudeEffort,
-    required this.onClaudeEffortChanged,
     required this.claudeMaxTurnsController,
     required this.maxTurnsError,
     required this.onMaxTurnsChanged,
@@ -1565,11 +1773,6 @@ class _AdvancedOptions extends StatelessWidget {
     required this.onClaudeForkSessionChanged,
     required this.claudePersistSession,
     required this.onClaudePersistSessionChanged,
-    required this.codexModels,
-    required this.selectedModel,
-    required this.onSelectedModelChanged,
-    required this.modelReasoningEffort,
-    required this.onModelReasoningEffortChanged,
     required this.webSearchMode,
     required this.onWebSearchModeChanged,
     required this.networkAccessEnabled,
@@ -1599,10 +1802,6 @@ class _AdvancedOptions extends StatelessWidget {
             ? _ClaudeAdvancedOptions(
                 buildInputDecoration: buildInputDecoration,
                 claudeModels: claudeModels,
-                selectedClaudeModel: selectedClaudeModel,
-                onClaudeModelChanged: onClaudeModelChanged,
-                claudeEffort: claudeEffort,
-                onClaudeEffortChanged: onClaudeEffortChanged,
                 claudeMaxTurnsController: claudeMaxTurnsController,
                 maxTurnsError: maxTurnsError,
                 onMaxTurnsChanged: onMaxTurnsChanged,
@@ -1618,11 +1817,6 @@ class _AdvancedOptions extends StatelessWidget {
               ).buildChildren(context)
             : _CodexAdvancedOptions(
                 buildInputDecoration: buildInputDecoration,
-                codexModels: codexModels,
-                selectedModel: selectedModel,
-                onSelectedModelChanged: onSelectedModelChanged,
-                modelReasoningEffort: modelReasoningEffort,
-                onModelReasoningEffortChanged: onModelReasoningEffortChanged,
                 webSearchMode: webSearchMode,
                 onWebSearchModeChanged: onWebSearchModeChanged,
                 networkAccessEnabled: networkAccessEnabled,
@@ -1642,10 +1836,6 @@ class _ClaudeAdvancedOptions extends StatelessWidget {
   })
   buildInputDecoration;
   final List<String> claudeModels;
-  final String? selectedClaudeModel;
-  final ValueChanged<String?> onClaudeModelChanged;
-  final ClaudeEffort? claudeEffort;
-  final ValueChanged<ClaudeEffort?> onClaudeEffortChanged;
   final TextEditingController claudeMaxTurnsController;
   final String? maxTurnsError;
   final VoidCallback onMaxTurnsChanged;
@@ -1662,10 +1852,6 @@ class _ClaudeAdvancedOptions extends StatelessWidget {
   const _ClaudeAdvancedOptions({
     required this.buildInputDecoration,
     required this.claudeModels,
-    required this.selectedClaudeModel,
-    required this.onClaudeModelChanged,
-    required this.claudeEffort,
-    required this.onClaudeEffortChanged,
     required this.claudeMaxTurnsController,
     required this.maxTurnsError,
     required this.onMaxTurnsChanged,
@@ -1683,132 +1869,58 @@ class _ClaudeAdvancedOptions extends StatelessWidget {
   List<Widget> buildChildren(BuildContext context) {
     final l = AppLocalizations.of(context);
     return [
-      DropdownButtonFormField<String?>(
-        key: const ValueKey('dialog_claude_model'),
-        initialValue: selectedClaudeModel,
+      TextField(
+        key: const ValueKey('dialog_claude_max_turns'),
+        controller: claudeMaxTurnsController,
+        keyboardType: TextInputType.number,
         decoration: buildInputDecoration(
-          l.modelOptional,
-          prefixIcon: const Icon(Icons.psychology_outlined, size: 18),
+          l.maxTurns,
+          hintText: l.maxTurnsHint,
+          errorText: maxTurnsError,
         ),
-        style: TextStyle(
-          fontSize: 13,
-          color: Theme.of(context).colorScheme.onSurface,
-        ),
-        items: [
-          DropdownMenuItem<String?>(
-            value: null,
-            child: Text(l.defaultLabel, style: const TextStyle(fontSize: 13)),
+        style: const TextStyle(fontSize: 13),
+        onChanged: (_) {
+          onMaxTurnsChanged();
+        },
+      ),
+      const SizedBox(height: 8),
+      _ResponsiveOptionRow(
+        leading: TextField(
+          key: const ValueKey('dialog_claude_max_budget'),
+          controller: claudeMaxBudgetController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: buildInputDecoration(
+            l.maxBudgetUsd,
+            hintText: l.maxBudgetHint,
+            errorText: maxBudgetError,
           ),
-          for (final model in claudeModels)
+          style: const TextStyle(fontSize: 13),
+          onChanged: (_) {
+            onMaxBudgetChanged();
+          },
+        ),
+        trailing: DropdownButtonFormField<String?>(
+          key: const ValueKey('dialog_claude_fallback_model'),
+          initialValue: selectedClaudeFallbackModel,
+          isExpanded: true,
+          decoration: buildInputDecoration(l.fallbackModel),
+          style: TextStyle(
+            fontSize: 13,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+          items: [
             DropdownMenuItem<String?>(
-              value: model,
-              child: Text(model, style: const TextStyle(fontSize: 13)),
+              value: null,
+              child: Text(l.defaultLabel, style: const TextStyle(fontSize: 13)),
             ),
-        ],
-        onChanged: (value) => onClaudeModelChanged(value),
-      ),
-      const SizedBox(height: 8),
-      Row(
-        children: [
-          Expanded(
-            child: DropdownButtonFormField<ClaudeEffort?>(
-              key: const ValueKey('dialog_claude_effort'),
-              initialValue: claudeEffort,
-              decoration: buildInputDecoration(l.effort),
-              style: TextStyle(
-                fontSize: 13,
-                color: Theme.of(context).colorScheme.onSurface,
+            for (final model in claudeModels)
+              DropdownMenuItem<String?>(
+                value: model,
+                child: Text(model, style: const TextStyle(fontSize: 13)),
               ),
-              items: [
-                DropdownMenuItem<ClaudeEffort?>(
-                  value: null,
-                  child: Text(
-                    l.defaultLabel,
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                ),
-                for (final effort in ClaudeEffort.values)
-                  DropdownMenuItem<ClaudeEffort?>(
-                    value: effort,
-                    child: Text(
-                      effort.label,
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-              ],
-              onChanged: (value) {
-                onClaudeEffortChanged(value);
-              },
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextField(
-              key: const ValueKey('dialog_claude_max_turns'),
-              controller: claudeMaxTurnsController,
-              keyboardType: TextInputType.number,
-              decoration: buildInputDecoration(
-                l.maxTurns,
-                hintText: l.maxTurnsHint,
-                errorText: maxTurnsError,
-              ),
-              style: const TextStyle(fontSize: 13),
-              onChanged: (_) {
-                onMaxTurnsChanged();
-              },
-            ),
-          ),
-        ],
-      ),
-      const SizedBox(height: 8),
-      Row(
-        children: [
-          Expanded(
-            child: TextField(
-              key: const ValueKey('dialog_claude_max_budget'),
-              controller: claudeMaxBudgetController,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: buildInputDecoration(
-                l.maxBudgetUsd,
-                hintText: l.maxBudgetHint,
-                errorText: maxBudgetError,
-              ),
-              style: const TextStyle(fontSize: 13),
-              onChanged: (_) {
-                onMaxBudgetChanged();
-              },
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: DropdownButtonFormField<String?>(
-              key: const ValueKey('dialog_claude_fallback_model'),
-              initialValue: selectedClaudeFallbackModel,
-              decoration: buildInputDecoration(l.fallbackModel),
-              style: TextStyle(
-                fontSize: 13,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-              items: [
-                DropdownMenuItem<String?>(
-                  value: null,
-                  child: Text(
-                    l.defaultLabel,
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                ),
-                for (final model in claudeModels)
-                  DropdownMenuItem<String?>(
-                    value: model,
-                    child: Text(model, style: const TextStyle(fontSize: 13)),
-                  ),
-              ],
-              onChanged: (value) => onClaudeFallbackModelChanged(value),
-            ),
-          ),
-        ],
+          ],
+          onChanged: (value) => onClaudeFallbackModelChanged(value),
+        ),
       ),
       const SizedBox(height: 4),
       SwitchListTile(
@@ -1852,11 +1964,6 @@ class _CodexAdvancedOptions extends StatelessWidget {
     String? errorText,
   })
   buildInputDecoration;
-  final List<String> codexModels;
-  final String? selectedModel;
-  final ValueChanged<String?> onSelectedModelChanged;
-  final ReasoningEffort? modelReasoningEffort;
-  final ValueChanged<ReasoningEffort?> onModelReasoningEffortChanged;
   final WebSearchMode? webSearchMode;
   final ValueChanged<WebSearchMode?> onWebSearchModeChanged;
   final bool networkAccessEnabled;
@@ -1864,11 +1971,6 @@ class _CodexAdvancedOptions extends StatelessWidget {
 
   const _CodexAdvancedOptions({
     required this.buildInputDecoration,
-    required this.codexModels,
-    required this.selectedModel,
-    required this.onSelectedModelChanged,
-    required this.modelReasoningEffort,
-    required this.onModelReasoningEffortChanged,
     required this.webSearchMode,
     required this.onWebSearchModeChanged,
     required this.networkAccessEnabled,
@@ -1878,97 +1980,27 @@ class _CodexAdvancedOptions extends StatelessWidget {
   List<Widget> buildChildren(BuildContext context) {
     final l = AppLocalizations.of(context);
     return [
-      DropdownButtonFormField<String?>(
-        key: const ValueKey('dialog_codex_model'),
-        initialValue: selectedModel,
-        decoration: buildInputDecoration(
-          l.model,
-          prefixIcon: const Icon(Icons.psychology_outlined, size: 18),
-        ),
+      DropdownButtonFormField<WebSearchMode?>(
+        key: const ValueKey('dialog_codex_web_search_mode'),
+        initialValue: webSearchMode,
+        isExpanded: true,
+        decoration: buildInputDecoration(l.webSearch),
         style: TextStyle(
           fontSize: 13,
           color: Theme.of(context).colorScheme.onSurface,
         ),
         items: [
-          DropdownMenuItem<String?>(
+          DropdownMenuItem<WebSearchMode?>(
             value: null,
             child: Text(l.defaultLabel, style: const TextStyle(fontSize: 13)),
           ),
-          for (final model in codexModels)
-            DropdownMenuItem<String?>(
-              value: model,
-              child: Text(model, style: const TextStyle(fontSize: 13)),
+          for (final mode in WebSearchMode.values)
+            DropdownMenuItem<WebSearchMode?>(
+              value: mode,
+              child: Text(mode.label, style: const TextStyle(fontSize: 13)),
             ),
         ],
-        onChanged: (value) => onSelectedModelChanged(value),
-      ),
-      const SizedBox(height: 8),
-      Row(
-        children: [
-          Expanded(
-            child: DropdownButtonFormField<ReasoningEffort?>(
-              key: const ValueKey('dialog_codex_reasoning_effort'),
-              initialValue: modelReasoningEffort,
-              decoration: buildInputDecoration(l.reasoning),
-              style: TextStyle(
-                fontSize: 13,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-              items: [
-                DropdownMenuItem<ReasoningEffort?>(
-                  value: null,
-                  child: Text(
-                    l.defaultLabel,
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                ),
-                for (final effort in ReasoningEffort.values)
-                  DropdownMenuItem<ReasoningEffort?>(
-                    value: effort,
-                    child: Text(
-                      effort.label,
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-              ],
-              onChanged: (value) {
-                onModelReasoningEffortChanged(value);
-              },
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: DropdownButtonFormField<WebSearchMode?>(
-              key: const ValueKey('dialog_codex_web_search_mode'),
-              initialValue: webSearchMode,
-              decoration: buildInputDecoration(l.webSearch),
-              style: TextStyle(
-                fontSize: 13,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-              items: [
-                DropdownMenuItem<WebSearchMode?>(
-                  value: null,
-                  child: Text(
-                    l.defaultLabel,
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                ),
-                for (final mode in WebSearchMode.values)
-                  DropdownMenuItem<WebSearchMode?>(
-                    value: mode,
-                    child: Text(
-                      mode.label,
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-              ],
-              onChanged: (value) {
-                onWebSearchModeChanged(value);
-              },
-            ),
-          ),
-        ],
+        onChanged: onWebSearchModeChanged,
       ),
       const SizedBox(height: 4),
       SwitchListTile(
