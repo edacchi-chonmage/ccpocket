@@ -114,7 +114,8 @@ class ToolResultBubbleState extends State<ToolResultBubble> {
 
   bool get _isMcpImageResult {
     final toolName = widget.message.toolName ?? '';
-    return widget.message.images.isNotEmpty && toolName.startsWith('mcp__');
+    return widget.message.images.isNotEmpty &&
+        (toolName.startsWith('mcp__') || toolName.startsWith('mcp:'));
   }
 
   ToolResultExpansion get _defaultExpansion =>

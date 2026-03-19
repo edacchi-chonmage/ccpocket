@@ -622,6 +622,87 @@ describe("CodexProcess (app-server)", () => {
     proc.stop();
   });
 
+  it("preserves MCP image outputs as raw content blocks for downstream rendering", async () => {
+    const proc = new CodexProcess();
+    const messages: unknown[] = [];
+    proc.on("message", (msg) => messages.push(msg));
+
+    proc.start("/tmp/project-mcp-images");
+    const child = fakeChildren[0];
+
+    await tick();
+    const initReq = nextOutgoingRequest(child);
+    child.stdout.emit("data", `${JSON.stringify({ id: initReq.id, result: {} })}\n`);
+    await tick();
+    nextOutgoingNotification(child);
+    const threadReq = nextOutgoingRequest(child);
+    child.stdout.emit("data", `${JSON.stringify({ id: threadReq.id, result: { thread: { id: "thr_mcp" } } })}\n`);
+
+    await tick();
+    child.stdout.emit(
+      "data",
+      `${JSON.stringify({
+        method: "item/completed",
+        params: {
+          item: {
+            type: "mcpToolCall",
+            id: "mcp_tool_1",
+            server: "marionette",
+            tool: "take_screenshots",
+            arguments: {},
+            result: {
+              content: [
+                {
+                  type: "image",
+                  data: "aGVsbG8=",
+                  mimeType: "image/png",
+                },
+              ],
+            },
+          },
+        },
+      })}\n`,
+    );
+
+    await tick();
+
+    expect(messages).toContainEqual(
+      expect.objectContaining({
+        type: "assistant",
+        message: expect.objectContaining({
+          content: expect.arrayContaining([
+            expect.objectContaining({
+              type: "tool_use",
+              id: "mcp_tool_1",
+              name: "mcp:marionette/take_screenshots",
+              input: {},
+            }),
+          ]),
+        }),
+      }),
+    );
+    expect(messages).toContainEqual(
+      expect.objectContaining({
+        type: "tool_result",
+        toolUseId: "mcp_tool_1",
+        toolName: "mcp:marionette/take_screenshots",
+        content: "Generated 1 image",
+        rawContentBlocks: [
+          {
+            type: "image",
+            source: {
+              type: "base64",
+              data: "aGVsbG8=",
+              media_type: "image/png",
+            },
+          },
+        ],
+      }),
+    );
+
+    proc.stop();
+  });
+
   it("emits plan notifications as regular stream messages", async () => {
     const proc = new CodexProcess();
     const messages: unknown[] = [];

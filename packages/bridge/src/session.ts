@@ -225,78 +225,79 @@ export class SessionManager {
             }
           }
 
-          // Extract images from tool_result content
-          if (msg.type === "tool_result" && this.imageStore) {
-            const paths = this.imageStore.extractImagePaths(msg.content);
-            if (paths.length > 0) {
-              const images = await this.imageStore.registerImages(paths, session.projectPath);
-              if (images.length > 0) {
-                msg = { ...msg, images };
-              }
-
-              // Also register in GalleryStore (disk-persistent)
-              if (this.galleryStore) {
-                for (const p of paths) {
-                  const meta = await this.galleryStore.addImage(
-                    p,
-                    session.projectPath,
-                    session.id,
-                  );
-                  if (meta && this.onGalleryImage) {
-                    this.onGalleryImage(meta);
-                  }
-                }
-              }
-            }
-
-            // Extract base64 images from content blocks (e.g., MCP screenshots)
-            if (msg.rawContentBlocks) {
-              const imageBlocks = (msg.rawContentBlocks as Array<Record<string, unknown>>)
-                .filter((c) => c.type === "image" && (c.source as Record<string, unknown>)?.type === "base64");
-
-              if (imageBlocks.length > 0) {
-                const existingImages = msg.images ?? [];
-                const newImages: ImageRef[] = [];
-
-                for (const block of imageBlocks) {
-                  const source = block.source as Record<string, unknown>;
-                  if (typeof source?.data !== "string" || typeof source?.media_type !== "string") continue;
-                  const b64Data = source.data as string;
-                  const mimeType = source.media_type as string;
-                  const ref = this.imageStore.registerFromBase64(b64Data, mimeType);
-                  if (ref) {
-                    newImages.push(ref);
-
-                    // Also persist to GalleryStore
-                    if (this.galleryStore) {
-                      const meta = await this.galleryStore.addImageFromBase64(
-                        b64Data,
-                        mimeType,
-                        session.projectPath,
-                        session.id,
-                      );
-                      if (meta && this.onGalleryImage) {
-                        this.onGalleryImage(meta);
-                      }
-                    }
-                  }
-                }
-
-                if (newImages.length > 0) {
-                  msg = { ...msg, images: [...existingImages, ...newImages] };
-                }
-              }
-
-              // Strip transient rawContentBlocks before sending to client
-              const { rawContentBlocks: _, ...cleanMsg } = msg;
-              msg = cleanMsg as typeof msg;
-            }
-          }
         } else {
           // Codex: capture thread_id for session tracking and worktree restore.
           if (msg.type === "system" && "sessionId" in msg && msg.sessionId) {
             session.claudeSessionId = msg.sessionId;
             this.saveWorktreeMapping(session);
+          }
+        }
+
+        // Extract images from tool_result content for both Claude and Codex.
+        if (msg.type === "tool_result" && this.imageStore) {
+          const paths = this.imageStore.extractImagePaths(msg.content);
+          if (paths.length > 0) {
+            const images = await this.imageStore.registerImages(paths, session.projectPath);
+            if (images.length > 0) {
+              msg = { ...msg, images };
+            }
+
+            // Also register in GalleryStore (disk-persistent)
+            if (this.galleryStore) {
+              for (const p of paths) {
+                const meta = await this.galleryStore.addImage(
+                  p,
+                  session.projectPath,
+                  session.id,
+                );
+                if (meta && this.onGalleryImage) {
+                  this.onGalleryImage(meta);
+                }
+              }
+            }
+          }
+
+          // Extract base64 images from content blocks (e.g., MCP screenshots)
+          if (msg.rawContentBlocks) {
+            const imageBlocks = (msg.rawContentBlocks as Array<Record<string, unknown>>)
+              .filter((c) => c.type === "image" && (c.source as Record<string, unknown>)?.type === "base64");
+
+            if (imageBlocks.length > 0) {
+              const existingImages = msg.images ?? [];
+              const newImages: ImageRef[] = [];
+
+              for (const block of imageBlocks) {
+                const source = block.source as Record<string, unknown>;
+                if (typeof source?.data !== "string" || typeof source?.media_type !== "string") continue;
+                const b64Data = source.data as string;
+                const mimeType = source.media_type as string;
+                const ref = this.imageStore.registerFromBase64(b64Data, mimeType);
+                if (ref) {
+                  newImages.push(ref);
+
+                  // Also persist to GalleryStore
+                  if (this.galleryStore) {
+                    const meta = await this.galleryStore.addImageFromBase64(
+                      b64Data,
+                      mimeType,
+                      session.projectPath,
+                      session.id,
+                    );
+                    if (meta && this.onGalleryImage) {
+                      this.onGalleryImage(meta);
+                    }
+                  }
+                }
+              }
+
+              if (newImages.length > 0) {
+                msg = { ...msg, images: [...existingImages, ...newImages] };
+              }
+            }
+
+            // Strip transient rawContentBlocks before sending to client
+            const { rawContentBlocks: _, ...cleanMsg } = msg;
+            msg = cleanMsg as typeof msg;
           }
         }
 

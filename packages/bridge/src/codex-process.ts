@@ -1399,6 +1399,7 @@ export class CodexProcess extends EventEmitter<CodexProcessEvents> {
         const tool = typeof item.tool === "string" ? item.tool : "unknown";
         const toolName = `mcp:${server}/${tool}`;
         const result = item.result ?? item.error ?? "MCP call completed";
+        const normalized = normalizeMcpToolResult(result);
         this.emitMessage({
           type: "assistant",
           message: {
@@ -1418,8 +1419,11 @@ export class CodexProcess extends EventEmitter<CodexProcessEvents> {
         this.emitMessage({
           type: "tool_result",
           toolUseId: itemId,
-          content: typeof result === "string" ? result : JSON.stringify(result),
+          content: normalized.content,
           toolName,
+          ...(normalized.rawContentBlocks.length > 0
+            ? { rawContentBlocks: normalized.rawContentBlocks }
+            : {}),
         });
         break;
       }
@@ -1773,6 +1777,80 @@ function formatDynamicToolResult(item: Record<string, unknown>): string {
   }
 
   return parts.join("\n");
+}
+
+function normalizeMcpToolResult(
+  result: unknown,
+): { content: string; rawContentBlocks: Array<Record<string, unknown>> } {
+  if (typeof result === "string") {
+    return { content: result, rawContentBlocks: [] };
+  }
+
+  const record = result && typeof result === "object" && !Array.isArray(result)
+    ? result as Record<string, unknown>
+    : null;
+  const contentItems = Array.isArray(record?.content) ? record.content : null;
+  if (!contentItems) {
+    return {
+      content: result == null ? "MCP call completed" : JSON.stringify(result),
+      rawContentBlocks: [],
+    };
+  }
+
+  const textParts: string[] = [];
+  const rawContentBlocks: Array<Record<string, unknown>> = [];
+
+  for (const entry of contentItems) {
+    if (!entry || typeof entry !== "object") continue;
+    const item = entry as Record<string, unknown>;
+    const type = typeof item.type === "string" ? item.type : "";
+
+    if (type === "text" && typeof item.text === "string") {
+      textParts.push(item.text);
+      rawContentBlocks.push({ type: "text", text: item.text });
+      continue;
+    }
+
+    if (type === "image" && typeof item.data === "string") {
+      const mimeType = typeof item.mimeType === "string"
+        ? item.mimeType
+        : typeof item.mediaType === "string"
+          ? item.mediaType
+          : typeof item.media_type === "string"
+            ? item.media_type
+            : "image/png";
+      rawContentBlocks.push({
+        type: "image",
+        source: {
+          type: "base64",
+          data: item.data,
+          media_type: mimeType,
+        },
+      });
+      continue;
+    }
+
+    rawContentBlocks.push(item);
+    textParts.push(JSON.stringify(item));
+  }
+
+  const content = textParts.join("\n").trim();
+  if (content.length > 0) {
+    return { content, rawContentBlocks };
+  }
+
+  const imageCount = rawContentBlocks.filter((entry) => entry.type === "image").length;
+  if (imageCount > 0) {
+    return {
+      content: imageCount === 1 ? "Generated 1 image" : `Generated ${imageCount} images`,
+      rawContentBlocks,
+    };
+  }
+
+  return {
+    content: result == null ? "MCP call completed" : JSON.stringify(result),
+    rawContentBlocks,
+  };
 }
 
 function toCodexThreadSummary(entry: unknown): CodexThreadSummary {

@@ -283,6 +283,75 @@ describe("SessionManager codex path", () => {
     const summary = manager.list().find((s) => s.id === sessionId);
     expect(summary).toBeDefined();
   });
+
+  it("extracts Codex MCP base64 images into images for history and forwarding", async () => {
+    const forwarded: Array<{ sessionId: string; msg: ServerMessage }> = [];
+    const imageStore = {
+      extractImagePaths: vi.fn(() => []),
+      registerImages: vi.fn(async () => []),
+      registerFromBase64: vi.fn(() => ({
+        id: "img-codex-1",
+        url: "/images/img-codex-1",
+        mimeType: "image/png",
+      })),
+    };
+    const manager = new SessionManager(
+      (sessionId, msg) => {
+        forwarded.push({ sessionId, msg });
+      },
+      imageStore as any,
+    );
+
+    const sessionId = manager.create(
+      "/tmp/project-codex-images",
+      undefined,
+      undefined,
+      undefined,
+      "codex",
+    );
+
+    codexInstances[0].emit("message", {
+      type: "tool_result",
+      toolUseId: "mcp-img-1",
+      toolName: "mcp:marionette/take_screenshots",
+      content: "Generated 1 image",
+      rawContentBlocks: [
+        {
+          type: "image",
+          source: {
+            type: "base64",
+            data: "aGVsbG8=",
+            media_type: "image/png",
+          },
+        },
+      ],
+    } as ServerMessage);
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const forwardedMsg = forwarded.at(-1)?.msg as Record<string, unknown> | undefined;
+    expect(forwardedMsg).toBeDefined();
+    expect(forwardedMsg?.type).toBe("tool_result");
+    expect(forwardedMsg?.images).toEqual([
+      {
+        id: "img-codex-1",
+        url: "/images/img-codex-1",
+        mimeType: "image/png",
+      },
+    ]);
+    expect(forwardedMsg).not.toHaveProperty("rawContentBlocks");
+
+    const historyMsg = manager.get(sessionId)?.history.at(-1) as Record<string, unknown> | undefined;
+    expect(historyMsg).toBeDefined();
+    expect(historyMsg?.images).toEqual([
+      {
+        id: "img-codex-1",
+        url: "/images/img-codex-1",
+        mimeType: "image/png",
+      },
+    ]);
+    expect(historyMsg).not.toHaveProperty("rawContentBlocks");
+  });
 });
 
 describe("SessionManager claude UUID backfill", () => {
