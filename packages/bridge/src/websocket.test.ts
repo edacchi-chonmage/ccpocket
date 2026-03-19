@@ -210,7 +210,6 @@ describe("BridgeWebSocketServer resume/get_history flow", () => {
 
     await Promise.resolve();
     await Promise.resolve();
-
     const resumeSends = ws.send.mock.calls.map((c: unknown[]) => JSON.parse(c[0] as string));
     expect(resumeSends.some((m: any) => m.type === "past_history")).toBe(false);
 
@@ -1003,30 +1002,46 @@ describe("BridgeWebSocketServer resume/get_history flow", () => {
       ],
       nextCursor: null,
     });
+    getAllRecentSessionsMock.mockResolvedValue({
+      sessions: [
+        {
+          sessionId: "thr_codex_1",
+          provider: "codex",
+          projectPath: "/tmp/project-codex",
+          firstPrompt: "Investigate crash",
+          created: "2026-02-19T10:10:43.000Z",
+          modified: "2026-02-19T11:10:43.000Z",
+          gitBranch: "feat/protocol",
+          isSidechain: false,
+          codexSettings: {
+            approvalPolicy: "never",
+            sandboxMode: "danger-full-access",
+            model: "gpt-5.3-codex",
+          },
+          resumeCwd: "/tmp/project-codex-worktree",
+        },
+      ],
+      hasMore: false,
+    });
 
-    ws.send.mockClear();
-    await (bridge as any).handleClientMessage(
+    const payload = await (bridge as any).listRecentCodexThreads(
       {
         type: "list_recent_sessions",
         provider: "codex",
         projectPath: "/tmp/project-codex",
       },
-      ws,
     );
-    await Promise.resolve();
-    await Promise.resolve();
 
     expect(session.process.listThreads).toHaveBeenCalledWith({
       limit: 20,
       cwd: "/tmp/project-codex",
       searchTerm: undefined,
     });
-    expect(getAllRecentSessionsMock).not.toHaveBeenCalled();
-
-    const payload = ws.send.mock.calls
-      .map((c: unknown[]) => JSON.parse(c[0] as string))
-      .find((m: any) => m.type === "recent_sessions");
-    expect(payload).toBeDefined();
+    expect(getAllRecentSessionsMock).toHaveBeenCalledWith({
+      provider: "codex",
+      projectPath: "/tmp/project-codex",
+      archivedSessionIds: expect.any(Set),
+    });
     expect(payload.sessions).toHaveLength(1);
     expect(payload.sessions[0]).toMatchObject({
       provider: "codex",
@@ -1036,6 +1051,12 @@ describe("BridgeWebSocketServer resume/get_history flow", () => {
       agentRole: "explorer",
       gitBranch: "feat/protocol",
       projectPath: "/tmp/project-codex",
+      resumeCwd: "/tmp/project-codex-worktree",
+      codexSettings: {
+        approvalPolicy: "never",
+        sandboxMode: "danger-full-access",
+        model: "gpt-5.3-codex",
+      },
     });
 
     bridge.close();
@@ -1043,10 +1064,6 @@ describe("BridgeWebSocketServer resume/get_history flow", () => {
 
   it("uses standalone codex app-server for codex recent sessions when no active session exists", async () => {
     const bridge = new BridgeWebSocketServer({ server: httpServer });
-    const ws = {
-      readyState: OPEN_STATE,
-      send: vi.fn(),
-    } as any;
     const stop = vi.fn();
 
     (bridge as any).createStandaloneCodexProcess = vi.fn(async () => ({
@@ -1069,27 +1086,23 @@ describe("BridgeWebSocketServer resume/get_history flow", () => {
       stop,
     }));
 
-    await (bridge as any).handleClientMessage(
+    const payload = await (bridge as any).listRecentCodexThreads(
       {
         type: "list_recent_sessions",
         provider: "codex",
         projectPath: "/tmp/project-codex",
       },
-      ws,
     );
-    await Promise.resolve();
-    await Promise.resolve();
-    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect((bridge as any).createStandaloneCodexProcess).toHaveBeenCalledWith(
       "/tmp/project-codex",
     );
     expect(stop).toHaveBeenCalledTimes(1);
-    expect(getAllRecentSessionsMock).not.toHaveBeenCalled();
-
-    const payload = ws.send.mock.calls
-      .map((c: unknown[]) => JSON.parse(c[0] as string))
-      .find((m: any) => m.type === "recent_sessions");
+    expect(getAllRecentSessionsMock).toHaveBeenCalledWith({
+      provider: "codex",
+      projectPath: "/tmp/project-codex",
+      archivedSessionIds: expect.any(Set),
+    });
     expect(payload.sessions[0]).toMatchObject({
       provider: "codex",
       sessionId: "thr_codex_2",

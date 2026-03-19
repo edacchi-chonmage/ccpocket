@@ -72,7 +72,10 @@ function threadTimestampToIso(value: number): string {
   return value > 0 ? new Date(value * 1000).toISOString() : "";
 }
 
-function codexThreadToRecentSession(thread: CodexThreadSummary): Record<string, unknown> {
+function codexThreadToRecentSession(
+  thread: CodexThreadSummary,
+  indexed?: { codexSettings?: Record<string, unknown>; resumeCwd?: string },
+): Record<string, unknown> {
   return {
     sessionId: thread.id,
     provider: "codex",
@@ -85,7 +88,9 @@ function codexThreadToRecentSession(thread: CodexThreadSummary): Record<string, 
     modified: threadTimestampToIso(thread.updatedAt),
     gitBranch: thread.gitBranch ?? "",
     projectPath: thread.cwd,
+    ...(indexed?.resumeCwd ? { resumeCwd: indexed.resumeCwd } : {}),
     isSidechain: false,
+    ...(indexed?.codexSettings ? { codexSettings: indexed.codexSettings } : {}),
   };
 }
 
@@ -2057,11 +2062,25 @@ export class BridgeWebSocketServer {
         searchTerm: msg.searchQuery,
       });
       const archivedIds = this.archiveStore.archivedIds();
+      const indexedSessions = await getAllRecentSessions({
+        provider: "codex",
+        projectPath: msg.projectPath,
+        archivedSessionIds: archivedIds,
+      });
+      const indexedById = new Map(
+        indexedSessions.sessions.map((session) => [
+          session.sessionId,
+          {
+            codexSettings: session.codexSettings,
+            resumeCwd: session.resumeCwd,
+          },
+        ]),
+      );
       const sessions = result.data
         .filter((thread) => !archivedIds.has(thread.id))
         .filter((thread) => !msg.namedOnly || !!thread.name)
         .slice(offset, offset + limit)
-        .map((thread) => codexThreadToRecentSession(thread));
+        .map((thread) => codexThreadToRecentSession(thread, indexedById.get(thread.id)));
       return {
         sessions,
         hasMore: result.nextCursor != null,
