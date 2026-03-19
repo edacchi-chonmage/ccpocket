@@ -47,6 +47,9 @@ class ApprovalBar extends StatelessWidget {
     final toolName = isPlanApproval
         ? l.planApproval
         : pendingPermission?.displayToolName;
+    final detailLines = isPlanApproval
+        ? const <String>[]
+        : (pendingPermission?.detailLines ?? const <String>[]);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -74,6 +77,7 @@ class ApprovalBar extends StatelessWidget {
               isPlanApproval: isPlanApproval,
               toolName: toolName,
               summary: summary,
+              detailLines: detailLines,
               onViewPlan: onViewPlan,
             ),
             const SizedBox(height: 6),
@@ -108,6 +112,7 @@ class _ApprovalHeader extends StatelessWidget {
   final bool isPlanApproval;
   final String? toolName;
   final String summary;
+  final List<String> detailLines;
   final VoidCallback? onViewPlan;
 
   const _ApprovalHeader({
@@ -115,6 +120,7 @@ class _ApprovalHeader extends StatelessWidget {
     required this.isPlanApproval,
     required this.toolName,
     required this.summary,
+    required this.detailLines,
     this.onViewPlan,
   });
 
@@ -156,6 +162,23 @@ class _ApprovalHeader extends StatelessWidget {
                 maxLines: 2,
                 backgroundColor: appColors.approvalBar,
               ),
+              if (detailLines.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                ...detailLines.map(
+                  (line) => Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: Text(
+                      line,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: appColors.subtleText,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -360,9 +383,7 @@ class _ApprovalButtons extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 10),
               foregroundColor: cs.error,
-              side: BorderSide(
-                color: cs.error.withValues(alpha: 0.5),
-              ),
+              side: BorderSide(color: cs.error.withValues(alpha: 0.5)),
             ),
             child: Text(l.always, style: const TextStyle(fontSize: 13)),
           ),

@@ -805,6 +805,46 @@ void main() {
       );
       expect(perm.summary, 'CustomTool');
     });
+
+    test('extracts granular approval detail lines', () {
+      const perm = PermissionRequestMessage(
+        toolUseId: 'tu-2',
+        toolName: 'Bash',
+        input: {
+          'command': 'curl https://example.com',
+          'additionalPermissions': {
+            'fileSystem': {
+              'write': ['/tmp/project'],
+            },
+          },
+          'proposedExecpolicyAmendment': {
+            'mode': 'allow',
+            'note': 'repeat command',
+          },
+          'proposedNetworkPolicyAmendments': [
+            {'host': 'example.com', 'action': 'allow'},
+          ],
+          'availableDecisions': ['accept', 'acceptForSession', 'decline'],
+        },
+      );
+
+      expect(
+        perm.detailLines,
+        contains('Additional permissions: fileSystem.write=/tmp/project'),
+      );
+      expect(
+        perm.detailLines,
+        contains('Exec policy: mode=allow, note=repeat command'),
+      );
+      expect(
+        perm.detailLines,
+        contains('Network policy: host=example.com, action=allow'),
+      );
+      expect(
+        perm.detailLines,
+        contains('Allowed actions: accept, acceptForSession, decline'),
+      );
+    });
   });
 
   group('PastHistory restoration — text, image, and text+image', () {

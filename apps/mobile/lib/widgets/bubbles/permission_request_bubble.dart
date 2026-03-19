@@ -21,6 +21,7 @@ class _PermissionRequestBubbleState extends State<PermissionRequestBubble> {
   @override
   Widget build(BuildContext context) {
     final appColors = Theme.of(context).extension<AppColors>()!;
+    final detailLines = widget.message.detailLines;
     final inputStr = const JsonEncoder.withIndent(
       '  ',
     ).convert(widget.message.input);
@@ -65,6 +66,17 @@ class _PermissionRequestBubbleState extends State<PermissionRequestBubble> {
             ),
           ),
           const SizedBox(height: 4),
+          if (detailLines.isNotEmpty) ...[
+            for (final line in detailLines)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Text(
+                  line,
+                  style: TextStyle(fontSize: 11, color: appColors.subtleText),
+                ),
+              ),
+            const SizedBox(height: 4),
+          ],
           Text(
             _expanded ? inputStr : preview,
             style: TextStyle(

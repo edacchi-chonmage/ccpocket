@@ -70,6 +70,34 @@ void main() {
       expect(find.text('Always'), findsOneWidget);
     });
 
+    testWidgets('shows granular approval detail lines', (tester) async {
+      await tester.pumpWidget(
+        buildSubject(
+          pendingPermission: const PermissionRequestMessage(
+            toolUseId: 'tu-1',
+            toolName: 'Bash',
+            input: {
+              'command': 'curl https://example.com',
+              'additionalPermissions': {
+                'fileSystem': {
+                  'write': ['/tmp/project'],
+                },
+              },
+              'proposedExecpolicyAmendment': {'mode': 'allow'},
+              'availableDecisions': ['accept', 'decline'],
+            },
+          ),
+        ),
+      );
+
+      expect(
+        find.text('Additional permissions: fileSystem.write=/tmp/project'),
+        findsOneWidget,
+      );
+      expect(find.text('Exec policy: mode=allow'), findsOneWidget);
+      expect(find.text('Allowed actions: accept, decline'), findsOneWidget);
+    });
+
     testWidgets('shows plan approval labels', (tester) async {
       await tester.pumpWidget(
         buildSubject(

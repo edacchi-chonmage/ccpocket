@@ -90,13 +90,13 @@ Result: one unrelated existing failure in `src/version.test.ts` (expected versio
 - Thread bootstrap now opts into `persistExtendedHistory`.
 - Remaining gaps:
   - `item/tool/call` / `dynamicToolCall` is normalized into tool history, but there is still no dedicated mobile affordance beyond generic tool-use/result rendering.
-  - Permission UI still projects latest protocol onto the existing mobile affordances, so granular policy amendments are not yet user-selectable.
+  - Permission UI now surfaces amendment summaries, but still does not offer dedicated controls for choosing among protocol-level policy amendment variants.
   - Recent sessions still come from rollout scanning rather than `thread/list`, so app-server-native pagination/filter semantics are not yet used.
 
 ### Recommended next implementation slice
 
 1. Decide whether dynamic tools need dedicated mobile UI instead of the current generic tool history rendering.
-2. Decide whether ccpocket wants to expose granular approval policy or continue projecting onto the existing mobile permission modes.
+2. Decide whether ccpocket wants interactive controls for granular approval policy amendments instead of summary-only display.
 3. Decide whether recent-session fetching should switch from rollout scanning to `thread/list`.
 4. Add real Codex E2E coverage for permissions + elicitation flows on mobile.
 

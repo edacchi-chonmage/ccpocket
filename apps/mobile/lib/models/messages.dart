@@ -833,6 +833,98 @@ class PermissionRequestMessage implements ServerMessage {
     }
     return parts.isNotEmpty ? parts.join(' | ') : toolName;
   }
+
+  List<String> get detailLines {
+    final lines = <String>[];
+
+    if (isPermissionGrantRequest) {
+      final permissions = _flattenPermissionValues(input['permissions']);
+      if (permissions.isNotEmpty) {
+        lines.add('Permissions: ${permissions.join(', ')}');
+      }
+    }
+
+    final additionalPermissions = _flattenPermissionValues(
+      input['additionalPermissions'],
+    );
+    if (additionalPermissions.isNotEmpty) {
+      lines.add('Additional permissions: ${additionalPermissions.join(', ')}');
+    }
+
+    final execAmendment = _stringMapSummary(
+      input['proposedExecpolicyAmendment'],
+    );
+    if (execAmendment != null) {
+      lines.add('Exec policy: $execAmendment');
+    }
+
+    final networkAmendments = _networkPolicySummary(
+      input['proposedNetworkPolicyAmendments'],
+    );
+    if (networkAmendments != null) {
+      lines.add('Network policy: $networkAmendments');
+    }
+
+    final availableDecisions = _stringList(input['availableDecisions']);
+    if (availableDecisions.isNotEmpty) {
+      lines.add('Allowed actions: ${availableDecisions.join(', ')}');
+    }
+
+    return lines;
+  }
+}
+
+List<String> _flattenPermissionValues(dynamic value, [String prefix = '']) {
+  if (value is Map) {
+    final out = <String>[];
+    for (final entry in value.entries) {
+      final key = entry.key.toString();
+      final nextPrefix = prefix.isEmpty ? key : '$prefix.$key';
+      out.addAll(_flattenPermissionValues(entry.value, nextPrefix));
+    }
+    return out;
+  }
+  if (value is List) {
+    return value
+        .map((entry) => entry.toString())
+        .where((entry) => entry.isNotEmpty)
+        .map((entry) => prefix.isEmpty ? entry : '$prefix=$entry')
+        .toList();
+  }
+  if (value is bool || value is num || value is String) {
+    final text = value.toString();
+    if (text.isEmpty) return const [];
+    return [prefix.isEmpty ? text : '$prefix=$text'];
+  }
+  return const [];
+}
+
+String? _stringMapSummary(dynamic value) {
+  if (value is! Map) return null;
+  final parts = value.entries
+      .map((entry) => '${entry.key}=${entry.value}')
+      .where((entry) => entry.isNotEmpty)
+      .toList();
+  if (parts.isEmpty) return null;
+  return parts.join(', ');
+}
+
+String? _networkPolicySummary(dynamic value) {
+  if (value is! List) return null;
+  final parts = value
+      .map((entry) => _stringMapSummary(entry))
+      .whereType<String>()
+      .toList();
+  if (parts.isEmpty) return null;
+  return parts.join(' | ');
+}
+
+List<String> _stringList(dynamic value) {
+  if (value is! List) return const [];
+  return value
+      .map((entry) => entry.toString())
+      .where((entry) => entry.isNotEmpty)
+      .toList();
 }
 
 class PermissionResolvedMessage implements ServerMessage {
