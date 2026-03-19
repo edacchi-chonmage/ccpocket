@@ -2,6 +2,20 @@
 
 All notable changes to `@ccpocket/bridge` will be documented in this file.
 
+## [1.26.0] - 2026-03-19
+
+### Added
+- Codex approval protocol support (catch up app-server approval flow)
+- Codex sub-agent session metadata display
+- Codex dynamic tool call normalization
+- Codex thread list for recent sessions (stored threads without active sessions)
+- Simplified Chinese (zh-CN) localization support
+
+### Fixed
+- Restore MCP images in Codex session history
+- Preserve Codex sandbox mode on session resume
+- Restore Codex recent session settings correctly
+
 ## [1.25.0] - 2026-03-19
 
 ### Changed
