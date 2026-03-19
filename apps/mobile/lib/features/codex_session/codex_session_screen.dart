@@ -39,6 +39,7 @@ import '../chat_session/widgets/chat_input_with_overlays.dart';
 import '../chat_session/widgets/bottom_overlay_layout.dart';
 import '../chat_session/widgets/chat_message_list.dart';
 import '../chat_session/widgets/reconnect_banner.dart';
+import '../chat_session/widgets/scroll_to_bottom_button.dart';
 import '../chat_session/widgets/session_mode_bar.dart';
 import '../chat_session/widgets/status_line_flexible_space.dart';
 import '../../router/app_router.dart';
@@ -807,7 +808,7 @@ class _CodexChatBody extends HookWidget {
                       return Positioned(
                         right: 12,
                         bottom: overlayHeight + 12,
-                        child: FloatingActionButton.small(
+                        child: ScrollToBottomButton(
                           onPressed: () {
                             if (scroll.controller.hasClients) {
                               scroll.controller.animateTo(
@@ -817,7 +818,6 @@ class _CodexChatBody extends HookWidget {
                               );
                             }
                           },
-                          child: const Icon(Icons.keyboard_arrow_down),
                         ),
                       );
                     },
