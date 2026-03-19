@@ -1472,6 +1472,8 @@ class RecentSession {
 
   /// User-assigned session name (customTitle for Claude, thread_name for Codex).
   final String? name;
+  final String? agentNickname;
+  final String? agentRole;
   final String? summary;
   final String firstPrompt;
   final String? lastPrompt;
@@ -1492,6 +1494,8 @@ class RecentSession {
     required this.sessionId,
     this.provider,
     this.name,
+    this.agentNickname,
+    this.agentRole,
     this.summary,
     required this.firstPrompt,
     this.lastPrompt,
@@ -1515,6 +1519,8 @@ class RecentSession {
       sessionId: json['sessionId'] as String,
       provider: json['provider'] as String?,
       name: json['name'] as String?,
+      agentNickname: json['agentNickname'] as String?,
+      agentRole: json['agentRole'] as String?,
       summary: json['summary'] as String?,
       firstPrompt: json['firstPrompt'] as String? ?? '',
       lastPrompt: json['lastPrompt'] as String?,
@@ -1554,6 +1560,8 @@ class RecentSession {
       sessionId: sessionId,
       provider: provider,
       name: clearName ? null : (name ?? this.name),
+      agentNickname: agentNickname,
+      agentRole: agentRole,
       summary: summary,
       firstPrompt: firstPrompt,
       lastPrompt: lastPrompt,
@@ -1583,6 +1591,8 @@ class SessionInfo {
 
   /// User-assigned session name.
   final String? name;
+  final String? agentNickname;
+  final String? agentRole;
   final String status;
   final String createdAt;
   final String lastActivityAt;
@@ -1606,6 +1616,8 @@ class SessionInfo {
     required this.projectPath,
     this.claudeSessionId,
     this.name,
+    this.agentNickname,
+    this.agentRole,
     required this.status,
     required this.createdAt,
     required this.lastActivityAt,
@@ -1639,6 +1651,8 @@ class SessionInfo {
       projectPath: projectPath,
       claudeSessionId: claudeSessionId,
       name: clearName ? null : (name ?? this.name),
+      agentNickname: agentNickname,
+      agentRole: agentRole,
       status: status ?? this.status,
       createdAt: createdAt,
       lastActivityAt: lastActivityAt,
@@ -1669,6 +1683,8 @@ class SessionInfo {
       projectPath: json['projectPath'] as String,
       claudeSessionId: json['claudeSessionId'] as String?,
       name: json['name'] as String?,
+      agentNickname: json['agentNickname'] as String?,
+      agentRole: json['agentRole'] as String?,
       status: json['status'] as String? ?? 'idle',
       createdAt: json['createdAt'] as String? ?? '',
       lastActivityAt: json['lastActivityAt'] as String? ?? '',

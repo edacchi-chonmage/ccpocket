@@ -126,6 +126,10 @@ class _RunningSessionCardState extends State<RunningSessionCard> {
     final provider = providerFromRaw(session.provider);
     final providerStyle = providerStyleFor(context, provider);
     final elapsed = _formatElapsed(session.lastActivityAt);
+    final agentLabel = _formatAgentLabel(
+      session.agentNickname,
+      session.agentRole,
+    );
     final displayMessage = formatCommandText(
       session.lastMessage.replaceAll(RegExp(r'\s+'), ' ').trim(),
     );
@@ -434,6 +438,10 @@ class _RunningSessionCardState extends State<RunningSessionCard> {
                       ),
                     ],
                   ),
+                  if (agentLabel != null) ...[
+                    const SizedBox(height: 8),
+                    _AgentLabel(label: agentLabel),
+                  ],
                   // Last message
                   if (displayMessage.isNotEmpty) ...[
                     const SizedBox(height: 4),
@@ -2182,6 +2190,41 @@ class _StatusDotPainter extends CustomPainter {
       oldDelegate.inPlanMode != inPlanMode;
 }
 
+String? _formatAgentLabel(String? nickname, String? role) {
+  final trimmedNickname = nickname?.trim();
+  final trimmedRole = role?.trim();
+  final hasNickname = trimmedNickname != null && trimmedNickname.isNotEmpty;
+  final hasRole = trimmedRole != null && trimmedRole.isNotEmpty;
+  if (!hasNickname && !hasRole) return null;
+  if (hasNickname && hasRole) return '$trimmedNickname [$trimmedRole]';
+  return hasNickname ? trimmedNickname : '[$trimmedRole]';
+}
+
+class _AgentLabel extends StatelessWidget {
+  final String label;
+
+  const _AgentLabel({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.onSurfaceVariant;
+    return Row(
+      children: [
+        Icon(Icons.smart_toy_outlined, size: 14, color: color),
+        const SizedBox(width: 4),
+        Flexible(
+          child: Text(
+            label,
+            style: TextStyle(fontSize: 12, color: color),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class RecentSessionCard extends StatelessWidget {
   final RecentSession session;
   final VoidCallback onTap;
@@ -2210,6 +2253,10 @@ class RecentSessionCard extends StatelessWidget {
     final provider = providerFromRaw(session.provider);
     final providerStyle = providerStyleFor(context, provider);
     final isCodex = session.provider == 'codex';
+    final agentLabel = _formatAgentLabel(
+      session.agentNickname,
+      session.agentRole,
+    );
     final settingsSummary = isCodex
         ? _buildSettingsSummary(
             isCodex: true,
@@ -2322,6 +2369,10 @@ class RecentSessionCard extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (agentLabel != null) ...[
+                    const SizedBox(height: 8),
+                    _AgentLabel(label: agentLabel),
+                  ],
                   const SizedBox(height: 8),
 
                   // Body Content

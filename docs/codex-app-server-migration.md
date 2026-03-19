@@ -91,13 +91,13 @@ Result: one unrelated existing failure in `src/version.test.ts` (expected versio
 - Remaining gaps:
   - `item/tool/call` (dynamic tool calls, experimental) is still not mapped into mobile WS/UI.
   - Permission UI still projects latest protocol onto the existing mobile affordances, so granular policy amendments are not yet user-selectable.
-  - Session list / recent session surfaces do not yet expose `agentNickname` / `agentRole` metadata from app-server threads.
+  - Recent sessions still come from rollout scanning rather than `thread/list`, so app-server-native pagination/filter semantics are not yet used.
 
 ### Recommended next implementation slice
 
 1. Add bridge/mobile handling for `item/tool/call` if dynamic tools need to work in ccpocket.
 2. Decide whether ccpocket wants to expose granular approval policy or continue projecting onto the existing mobile permission modes.
-3. Surface `agentNickname` / `agentRole` and collab/sub-agent metadata in session list and history summaries.
+3. Decide whether recent-session fetching should switch from rollout scanning to `thread/list`.
 4. Add real Codex E2E coverage for permissions + elicitation flows on mobile.
 
 ## Follow-ups

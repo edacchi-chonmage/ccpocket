@@ -225,6 +225,27 @@ describe("SessionManager codex path", () => {
     expect(afterExit?.history.at(-1)).toEqual({ type: "status", status: "idle" });
   });
 
+  it("includes codex agent metadata in session summaries", () => {
+    const manager = new SessionManager(() => {});
+    const sessionId = manager.create(
+      "/tmp/project-codex",
+      undefined,
+      undefined,
+      undefined,
+      "codex",
+    );
+    const proc = codexInstances[0] as typeof codexInstances[number] & {
+      agentNickname?: string;
+      agentRole?: string;
+    };
+    proc.agentNickname = "Atlas";
+    proc.agentRole = "explorer";
+
+    const summary = manager.list().find((entry) => entry.id == sessionId);
+    expect(summary?.agentNickname).toBe("Atlas");
+    expect(summary?.agentRole).toBe("explorer");
+  });
+
   it("counts past messages and excludes streaming deltas from history", () => {
     const forwarded: Array<{ sessionId: string; msg: ServerMessage }> = [];
     const manager = new SessionManager((sessionId, msg) => {

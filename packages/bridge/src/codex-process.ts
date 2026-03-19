@@ -103,6 +103,8 @@ export class CodexProcess extends EventEmitter<CodexProcessEvents> {
   private child: ChildProcessWithoutNullStreams | null = null;
   private _status: ProcessStatus = "starting";
   private _threadId: string | null = null;
+  private _agentNickname: string | null = null;
+  private _agentRole: string | null = null;
   private stopped = false;
   private startModel: string | undefined;
 
@@ -153,6 +155,14 @@ export class CodexProcess extends EventEmitter<CodexProcessEvents> {
 
   get sessionId(): string | null {
     return this._threadId;
+  }
+
+  get agentNickname(): string | null {
+    return this._agentNickname;
+  }
+
+  get agentRole(): string | null {
+    return this._agentRole;
   }
 
   get isRunning(): boolean {
@@ -215,6 +225,8 @@ export class CodexProcess extends EventEmitter<CodexProcessEvents> {
 
     this.stopped = false;
     this._threadId = null;
+    this._agentNickname = null;
+    this._agentRole = null;
     this.pendingTurnId = null;
     this.pendingTurnCompletion = null;
     this.pendingApprovals.clear();
@@ -979,6 +991,8 @@ export class CodexProcess extends EventEmitter<CodexProcessEvents> {
         if (typeof thread?.id === "string") {
           this._threadId = thread.id;
         }
+        this._agentNickname = stringOrNull(thread?.agentNickname);
+        this._agentRole = stringOrNull(thread?.agentRole);
         break;
       }
 
@@ -1606,6 +1620,10 @@ function normalizeItemType(raw: unknown): string {
 
 function numberOrUndefined(value: unknown): number | undefined {
   return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+}
+
+function stringOrNull(value: unknown): string | null {
+  return typeof value === "string" && value.trim().length > 0 ? value : null;
 }
 
 function summarizeFileChanges(changes: unknown): string {

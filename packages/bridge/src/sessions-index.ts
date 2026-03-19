@@ -9,6 +9,8 @@ export interface SessionIndexEntry {
   provider: "claude" | "codex";
   /** User-assigned session name (customTitle for Claude, thread_name for Codex). */
   name?: string;
+  agentNickname?: string;
+  agentRole?: string;
   summary?: string;
   firstPrompt: string;
   lastPrompt?: string;
@@ -1068,6 +1070,8 @@ function parseCodexSessionJsonl(raw: string, fallbackSessionId: string): CodexSe
   let summary = "";
   let hasMessages = false;
   let lastAssistantText = "";
+  let agentNickname: string | undefined;
+  let agentRole: string | undefined;
   // Settings extracted from the first turn_context entry
   let approvalPolicy: string | undefined;
   let sandboxMode: string | undefined;
@@ -1104,6 +1108,12 @@ function parseCodexSessionJsonl(raw: string, fallbackSessionId: string): CodexSe
         const git = payload.git as Record<string, unknown> | undefined;
         if (git && typeof git.branch === "string") {
           gitBranch = git.branch;
+        }
+        if (typeof payload.agent_nickname === "string" && payload.agent_nickname.length > 0) {
+          agentNickname = payload.agent_nickname;
+        }
+        if (typeof payload.agent_role === "string" && payload.agent_role.length > 0) {
+          agentRole = payload.agent_role;
         }
       }
       continue;
@@ -1195,6 +1205,8 @@ function parseCodexSessionJsonl(raw: string, fallbackSessionId: string): CodexSe
     entry: {
       sessionId: threadId,
       provider: "codex",
+      ...(agentNickname ? { agentNickname } : {}),
+      ...(agentRole ? { agentRole } : {}),
       summary: summary || undefined,
       firstPrompt,
       ...(lastPrompt && lastPrompt !== firstPrompt ? { lastPrompt } : {}),

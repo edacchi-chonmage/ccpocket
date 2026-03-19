@@ -75,6 +75,8 @@ export interface SessionSummary {
     networkAccessEnabled?: boolean;
     webSearchMode?: string;
   };
+  agentNickname?: string;
+  agentRole?: string;
   /** Claude sandbox enabled state. */
   sandboxEnabled?: boolean;
   pendingPermission?: {
@@ -475,6 +477,14 @@ export class SessionManager {
           ? s.process.model
           : undefined,
         codexSettings: s.codexSettings,
+        agentNickname:
+          s.process instanceof CodexProcess
+            ? s.process.agentNickname ?? undefined
+            : undefined,
+        agentRole:
+          s.process instanceof CodexProcess
+            ? s.process.agentRole ?? undefined
+            : undefined,
         sandboxEnabled: s.sandboxEnabled,
         pendingPermission,
       };

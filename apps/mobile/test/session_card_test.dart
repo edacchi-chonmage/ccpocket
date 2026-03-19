@@ -66,6 +66,22 @@ void main() {
       expect(info.codexSandboxMode, 'workspace-write');
       expect(info.codexModel, 'gpt-5.3-codex');
     });
+
+    test('parses agent metadata', () {
+      final json = {
+        'id': 'codex-agent',
+        'provider': 'codex',
+        'projectPath': '/home/user/my-app',
+        'status': 'running',
+        'createdAt': '',
+        'lastActivityAt': '',
+        'agentNickname': 'Atlas',
+        'agentRole': 'explorer',
+      };
+      final info = SessionInfo.fromJson(json);
+      expect(info.agentNickname, 'Atlas');
+      expect(info.agentRole, 'explorer');
+    });
   });
 
   group('RunningSessionCard', () {
@@ -201,6 +217,28 @@ void main() {
         find.text('gpt-5.3-codex  sandbox-workspace-write  on-request'),
         findsOneWidget,
       );
+    });
+
+    testWidgets('shows agent metadata for codex sub-agent sessions', (
+      tester,
+    ) async {
+      final session = SessionInfo(
+        id: 'codex-agent',
+        provider: 'codex',
+        projectPath: '/home/user/my-app',
+        status: 'running',
+        createdAt: DateTime.now().toIso8601String(),
+        lastActivityAt: DateTime.now().toIso8601String(),
+        agentNickname: 'Atlas',
+        agentRole: 'explorer',
+      );
+
+      await tester.pumpWidget(
+        _wrap(RunningSessionCard(session: session, onTap: () {})),
+      );
+
+      expect(find.text('Atlas [explorer]'), findsOneWidget);
+      expect(find.byIcon(Icons.smart_toy_outlined), findsOneWidget);
     });
 
     testWidgets('shows settings summary for claude provider with model', (
