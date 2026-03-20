@@ -601,7 +601,7 @@ class _NewSessionSheetContentState extends State<_NewSessionSheetContent> {
       projectPath: path,
       provider: _provider,
       executionMode: _executionMode,
-      planMode: _planMode,
+      planMode: isCodex ? false : _planMode,
       useWorktree: useExisting ? false : _useWorktree,
       worktreeBranch: useExisting
           ? _selectedWorktree?.branch
@@ -1419,17 +1419,6 @@ class _OptionsSection extends StatelessWidget {
                           onExecutionModeChanged(value);
                         }
                       },
-                    ),
-                    const SizedBox(height: 8),
-                    SwitchListTile.adaptive(
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('Plan Mode'),
-                      subtitle: Text(
-                        l.codexPlanModeDescription,
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      value: planMode,
-                      onChanged: onPlanModeChanged,
                     ),
                   ],
                 )
