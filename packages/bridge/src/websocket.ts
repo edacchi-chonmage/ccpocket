@@ -82,6 +82,11 @@ function threadTimestampToIso(value: number): string {
   return value > 0 ? new Date(value * 1000).toISOString() : "";
 }
 
+function envFlagEnabled(name: string): boolean {
+  const value = process.env[name]?.trim().toLowerCase();
+  return value === "1" || value === "true" || value === "yes" || value === "on";
+}
+
 function codexThreadToRecentSession(
   thread: CodexThreadSummary,
   indexed?: { codexSettings?: Record<string, unknown>; resumeCwd?: string },
@@ -141,6 +146,8 @@ export class BridgeWebSocketServer {
   /** FCM token → push notification locale */
   private tokenLocales = new Map<string, PushLocale>();
   private tokenPrivacyMode = new Map<string, boolean>();
+  private failSetPermissionMode = envFlagEnabled("BRIDGE_FAIL_SET_PERMISSION_MODE");
+  private failSetSandboxMode = envFlagEnabled("BRIDGE_FAIL_SET_SANDBOX_MODE");
 
   constructor(options: BridgeServerOptions) {
     const { server, apiKey, allowedDirs, imageStore, galleryStore, projectHistory, debugTraceStore, recordingStore, firebaseAuth, promptHistoryBackup } = options;
@@ -672,6 +679,14 @@ export class BridgeWebSocketServer {
       }
 
       case "set_permission_mode": {
+        if (this.failSetPermissionMode) {
+          this.send(ws, {
+            type: "error",
+            message: "Failed to set permission mode: forced test failure",
+            errorCode: "set_permission_mode_rejected",
+          });
+          break;
+        }
         const session = this.resolveSession(msg.sessionId);
         if (!session) {
           this.send(ws, { type: "error", message: "No active session." });
@@ -819,6 +834,14 @@ export class BridgeWebSocketServer {
       }
 
       case "set_sandbox_mode": {
+        if (this.failSetSandboxMode) {
+          this.send(ws, {
+            type: "error",
+            message: "Failed to set sandbox mode: forced test failure",
+            errorCode: "set_sandbox_mode_rejected",
+          });
+          break;
+        }
         const session = this.resolveSession(msg.sessionId);
         if (!session) {
           this.send(ws, { type: "error", message: "No active session." });

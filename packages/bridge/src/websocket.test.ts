@@ -184,6 +184,7 @@ describe("BridgeWebSocketServer resume/get_history flow", () => {
 
   afterEach(() => {
     globalThis.fetch = originalFetch;
+    vi.unstubAllEnvs();
     httpServer.close();
   });
 
@@ -533,6 +534,60 @@ describe("BridgeWebSocketServer resume/get_history flow", () => {
     expect(last).toEqual({
       type: "error",
       message: "No active session.",
+    });
+
+    bridge.close();
+  });
+
+  it("can force set_permission_mode failure for testing", () => {
+    vi.stubEnv("BRIDGE_FAIL_SET_PERMISSION_MODE", "1");
+    const bridge = new BridgeWebSocketServer({ server: httpServer });
+    const ws = {
+      readyState: OPEN_STATE,
+      send: vi.fn(),
+    } as any;
+
+    (bridge as any).handleClientMessage(
+      {
+        type: "set_permission_mode",
+        sessionId: "s-1",
+        mode: "plan",
+      },
+      ws,
+    );
+
+    const last = JSON.parse(ws.send.mock.calls.at(-1)?.[0] as string);
+    expect(last).toEqual({
+      type: "error",
+      message: "Failed to set permission mode: forced test failure",
+      errorCode: "set_permission_mode_rejected",
+    });
+
+    bridge.close();
+  });
+
+  it("can force set_sandbox_mode failure for testing", () => {
+    vi.stubEnv("BRIDGE_FAIL_SET_SANDBOX_MODE", "1");
+    const bridge = new BridgeWebSocketServer({ server: httpServer });
+    const ws = {
+      readyState: OPEN_STATE,
+      send: vi.fn(),
+    } as any;
+
+    (bridge as any).handleClientMessage(
+      {
+        type: "set_sandbox_mode",
+        sessionId: "s-1",
+        sandboxMode: "off",
+      },
+      ws,
+    );
+
+    const last = JSON.parse(ws.send.mock.calls.at(-1)?.[0] as string);
+    expect(last).toEqual({
+      type: "error",
+      message: "Failed to set sandbox mode: forced test failure",
+      errorCode: "set_sandbox_mode_rejected",
     });
 
     bridge.close();

@@ -734,6 +734,16 @@ class BridgeService implements BridgeServiceBase {
     _patchSessionPermissionMode(sessionId, permissionMode);
   }
 
+  void patchSessionSandboxMode(String sessionId, String sandboxMode) {
+    final idx = _sessions.indexWhere((s) => s.id == sessionId);
+    if (idx < 0) return;
+    final current = _sessions[idx];
+    if (current.codexSandboxMode == sandboxMode) return;
+    _sessions = List.of(_sessions)
+      ..[idx] = current.copyWith(codexSandboxMode: sandboxMode);
+    _sessionListController.add(_sessions);
+  }
+
   @override
   Stream<ServerMessage> messagesForSession(String sessionId) {
     return _taggedMessageController.stream

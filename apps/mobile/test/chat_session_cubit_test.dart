@@ -249,6 +249,47 @@ void main() {
       expect(cubit.state.inPlanMode, isFalse);
     });
 
+    test('permission mode rolls back on mode-change error', () async {
+      final cubit = createCubit('s1');
+      addTearDown(cubit.close);
+      await Future.microtask(() {});
+
+      cubit.setPermissionMode(PermissionMode.bypassPermissions);
+      expect(cubit.state.permissionMode, PermissionMode.bypassPermissions);
+
+      mockBridge.emitMessage(
+        const ErrorMessage(
+          message: 'Failed to set permission mode: forced test failure',
+          errorCode: 'set_permission_mode_rejected',
+        ),
+        sessionId: 's1',
+      );
+      await Future.microtask(() {});
+
+      expect(cubit.state.permissionMode, PermissionMode.defaultMode);
+      expect(cubit.state.inPlanMode, isFalse);
+    });
+
+    test('sandbox mode rolls back on mode-change error', () async {
+      final cubit = createCubit('s1');
+      addTearDown(cubit.close);
+      await Future.microtask(() {});
+
+      cubit.setSandboxMode(SandboxMode.on);
+      expect(cubit.state.sandboxMode, SandboxMode.on);
+
+      mockBridge.emitMessage(
+        const ErrorMessage(
+          message: 'Failed to set sandbox mode: forced test failure',
+          errorCode: 'set_sandbox_mode_rejected',
+        ),
+        sessionId: 's1',
+      );
+      await Future.microtask(() {});
+
+      expect(cubit.state.sandboxMode, SandboxMode.off);
+    });
+
     test('history message adds entries', () async {
       final cubit = createCubit('s1');
       addTearDown(cubit.close);

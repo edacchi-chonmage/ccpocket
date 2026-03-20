@@ -37,6 +37,9 @@ class ChatSessionCubit extends Cubit<ChatSessionState> {
   /// completes ([ResultMessage]).
   final _respondedToolUseIds = <String>{};
 
+  PermissionMode? _pendingPermissionRollback;
+  SandboxMode? _pendingSandboxRollback;
+
   /// Whether this session is a Codex session.
   bool get isCodex => provider == Provider.codex;
 
@@ -87,6 +90,7 @@ class ChatSessionCubit extends Cubit<ChatSessionState> {
     // Log errors prominently
     if (msg is ErrorMessage) {
       logger.error('[session:$sessionId] Error from bridge: ${msg.message}');
+      _rollbackFailedModeChange(msg);
     }
 
     // Prevent duplicate past_history processing
@@ -636,6 +640,7 @@ class ChatSessionCubit extends Cubit<ChatSessionState> {
   /// Change permission mode for Claude sessions.
   void setPermissionMode(PermissionMode mode) {
     logger.info('[session:$sessionId] setPermissionMode=${mode.value}');
+    _pendingPermissionRollback = state.permissionMode;
     emit(
       state.copyWith(
         permissionMode: mode,
@@ -657,7 +662,11 @@ class ChatSessionCubit extends Cubit<ChatSessionState> {
   /// Change sandbox mode (Claude & Codex).
   /// Bridge destroys and resumes the session with new sandbox settings.
   void setSandboxMode(SandboxMode mode) {
+    _pendingSandboxRollback = state.sandboxMode;
     emit(state.copyWith(sandboxMode: mode));
+    if (isCodex) {
+      _bridge.patchSessionSandboxMode(sessionId, mode.value);
+    }
     _bridge.send(
       ClientMessage.setSandboxMode(mode.value, sessionId: sessionId),
     );
@@ -666,6 +675,57 @@ class ChatSessionCubit extends Cubit<ChatSessionState> {
     if (claudeSid != null && claudeSid.isNotEmpty) {
       _SessionSettingsHelper.save(claudeSid, {'sandboxMode': mode.value});
     }
+  }
+
+  void _rollbackFailedModeChange(ErrorMessage msg) {
+    if (_isPermissionModeFailure(msg)) {
+      final previous = _pendingPermissionRollback;
+      _pendingPermissionRollback = null;
+      if (previous != null) {
+        emit(
+          state.copyWith(
+            permissionMode: previous,
+            inPlanMode: previous == PermissionMode.plan,
+          ),
+        );
+        _bridge.patchSessionPermissionMode(sessionId, previous.value);
+        final claudeSid = state.claudeSessionId;
+        if (claudeSid != null && claudeSid.isNotEmpty) {
+          _SessionSettingsHelper.save(claudeSid, {'permissionMode': previous.value});
+        }
+      }
+    }
+
+    if (_isSandboxModeFailure(msg)) {
+      final previous = _pendingSandboxRollback;
+      _pendingSandboxRollback = null;
+      if (previous != null) {
+        emit(state.copyWith(sandboxMode: previous));
+        if (isCodex) {
+          _bridge.patchSessionSandboxMode(sessionId, previous.value);
+        }
+        final claudeSid = state.claudeSessionId;
+        if (claudeSid != null && claudeSid.isNotEmpty) {
+          _SessionSettingsHelper.save(claudeSid, {'sandboxMode': previous.value});
+        }
+      }
+    }
+  }
+
+  bool _isPermissionModeFailure(ErrorMessage msg) {
+    return msg.errorCode == 'set_permission_mode_rejected' ||
+        msg.message.startsWith('Failed to set permission mode:') ||
+        msg.message.startsWith(
+          'Failed to restart session for permission mode change:',
+        );
+  }
+
+  bool _isSandboxModeFailure(ErrorMessage msg) {
+    return msg.errorCode == 'set_sandbox_mode_rejected' ||
+        msg.message.startsWith('Failed to set sandbox mode:') ||
+        msg.message.startsWith(
+          'Failed to restart session for sandbox mode change:',
+        );
   }
 
   /// Stop the session.
