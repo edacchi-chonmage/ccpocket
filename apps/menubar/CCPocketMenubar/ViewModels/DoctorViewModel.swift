@@ -42,6 +42,47 @@ final class DoctorViewModel: ObservableObject {
         report?.allRequiredPassed ?? false
     }
 
+    var codexProvider: ProviderResult? {
+        provider(named: "Codex CLI")
+    }
+
+    var claudeProvider: ProviderResult? {
+        provider(named: "Claude Code CLI")
+    }
+
+    var isCodexInstalled: Bool {
+        codexProvider?.installed ?? false
+    }
+
+    var isCodexAuthenticated: Bool {
+        codexProvider?.authenticated ?? false
+    }
+
+    var isCodexReady: Bool {
+        isCodexInstalled && isCodexAuthenticated
+    }
+
+    var isClaudeReady: Bool {
+        guard let claudeProvider else { return false }
+        return claudeProvider.installed && claudeProvider.authenticated
+    }
+
+    var canContinueOnboarding: Bool {
+        allPassed && isCodexReady
+    }
+
+    var onboardingCTA: String {
+        canContinueOnboarding
+            ? String(localized: "Continue to Connect")
+            : String(localized: "Finish Codex Setup")
+    }
+
+    var onboardingHint: String {
+        canContinueOnboarding
+            ? String(localized: "Codex ready on this Mac")
+            : String(localized: "Finish Codex setup to continue. Claude Code stays available in Doctor.")
+    }
+
     func runDoctor() {
         guard !isRunning else { return }
         isRunning = true
@@ -244,6 +285,27 @@ final class DoctorViewModel: ObservableObject {
         }
     }
 
+    func onboardingCommands(for check: CheckResult) -> [(comment: String, command: String)] {
+        switch check.name {
+        case "Node.js":
+            return nodeCommands()
+        case "CLI providers":
+            return cliProviderCommands(for: check, preferredOnly: true)
+        case "Bridge Server", "launchd service":
+            return bridgeCommands()
+        default:
+            return []
+        }
+    }
+
+    func runPrimaryCodexAction() {
+        if !isCodexInstalled {
+            installCodex()
+        } else if !isCodexAuthenticated {
+            loginProvider("Codex CLI")
+        }
+    }
+
     private func nodeCommands() -> [(comment: String, command: String)] {
         [
             (String(localized: "Install Homebrew"), "/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""),
@@ -257,13 +319,29 @@ final class DoctorViewModel: ObservableObject {
         ]
     }
 
-    /// Build CLI provider commands. Either provider is sufficient.
-    private func cliProviderCommands(for check: CheckResult) -> [(comment: String, command: String)] {
+    private func provider(named providerName: String) -> ProviderResult? {
+        report?.results
+            .compactMap(\.providers)
+            .flatMap { $0 }
+            .first(where: { $0.name == providerName })
+    }
+
+    /// Build CLI provider commands. Prefer Codex for onboarding and first-run setup.
+    private func cliProviderCommands(
+        for check: CheckResult,
+        preferredOnly: Bool = false
+    ) -> [(comment: String, command: String)] {
         guard let providers = check.providers else { return [] }
 
         var commands: [(comment: String, command: String)] = []
+        let prioritizedProviders = providers.sorted { lhs, rhs in
+            rank(for: lhs.name) < rank(for: rhs.name)
+        }
 
-        for provider in providers {
+        for provider in prioritizedProviders {
+            if preferredOnly && provider.name != "Codex CLI" {
+                continue
+            }
             if provider.installed && !provider.authenticated {
                 switch provider.name {
                 case "Claude Code CLI":
@@ -276,9 +354,9 @@ final class DoctorViewModel: ObservableObject {
             } else if !provider.installed {
                 switch provider.name {
                 case "Claude Code CLI":
-                    commands.append((String(localized: "Install Claude Code (either one is OK)"), "curl -fsSL https://claude.ai/install.sh | bash"))
+                    commands.append((String(localized: "Install Claude Code (Optional)"), "npm install -g @anthropic-ai/claude-code"))
                 case "Codex CLI":
-                    commands.append((String(localized: "Install Codex (either one is OK)"), "npm install -g @openai/codex"))
+                    commands.append((String(localized: "Install Codex (Recommended)"), "npm install -g @openai/codex"))
                 default:
                     break
                 }
@@ -302,6 +380,14 @@ final class DoctorViewModel: ObservableObject {
                 actionError = error.localizedDescription
             }
             actionInProgress = nil
+        }
+    }
+
+    private func rank(for providerName: String) -> Int {
+        switch providerName {
+        case "Codex CLI": return 0
+        case "Claude Code CLI": return 1
+        default: return 2
         }
     }
 }

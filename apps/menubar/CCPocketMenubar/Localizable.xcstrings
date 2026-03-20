@@ -65,14 +65,54 @@
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "CC Pocketへようこそ" } }
       }
     },
+    "Already have ChatGPT Plus?" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ChatGPT Plus を使っていますか？" } }
+      }
+    },
+    "You can use Codex today with no extra subscription. CC Pocket helps you set it up on your Mac and connect from your phone." : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "追加課金なしで Codex を今日から使えます。CC Pocket が、Mac でのセットアップとスマホ接続を案内します。" } }
+      }
+    },
     "Manage your Bridge Server, monitor usage, and connect your mobile device — all from the menu bar." : {
       "localizations" : {
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "Bridge Serverの管理、使用状況の確認、モバイル端末との接続 — すべてメニューバーから操作できます。" } }
       }
     },
+    "ChatGPT Plus or above" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ChatGPT Plus 以上" } }
+      }
+    },
+    "No extra subscription" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "追加課金なし" } }
+      }
+    },
+    "Mac setup assistant" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Macセットアップ支援" } }
+      }
+    },
+    "Claude optional" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Claude は任意" } }
+      }
+    },
     "Environment Check" : {
       "localizations" : {
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "環境チェック" } }
+      }
+    },
+    "Codex-first setup" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Codex 優先セットアップ" } }
+      }
+    },
+    "We'll check the essentials for a polished Codex workflow on your Mac." : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Mac で Codex を気持ちよく使い始めるための必須項目を確認します。" } }
       }
     },
     "Let's make sure everything is set up correctly. We'll check for Node.js, CLI tools, and the Bridge service." : {
@@ -90,6 +130,16 @@
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "環境の準備ができました。必要に応じて「診断」タブからいつでも再実行できます。" } }
       }
     },
+    "Codex is ready" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Codex の準備ができました" } }
+      }
+    },
+    "Your Mac is ready for a phone-first Codex workflow." : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "スマホ中心の Codex ワークフローを始める準備が、Mac 側で整いました。" } }
+      }
+    },
     "Running checks…" : {
       "localizations" : {
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "チェック中…" } }
@@ -105,9 +155,24 @@
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "はじめる" } }
       }
     },
+    "Set Up Codex" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Codex をセットアップ" } }
+      }
+    },
     "Continue" : {
       "localizations" : {
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "続ける" } }
+      }
+    },
+    "Continue to Connect" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "接続画面へ進む" } }
+      }
+    },
+    "Finish Codex Setup" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Codex の設定を完了" } }
       }
     },
     "Continue Anyway" : {
@@ -115,9 +180,24 @@
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "このまま続ける" } }
       }
     },
+    "Codex ready on this Mac" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "この Mac で Codex が使えます" } }
+      }
+    },
+    "Finish Codex setup to continue. Claude Code stays available in Doctor." : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "続けるには Codex の設定を完了してください。Claude Code は診断タブから引き続き使えます。" } }
+      }
+    },
     "Open CC Pocket" : {
       "localizations" : {
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "CC Pocketを開く" } }
+      }
+    },
+    "Use the CC Pocket app to scan the Connect tab QR code and start from your phone." : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "CC Pocket アプリで接続タブの QR コードを読み取り、スマホから始めてください。" } }
       }
     },
 
@@ -172,6 +252,11 @@
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "インストール" } }
       }
     },
+    "Recommended" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "おすすめ" } }
+      }
+    },
     "Login" : {
       "localizations" : {
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "ログイン" } }
@@ -201,6 +286,16 @@
     "Scan with CC Pocket app" : {
       "localizations" : {
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "CC Pocketアプリでスキャン" } }
+      }
+    },
+    "Ready for your phone" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "スマホ接続の準備完了" } }
+      }
+    },
+    "Scan this QR code in CC Pocket to connect to your Mac." : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "CC Pocket でこの QR コードを読み取り、Mac に接続します。" } }
       }
     },
     "No Network" : {
@@ -463,9 +558,19 @@
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "Claude Codeをインストール（どちらか1つでOK）" } }
       }
     },
+    "Install Claude Code (Optional)" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Claude Code をインストール（任意）" } }
+      }
+    },
     "Install Codex (either one is OK)" : {
       "localizations" : {
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "Codexをインストール（どちらか1つでOK）" } }
+      }
+    },
+    "Install Codex (Recommended)" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Codex をインストール（推奨）" } }
       }
     },
     "Login to Claude Code" : {
@@ -487,6 +592,16 @@
     "Launch at Login" : {
       "localizations" : {
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "ログイン時に起動" } }
+      }
+    },
+    "Codex recommended" : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Codex 推奨" } }
+      }
+    },
+    "If you already have ChatGPT Plus or above, Codex is the smoothest way to start with CC Pocket." : {
+      "localizations" : {
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ChatGPT Plus 以上を使っているなら、CC Pocket を始める最短ルートは Codex です。" } }
       }
     },
 

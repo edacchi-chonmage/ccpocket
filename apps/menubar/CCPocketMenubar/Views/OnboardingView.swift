@@ -9,9 +9,9 @@ struct OnboardingView: View {
 
     private var steps: [(icon: String, title: String, description: String)] {
         [
-            ("hand.wave.fill", String(localized: "Welcome to CC Pocket"), String(localized: "Manage your Bridge Server, monitor usage, and connect your mobile device — all from the menu bar.")),
-            ("stethoscope", String(localized: "Environment Check"), String(localized: "Let's make sure everything is set up correctly.")),
-            ("checkmark.seal.fill", String(localized: "You're All Set!"), String(localized: "Your environment is ready. You can always re-run Doctor from the Doctor tab if needed.")),
+            ("sparkles", String(localized: "Already have ChatGPT Plus?"), String(localized: "You can use Codex today with no extra subscription. CC Pocket helps you set it up on your Mac and connect from your phone.")),
+            ("stethoscope", String(localized: "Codex-first setup"), String(localized: "We'll check the essentials for a polished Codex workflow on your Mac.")),
+            ("checkmark.seal.fill", String(localized: "Codex is ready"), String(localized: "Your Mac is ready for a phone-first Codex workflow.")),
         ]
     }
 
@@ -43,31 +43,77 @@ struct OnboardingView: View {
 
     private var welcomeStep: some View {
         VStack(spacing: 0) {
-            VStack(spacing: 16) {
-                Image(systemName: steps[0].icon)
-                    .font(.system(size: 40))
-                    .foregroundStyle(Color.accentColor)
-                    .symbolEffect(.bounce, value: currentStep)
+            ZStack {
+                Circle()
+                    .fill(.cyan.opacity(0.18))
+                    .frame(width: 180, height: 180)
+                    .blur(radius: 18)
+                    .offset(x: -80, y: -30)
 
-                Text(steps[0].title)
-                    .font(.title3.weight(.semibold))
+                Circle()
+                    .fill(.blue.opacity(0.16))
+                    .frame(width: 140, height: 140)
+                    .blur(radius: 16)
+                    .offset(x: 90, y: -50)
 
-                Text(steps[0].description)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
+                VStack(spacing: 18) {
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.cyan.opacity(0.95), Color.blue.opacity(0.8)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 68, height: 68)
+
+                        Image(systemName: steps[0].icon)
+                            .font(.system(size: 28, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .symbolEffect(.bounce, value: currentStep)
+                    }
+
+                    VStack(spacing: 10) {
+                        Text(steps[0].title)
+                            .font(.title2.weight(.bold))
+                            .multilineTextAlignment(.center)
+
+                        Text(steps[0].description)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 24)
+                    }
+
+                    HStack(spacing: 8) {
+                        WelcomeBadge(title: String(localized: "ChatGPT Plus or above"))
+                        WelcomeBadge(title: String(localized: "No extra subscription"))
+                    }
+
+                    HStack(spacing: 8) {
+                        WelcomeBadge(title: String(localized: "Mac setup assistant"))
+                        WelcomeBadge(title: String(localized: "Claude optional"))
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 28)
             }
+            .frame(maxWidth: .infinity)
+            .background(.white.opacity(0.06), in: .rect(cornerRadius: 28))
+            .glassEffect(.regular.tint(.white.opacity(0.1)), in: .rect(cornerRadius: 28))
+            .padding(.horizontal, 18)
             .frame(maxWidth: .infinity)
             .padding(.top, 20)
 
             Spacer()
 
-            Button("Get Started") {
+            Button(String(localized: "Set Up Codex")) {
                 withAnimation { currentStep = 1 }
                 doctorVM.runDoctor()
             }
             .buttonStyle(.borderedProminent)
+            .controlSize(.large)
             .padding(.horizontal, 24)
             .padding(.bottom, 20)
         }
@@ -79,18 +125,10 @@ struct OnboardingView: View {
         VStack(spacing: 0) {
             // Header
             VStack(spacing: 8) {
-                Image(systemName: steps[1].icon)
-                    .font(.system(size: 32))
-                    .foregroundStyle(Color.accentColor)
-
-                Text(steps[1].title)
-                    .font(.title3.weight(.semibold))
-
-                Text(steps[1].description)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                onboardingStatusCard
             }
             .frame(maxWidth: .infinity)
+            .padding(.horizontal, 18)
 
             // Scrollable step list
             ScrollView {
@@ -200,6 +238,11 @@ struct OnboardingView: View {
         VStack(spacing: 8) {
             Divider()
 
+            Text(doctorVM.onboardingHint)
+                .font(.caption)
+                .foregroundStyle(doctorVM.canContinueOnboarding ? .green : .secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
             // Terminal + Re-check (always visible)
             HStack(spacing: 8) {
                 Button {
@@ -234,12 +277,13 @@ struct OnboardingView: View {
 
                 Spacer()
 
-                Button(doctorVM.allPassed ? String(localized: "Continue") : String(localized: "Continue Anyway")) {
+                Button(doctorVM.onboardingCTA) {
                     withAnimation { currentStep = 2 }
                 }
-                .buttonStyle(.borderless)
-                .font(.caption)
-                .disabled(doctorVM.isRunning)
+                .buttonStyle(.borderedProminent)
+                .controlSize(.regular)
+                .font(.caption.weight(.semibold))
+                .disabled(doctorVM.isRunning || !doctorVM.canContinueOnboarding)
             }
         }
         .padding(.horizontal, 20)
@@ -264,6 +308,12 @@ struct OnboardingView: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
+
+                Text(String(localized: "Use the CC Pocket app to scan the Connect tab QR code and start from your phone."))
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 28)
             }
             .frame(maxWidth: .infinity)
             .padding(.top, 20)
@@ -313,7 +363,7 @@ struct OnboardingView: View {
             guard !seenChecks.contains(groupKey) else { continue }
             seenChecks.insert(groupKey)
 
-            let commands = doctorVM.allSetupCommands(for: check)
+            let commands = doctorVM.onboardingCommands(for: check)
             guard !commands.isEmpty else { continue }
 
             let checkPassed = check.status == "pass"
@@ -347,6 +397,92 @@ struct OnboardingView: View {
         }
 
         return steps
+    }
+
+    private var onboardingStatusCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .center, spacing: 10) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: doctorVM.canContinueOnboarding
+                                    ? [Color.green.opacity(0.85), Color.cyan.opacity(0.65)]
+                                    : [Color.cyan.opacity(0.9), Color.blue.opacity(0.72)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 40, height: 40)
+
+                    Image(systemName: doctorVM.canContinueOnboarding ? "checkmark" : steps[1].icon)
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(steps[1].title)
+                        .font(.title3.weight(.semibold))
+                    Text(steps[1].description)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+            }
+
+            HStack(spacing: 8) {
+                StatusBadge(
+                    title: "Codex",
+                    systemImage: doctorVM.isCodexReady ? "checkmark.seal.fill" : "bolt.fill",
+                    tint: doctorVM.isCodexReady ? .green : .blue
+                )
+                StatusBadge(
+                    title: "Bridge",
+                    systemImage: doctorVM.allPassed ? "checkmark.circle.fill" : "dot.scope",
+                    tint: doctorVM.allPassed ? .green : .secondary
+                )
+                if doctorVM.isClaudeReady {
+                    StatusBadge(
+                        title: "Claude",
+                        systemImage: "checkmark.circle.fill",
+                        tint: .secondary
+                    )
+                }
+            }
+        }
+        .padding(16)
+        .background(.white.opacity(0.07), in: .rect(cornerRadius: 20))
+        .glassEffect(.regular.tint(.white.opacity(0.08)), in: .rect(cornerRadius: 20))
+    }
+}
+
+private struct WelcomeBadge: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.primary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(.white.opacity(0.08), in: .capsule)
+            .glassEffect(.regular.tint(.white.opacity(0.06)), in: .capsule)
+    }
+}
+
+private struct StatusBadge: View {
+    let title: String
+    let systemImage: String
+    let tint: Color
+
+    var body: some View {
+        Label(title, systemImage: systemImage)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(tint)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(tint.opacity(0.12), in: .capsule)
     }
 }
 

@@ -46,6 +46,15 @@ struct CheckResultRow: View {
                         Text(provider.name)
                             .font(.caption)
 
+                        if provider.name == "Codex CLI" {
+                            Text(String(localized: "Recommended"))
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(.blue)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(.blue.opacity(0.12), in: .capsule)
+                        }
+
                         Spacer()
 
                         // Install button for uninstalled providers

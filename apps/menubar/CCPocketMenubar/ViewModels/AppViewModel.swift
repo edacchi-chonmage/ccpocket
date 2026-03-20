@@ -85,6 +85,7 @@ final class AppViewModel: ObservableObject {
 
     func completeOnboarding() {
         hasCompletedOnboarding = true
+        selectedTab = .qrCode
         UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
     }
 

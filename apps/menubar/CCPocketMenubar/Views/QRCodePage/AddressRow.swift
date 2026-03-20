@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AddressRow: View {
     let address: NetworkAddress
+    let port: Int
     let isSelected: Bool
     let onSelect: () -> Void
 
@@ -26,7 +27,7 @@ struct AddressRow: View {
 
                 Button {
                     NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString("ws://\(address.ip):8765", forType: .string)
+                    NSPasteboard.general.setString("ws://\(address.ip):\(port)", forType: .string)
                 } label: {
                     Image(systemName: "doc.on.doc")
                         .font(.caption)

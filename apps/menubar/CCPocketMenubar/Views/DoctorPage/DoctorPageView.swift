@@ -19,6 +19,8 @@ struct DoctorPageView: View {
             } else if let report = viewModel.report {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 14) {
+                        codexCallout
+
                         // Bridge update banner
                         if let newVersion = bridgeUpdateAvailable {
                             HStack(spacing: 8) {
@@ -175,8 +177,8 @@ struct DoctorPageView: View {
         switch check.name {
         case "Node.js" where check.status == "fail":
             return { viewModel.installNode() }
-        case "CLI providers" where check.status == "fail":
-            return { viewModel.installClaudeCode() }
+        case "CLI providers" where check.status != "pass":
+            return { viewModel.runPrimaryCodexAction() }
         case "launchd service" where check.status == "skip":
             return { viewModel.setupBridge() }
         default:
@@ -193,5 +195,69 @@ struct DoctorPageView: View {
         default:
             break
         }
+    }
+
+    private var codexCallout: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 10) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.cyan.opacity(0.9), Color.blue.opacity(0.75)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 36, height: 36)
+
+                    Image(systemName: viewModel.isCodexReady ? "sparkles" : "bolt.fill")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.white)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(viewModel.isCodexReady
+                         ? String(localized: "Codex ready on this Mac")
+                         : String(localized: "Codex recommended"))
+                        .font(.subheadline.weight(.semibold))
+
+                    Text(viewModel.isCodexReady
+                         ? String(localized: "Your Mac is ready for a phone-first Codex workflow.")
+                         : String(localized: "If you already have ChatGPT Plus or above, Codex is the smoothest way to start with CC Pocket."))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer()
+            }
+
+            if !viewModel.isCodexReady {
+                Button {
+                    viewModel.runPrimaryCodexAction()
+                } label: {
+                    Label(
+                        viewModel.isCodexInstalled
+                            ? String(localized: "Login to Codex")
+                            : String(localized: "Install Codex"),
+                        systemImage: viewModel.isCodexInstalled ? "person.badge.key" : "arrow.down.circle"
+                    )
+                    .font(.caption.weight(.semibold))
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.blue)
+            }
+        }
+        .padding(14)
+        .background(
+            LinearGradient(
+                colors: [Color.white.opacity(0.12), Color.cyan.opacity(0.08)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ),
+            in: .rect(cornerRadius: 16)
+        )
+        .glassEffect(.regular.tint(.white.opacity(0.08)), in: .rect(cornerRadius: 16))
     }
 }
