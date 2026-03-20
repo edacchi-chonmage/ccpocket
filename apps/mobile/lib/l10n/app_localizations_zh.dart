@@ -406,6 +406,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get always => '始终';
 
   @override
+  String get approveOnce => '仅此一次';
+
+  @override
+  String get approveForSession => '本次会话期间允许';
+
+  @override
   String get messagePlaceholder => '给 Claude 发消息...';
 
   @override

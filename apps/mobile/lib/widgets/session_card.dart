@@ -606,7 +606,7 @@ class _ToolApprovalArea extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: onApproveAlways,
                   icon: const Icon(Icons.done_all, size: 14),
-                  label: Text(AppLocalizations.of(context).always),
+                  label: Text(AppLocalizations.of(context).approveForSession),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     textStyle: const TextStyle(fontSize: 12),
@@ -625,7 +625,7 @@ class _ToolApprovalArea extends StatelessWidget {
                 child: FilledButton.tonalIcon(
                   onPressed: onApprove,
                   icon: const Icon(Icons.check, size: 14),
-                  label: Text(AppLocalizations.of(context).approve),
+                  label: Text(AppLocalizations.of(context).approveOnce),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     textStyle: const TextStyle(fontSize: 12),

@@ -385,7 +385,10 @@ class _ApprovalButtons extends StatelessWidget {
               foregroundColor: cs.error,
               side: BorderSide(color: cs.error.withValues(alpha: 0.5)),
             ),
-            child: Text(l.always, style: const TextStyle(fontSize: 13)),
+            child: Text(
+              l.approveForSession,
+              style: const TextStyle(fontSize: 13),
+            ),
           ),
         ),
         const SizedBox(width: 8),
@@ -396,7 +399,7 @@ class _ApprovalButtons extends StatelessWidget {
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 10),
             ),
-            child: Text(l.approve, style: const TextStyle(fontSize: 13)),
+            child: Text(l.approveOnce, style: const TextStyle(fontSize: 13)),
           ),
         ),
       ],

@@ -147,6 +147,8 @@
   "reject": "Reject",
   "approve": "Approve",
   "always": "Always",
+  "approveOnce": "Allow Once",
+  "approveForSession": "Allow for This Session",
 
   "messagePlaceholder": "Message Claude...",
   "filesMentioned": "{count} file(s) @mentioned",

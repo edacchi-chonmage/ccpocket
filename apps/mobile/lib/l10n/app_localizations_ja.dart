@@ -408,6 +408,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get always => '常に許可';
 
   @override
+  String get approveOnce => '今回だけ許可';
+
+  @override
+  String get approveForSession => 'このセッション中は許可';
+
+  @override
   String get messagePlaceholder => 'Claude にメッセージ...';
 
   @override

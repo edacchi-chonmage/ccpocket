@@ -862,6 +862,18 @@ abstract class AppLocalizations {
   /// **'常に許可'**
   String get always;
 
+  /// No description provided for @approveOnce.
+  ///
+  /// In ja, this message translates to:
+  /// **'今回だけ許可'**
+  String get approveOnce;
+
+  /// No description provided for @approveForSession.
+  ///
+  /// In ja, this message translates to:
+  /// **'このセッション中は許可'**
+  String get approveForSession;
+
   /// No description provided for @messagePlaceholder.
   ///
   /// In ja, this message translates to:

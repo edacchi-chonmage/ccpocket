@@ -411,6 +411,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get always => 'Always';
 
   @override
+  String get approveOnce => 'Allow Once';
+
+  @override
+  String get approveForSession => 'Allow for This Session';
+
+  @override
   String get messagePlaceholder => 'Message Claude...';
 
   @override

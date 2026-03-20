@@ -175,6 +175,8 @@
   "reject": "拒否",
   "approve": "承認",
   "always": "常に許可",
+  "approveOnce": "今回だけ許可",
+  "approveForSession": "このセッション中は許可",
 
   "messagePlaceholder": "Claude にメッセージ...",
   "filesMentioned": "{count} ファイルを @メンション中",

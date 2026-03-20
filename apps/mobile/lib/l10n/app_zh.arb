@@ -189,6 +189,8 @@
   "reject": "拒绝",
   "approve": "批准",
   "always": "始终",
+  "approveOnce": "仅此一次",
+  "approveForSession": "本次会话期间允许",
   "restart": "重启",
 
   "messagePlaceholder": "给 Claude 发消息...",
