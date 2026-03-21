@@ -1,5 +1,6 @@
-- Codex is now prioritized as the default entry point
-- Many small fixes and improvements for Codex sessions
-- Simplified Chinese language support
-- Model and permission mode are now easier to access from the new session sheet
-- Expandable approval commands for long tool calls
+- Unified session settings into BottomSheets with descriptions for each option
+- Mode descriptions now shown in the new session sheet
+- Redesigned session modes with Execution and Plan controls
+- Plan mode can now be toggled without restart when idle
+- Clearer approval dialog labels
+- Many stability improvements and bug fixes
