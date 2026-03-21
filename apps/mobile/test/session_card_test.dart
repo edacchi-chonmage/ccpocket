@@ -670,8 +670,8 @@ void main() {
 
       expect(find.text('Approve tool call'), findsOneWidget);
       expect(find.text('Allow Once'), findsOneWidget);
-      expect(find.text('Allow'), findsOneWidget);
-      expect(find.text('This Session'), findsOneWidget);
+      // Wide viewport (800px) → single-line combined text
+      expect(find.text('This Session allow'), findsOneWidget);
       expect(find.text('Reject'), findsOneWidget);
       expect(find.text('Other answer...'), findsNothing);
 

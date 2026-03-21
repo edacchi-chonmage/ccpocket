@@ -128,7 +128,9 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          side: BorderSide(color: colorScheme.outline, width: 1.5),
+          side: BorderSide(
+            color: colorScheme.outline.withValues(alpha: 0.3),
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),

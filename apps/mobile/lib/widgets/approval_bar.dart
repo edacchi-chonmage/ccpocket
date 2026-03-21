@@ -366,56 +366,78 @@ class _ApprovalButtons extends StatelessWidget {
     final isCodex = planApprovalUiMode == PlanApprovalUiMode.codex;
     final alwaysMain = isCodex ? l.approveSessionMain : l.approveAlways;
     final alwaysSub = isCodex ? l.approveSessionSub : l.approveAlwaysSub;
-    return Row(
-      children: [
-        Expanded(
-          child: OutlinedButton(
-            key: const ValueKey('reject_button'),
-            onPressed: onReject,
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-            ),
-            child: Text(l.reject, style: const TextStyle(fontSize: 13)),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: OutlinedButton(
-            key: const ValueKey('approve_always_button'),
-            onPressed: onApproveAlways,
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              foregroundColor: cs.error,
-              side: BorderSide(color: cs.error.withValues(alpha: 0.5)),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(alwaysMain, style: const TextStyle(fontSize: 13)),
-                Text(
-                  alwaysSub,
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w400,
-                    color: cs.error.withValues(alpha: 0.7),
-                  ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // On wide screens (iPad etc.), show single-line text
+        final isWide = constraints.maxWidth >= 400;
+        return Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                key: const ValueKey('reject_button'),
+                onPressed: onReject,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
                 ),
-              ],
+                child:
+                    Text(l.reject, style: const TextStyle(fontSize: 13)),
+              ),
             ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: FilledButton(
-            key: const ValueKey('approve_button'),
-            onPressed: onApprove,
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 10),
+            const SizedBox(width: 8),
+            Expanded(
+              child: OutlinedButton(
+                key: const ValueKey('approve_always_button'),
+                onPressed: onApproveAlways,
+                style: OutlinedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                    vertical: isWide ? 8 : 5,
+                  ),
+                  foregroundColor: cs.error,
+                  side: BorderSide(color: cs.error.withValues(alpha: 0.5)),
+                ),
+                child: isWide || alwaysSub.isEmpty
+                    ? Text(
+                        alwaysSub.isEmpty
+                            ? alwaysMain
+                            : '$alwaysMain $alwaysSub',
+                        style: const TextStyle(fontSize: 13),
+                      )
+                    : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            alwaysSub,
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w400,
+                              color: cs.error.withValues(alpha: 0.7),
+                            ),
+                          ),
+                          Text(
+                            alwaysMain,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+              ),
             ),
-            child: Text(l.approveOnce, style: const TextStyle(fontSize: 13)),
-          ),
-        ),
-      ],
+            const SizedBox(width: 8),
+            Expanded(
+              child: FilledButton(
+                key: const ValueKey('approve_button'),
+                onPressed: onApprove,
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                ),
+                child: Text(
+                  l.approveOnce,
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

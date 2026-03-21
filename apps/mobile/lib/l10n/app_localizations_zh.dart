@@ -418,13 +418,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get approveAlways => '始终允许';
 
   @override
-  String get approveAlwaysSub => '永久';
+  String get approveAlwaysSub => '';
 
   @override
-  String get approveSessionMain => '允许';
+  String get approveSessionMain => '本次会话允许';
 
   @override
-  String get approveSessionSub => '本次会话';
+  String get approveSessionSub => '';
 
   @override
   String get permissionDefaultDescription => '标准权限提示';

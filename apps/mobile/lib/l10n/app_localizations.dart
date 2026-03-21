@@ -889,19 +889,19 @@ abstract class AppLocalizations {
   /// No description provided for @approveAlwaysSub.
   ///
   /// In ja, this message translates to:
-  /// **'永続的に'**
+  /// **''**
   String get approveAlwaysSub;
 
   /// No description provided for @approveSessionMain.
   ///
   /// In ja, this message translates to:
-  /// **'許可'**
+  /// **'セッション中許可'**
   String get approveSessionMain;
 
   /// No description provided for @approveSessionSub.
   ///
   /// In ja, this message translates to:
-  /// **'このセッション'**
+  /// **''**
   String get approveSessionSub;
 
   /// No description provided for @permissionDefaultDescription.

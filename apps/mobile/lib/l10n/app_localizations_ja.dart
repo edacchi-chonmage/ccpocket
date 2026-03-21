@@ -420,13 +420,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get approveAlways => '常に許可';
 
   @override
-  String get approveAlwaysSub => '永続的に';
+  String get approveAlwaysSub => '';
 
   @override
-  String get approveSessionMain => '許可';
+  String get approveSessionMain => 'セッション中許可';
 
   @override
-  String get approveSessionSub => 'このセッション';
+  String get approveSessionSub => '';
 
   @override
   String get permissionDefaultDescription => '標準の承認フローです';

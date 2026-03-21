@@ -596,76 +596,86 @@ class _ToolApprovalArea extends StatelessWidget {
             maxLines: 2,
           ),
           const SizedBox(height: 6),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              SizedBox(
-                height: 36,
-                child: OutlinedButton.icon(
-                  onPressed: onReject,
-                  icon: const Icon(Icons.close, size: 14),
-                  label: Text(AppLocalizations.of(context).reject),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    textStyle: const TextStyle(fontSize: 12),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              SizedBox(
-                height: 36,
-                child: OutlinedButton(
-                  onPressed: onApproveAlways,
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    foregroundColor: Theme.of(context).colorScheme.error,
-                    side: BorderSide(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.error.withValues(alpha: 0.5),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth >= 400;
+              final l = AppLocalizations.of(context);
+              final cs = Theme.of(context).colorScheme;
+              final alwaysMain =
+                  isCodex ? l.approveSessionMain : l.approveAlways;
+              final alwaysSub =
+                  isCodex ? l.approveSessionSub : l.approveAlwaysSub;
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  SizedBox(
+                    height: 36,
+                    child: OutlinedButton.icon(
+                      onPressed: onReject,
+                      icon: const Icon(Icons.close, size: 14),
+                      label: Text(l.reject),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        textStyle: const TextStyle(fontSize: 12),
+                      ),
                     ),
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        isCodex
-                            ? AppLocalizations.of(context).approveSessionMain
-                            : AppLocalizations.of(context).approveAlways,
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      Text(
-                        isCodex
-                            ? AppLocalizations.of(context).approveSessionSub
-                            : AppLocalizations.of(context).approveAlwaysSub,
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w400,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.error.withValues(alpha: 0.7),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    height: 36,
+                    child: OutlinedButton(
+                      onPressed: onApproveAlways,
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        foregroundColor: cs.error,
+                        side: BorderSide(
+                          color: cs.error.withValues(alpha: 0.5),
                         ),
                       ),
-                    ],
+                      child: isWide || alwaysSub.isEmpty
+                          ? Text(
+                              alwaysSub.isEmpty
+                                  ? alwaysMain
+                                  : '$alwaysMain $alwaysSub',
+                              style: const TextStyle(fontSize: 12),
+                            )
+                          : Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  alwaysSub,
+                                  style: TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w400,
+                                    color: cs.error.withValues(alpha: 0.7),
+                                  ),
+                                ),
+                                Text(
+                                  alwaysMain,
+                                  style: const TextStyle(fontSize: 11),
+                                ),
+                              ],
+                            ),
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              SizedBox(
-                height: 36,
-                child: FilledButton.tonalIcon(
-                  onPressed: onApprove,
-                  icon: const Icon(Icons.check, size: 14),
-                  label: Text(AppLocalizations.of(context).approveOnce),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    textStyle: const TextStyle(fontSize: 12),
-                    backgroundColor: statusColor.withValues(alpha: 0.15),
-                    foregroundColor: statusColor,
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    height: 36,
+                    child: FilledButton.tonalIcon(
+                      onPressed: onApprove,
+                      icon: const Icon(Icons.check, size: 14),
+                      label: Text(l.approveOnce),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        textStyle: const TextStyle(fontSize: 12),
+                        backgroundColor: statusColor.withValues(alpha: 0.15),
+                        foregroundColor: statusColor,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
         ],
       ),
