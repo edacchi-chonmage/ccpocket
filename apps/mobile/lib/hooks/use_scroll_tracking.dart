@@ -58,7 +58,8 @@ ScrollTrackingResult useScrollTracking(String sessionId) {
         if (extentDelta > _kExtentChangeTolerance) return;
       }
 
-      final scrolled = pos.pixels < pos.maxScrollExtent - 100;
+      // Reverse list: offset 0 = bottom, higher offset = scrolled up.
+      final scrolled = pos.pixels > 100;
       isScrolledUpRef.value = scrolled;
       if (scrolled != isScrolledUp.value) {
         isScrolledUp.value = scrolled;
@@ -90,7 +91,7 @@ ScrollTrackingResult useScrollTracking(String sessionId) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (controller.hasClients) {
         controller.animateTo(
-          controller.position.maxScrollExtent,
+          0.0,
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
         );

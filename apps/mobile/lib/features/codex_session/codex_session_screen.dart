@@ -814,7 +814,7 @@ class _CodexChatBody extends HookWidget {
                           onPressed: () {
                             if (scroll.controller.hasClients) {
                               scroll.controller.animateTo(
-                                scroll.controller.position.maxScrollExtent,
+                                0.0,
                                 duration: const Duration(milliseconds: 200),
                                 curve: Curves.easeOut,
                               );
@@ -836,7 +836,6 @@ class _CodexChatBody extends HookWidget {
                       pendingPlanToolUseId: pendingPlanToolUseId,
                       scrollToUserEntry: scrollToUserEntry,
                       collapseToolResults: collapseToolResults,
-                      onScrollToBottom: scroll.scrollToBottom,
                       bottomPadding: 8,
                     ),
                   ),

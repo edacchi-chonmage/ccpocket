@@ -806,7 +806,7 @@ class _ChatScreenBody extends HookWidget {
                           onPressed: () {
                             if (scroll.controller.hasClients) {
                               scroll.controller.animateTo(
-                                scroll.controller.position.maxScrollExtent,
+                                0.0,
                                 duration: const Duration(milliseconds: 200),
                                 curve: Curves.easeOut,
                               );
@@ -829,7 +829,6 @@ class _ChatScreenBody extends HookWidget {
                       editedPlanText: editedPlanText,
                       allowPlanEditing: pendingPlanToolUseId != null,
                       pendingPlanToolUseId: pendingPlanToolUseId,
-                      onScrollToBottom: scroll.scrollToBottom,
                       scrollToUserEntry: scrollToUserEntry,
                       bottomPadding: 8,
                     ),
