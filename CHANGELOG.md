@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.47.1] - 2026-03-21
+
+### Fixed
+- Approval button overflow and split Claude/Codex labels
+
 ## [1.47.0] - 2026-03-21
 
 ### Added
