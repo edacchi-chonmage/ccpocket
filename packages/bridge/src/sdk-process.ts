@@ -984,6 +984,27 @@ export class SdkProcess extends EventEmitter<SdkProcessEvents> {
         this.setStatus("idle");
       }
 
+      // Detect permission mode changes from SDK status messages (SSOT).
+      // When the CLI internally transitions (e.g. "Always allow" edits →
+      // default → acceptEdits), the SDK emits a status message with the new
+      // permissionMode.  Propagate the change to connected clients.
+      if (message.type === "system" && "subtype" in message) {
+        const sys = message as Record<string, unknown>;
+        if (sys.subtype === "status" && typeof sys.permissionMode === "string") {
+          const newMode = sys.permissionMode as PermissionMode;
+          if (newMode !== this._permissionMode) {
+            console.log(`[sdk-process] Permission mode changed: ${this._permissionMode} → ${newMode}`);
+            this._permissionMode = newMode;
+            this.emitMessage({
+              type: "system",
+              subtype: "set_permission_mode",
+              permissionMode: newMode,
+              sessionId: this._sessionId ?? undefined,
+            });
+          }
+        }
+      }
+
       // Update status from message type
       this.updateStatusFromMessage(message);
     }
