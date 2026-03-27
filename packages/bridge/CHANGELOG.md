@@ -2,6 +2,12 @@
 
 All notable changes to `@ccpocket/bridge` will be documented in this file.
 
+## [1.29.0] - 2026-03-27
+
+### Added
+- Improve @mention file list with untracked files and relevance scoring
+- Improve resume command copy for worktree and permission modes
+
 ## [1.28.0] - 2026-03-24
 
 ### Added
