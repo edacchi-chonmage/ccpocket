@@ -26,7 +26,7 @@ class AppConstants {
 
   /// App Store URL (iOS)
   static const String appStoreUrl =
-      'https://apps.apple.com/us/app/cc-pocket-dev-agent-remote/id6759188790';
+      'https://apps.apple.com/us/app/cc-pocket-code-anywhere/id6759188790';
 
   /// Play Store URL (Android)
   static const String playStoreUrl =
