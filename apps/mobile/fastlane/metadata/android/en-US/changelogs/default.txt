@@ -1,4 +1,1 @@
 - File Peek: tap file paths in messages to preview contents in a bottom sheet
-- Smart path resolution: shortened paths auto-resolve against project files
-- Syntax highlighting and Markdown preview toggle in File Peek
-- Copy @path for quick file references in chat
