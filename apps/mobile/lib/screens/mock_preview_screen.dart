@@ -1313,7 +1313,7 @@ class _StoreDiffWrapperState extends State<_StoreDiffWrapper> {
   @override
   void initState() {
     super.initState();
-    _mockBridge = MockBridgeService();
+    _mockBridge = MockBridgeService()..mockDiff = storeMockDiff;
   }
 
   @override
@@ -1326,7 +1326,10 @@ class _StoreDiffWrapperState extends State<_StoreDiffWrapper> {
   Widget build(BuildContext context) {
     return RepositoryProvider<BridgeService>.value(
       value: _mockBridge,
-      child: DiffScreen(initialDiff: storeMockDiff, title: 'shopify-app'),
+      child: const DiffScreen(
+        projectPath: '/mock/shopify-app',
+        title: 'shopify-app',
+      ),
     );
   }
 }
@@ -1350,7 +1353,7 @@ class _StoreLineNumberDiffWrapperState
   @override
   void initState() {
     super.initState();
-    _mockBridge = MockBridgeService();
+    _mockBridge = MockBridgeService()..mockDiff = lineNumberTestDiff;
   }
 
   @override
@@ -1363,8 +1366,8 @@ class _StoreLineNumberDiffWrapperState
   Widget build(BuildContext context) {
     return RepositoryProvider<BridgeService>.value(
       value: _mockBridge,
-      child: DiffScreen(
-        initialDiff: lineNumberTestDiff,
+      child: const DiffScreen(
+        projectPath: '/mock/line-number-test',
         title: 'line-number-test',
       ),
     );

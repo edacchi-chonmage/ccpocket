@@ -9,6 +9,12 @@ class MockBridgeService extends BridgeService {
   final _mockMessageController = StreamController<ServerMessage>.broadcast();
   final List<Timer> _timers = [];
 
+  /// Optional diff text to return for `get_diff` requests (projectPath mode).
+  String? _mockDiff;
+
+  /// Set mock diff data for projectPath-mode DiffScreen previews.
+  set mockDiff(String value) => _mockDiff = value;
+
   @override
   Stream<ServerMessage> get messages => _mockMessageController.stream;
 
@@ -26,6 +32,66 @@ class MockBridgeService extends BridgeService {
   Stream<FileContentMessage> get fileContent => _mockMessageController.stream
       .where((m) => m is FileContentMessage)
       .cast<FileContentMessage>();
+
+  @override
+  Stream<DiffResultMessage> get diffResults => _mockMessageController.stream
+      .where((m) => m is DiffResultMessage)
+      .cast<DiffResultMessage>();
+
+  // Git Operations streams
+  @override
+  Stream<GitStageResultMessage> get gitStageResults =>
+      _mockMessageController.stream
+          .where((m) => m is GitStageResultMessage)
+          .cast<GitStageResultMessage>();
+
+  @override
+  Stream<GitUnstageResultMessage> get gitUnstageResults =>
+      _mockMessageController.stream
+          .where((m) => m is GitUnstageResultMessage)
+          .cast<GitUnstageResultMessage>();
+
+  @override
+  Stream<GitCommitResultMessage> get gitCommitResults =>
+      _mockMessageController.stream
+          .where((m) => m is GitCommitResultMessage)
+          .cast<GitCommitResultMessage>();
+
+  @override
+  Stream<GitPushResultMessage> get gitPushResults =>
+      _mockMessageController.stream
+          .where((m) => m is GitPushResultMessage)
+          .cast<GitPushResultMessage>();
+
+  @override
+  Stream<GhPrResultMessage> get ghPrResults =>
+      _mockMessageController.stream
+          .where((m) => m is GhPrResultMessage)
+          .cast<GhPrResultMessage>();
+
+  @override
+  Stream<GitStatusResultMessage> get gitStatusResults =>
+      _mockMessageController.stream
+          .where((m) => m is GitStatusResultMessage)
+          .cast<GitStatusResultMessage>();
+
+  @override
+  Stream<GitBranchesResultMessage> get gitBranchesResults =>
+      _mockMessageController.stream
+          .where((m) => m is GitBranchesResultMessage)
+          .cast<GitBranchesResultMessage>();
+
+  @override
+  Stream<GitCreateBranchResultMessage> get gitCreateBranchResults =>
+      _mockMessageController.stream
+          .where((m) => m is GitCreateBranchResultMessage)
+          .cast<GitCreateBranchResultMessage>();
+
+  @override
+  Stream<GitCheckoutBranchResultMessage> get gitCheckoutBranchResults =>
+      _mockMessageController.stream
+          .where((m) => m is GitCheckoutBranchResultMessage)
+          .cast<GitCheckoutBranchResultMessage>();
 
   @override
   void send(ClientMessage message) {
@@ -124,6 +190,76 @@ class MockBridgeService extends BridgeService {
             language: _mockFileLanguage(filePath),
             totalLines: _mockFileContent(filePath).split('\n').length,
           ),
+        );
+      // ---- Git Operations (mock) ----
+      case 'get_diff':
+        _scheduleMessage(
+          const Duration(milliseconds: 300),
+          DiffResultMessage(diff: _mockDiff ?? ''),
+        );
+      case 'git_stage':
+        _scheduleMessage(
+          const Duration(milliseconds: 200),
+          const GitStageResultMessage(success: true),
+        );
+      case 'git_unstage':
+        _scheduleMessage(
+          const Duration(milliseconds: 200),
+          const GitUnstageResultMessage(success: true),
+        );
+      case 'git_commit':
+        _scheduleMessage(
+          const Duration(milliseconds: 500),
+          GitCommitResultMessage(
+            success: true,
+            commitHash: 'abc1234',
+            message: json['message'] as String? ?? 'mock commit',
+          ),
+        );
+      case 'git_push':
+        _scheduleMessage(
+          const Duration(milliseconds: 600),
+          const GitPushResultMessage(
+            success: true,
+            remote: 'origin',
+            branch: 'feat/mock',
+          ),
+        );
+      case 'gh_pr_create':
+        _scheduleMessage(
+          const Duration(milliseconds: 800),
+          const GhPrResultMessage(
+            success: true,
+            prNumber: 42,
+            url: 'https://github.com/user/repo/pull/42',
+          ),
+        );
+      case 'git_status':
+        _scheduleMessage(
+          const Duration(milliseconds: 200),
+          const GitStatusResultMessage(
+            staged: ['lib/main.dart', 'lib/app.dart'],
+            unstaged: ['lib/screen.dart'],
+            untracked: ['lib/new_file.dart'],
+          ),
+        );
+      case 'git_branches':
+        _scheduleMessage(
+          const Duration(milliseconds: 200),
+          const GitBranchesResultMessage(
+            current: 'feat/mock',
+            branches: ['main', 'feat/mock', 'feat/login', 'fix/bug-123'],
+          ),
+        );
+      case 'git_create_branch':
+        _scheduleMessage(
+          const Duration(milliseconds: 300),
+          const GitCreateBranchResultMessage(success: true),
+        );
+      case 'git_checkout_branch':
+        _scheduleMessage(
+          const Duration(milliseconds: 300),
+          const GitCheckoutBranchResultMessage(success: true),
         );
       default:
         break;
