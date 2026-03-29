@@ -1,4 +1,4 @@
-- Expanded localization coverage
-- Added untracked files and relevance scoring to @mention file list
-- Improved new session sheet (tool-colored project tiles, customizable tool order)
-- Improved resume command for mac / Linux
+- File Peek: tap file paths in messages to preview contents in a bottom sheet
+- Smart path resolution: shortened paths auto-resolve against project files
+- Syntax highlighting and Markdown preview toggle in File Peek
+- Copy @path for quick file references in chat
