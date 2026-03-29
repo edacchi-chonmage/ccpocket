@@ -9,11 +9,15 @@ class MockBridgeService extends BridgeService {
   final _mockMessageController = StreamController<ServerMessage>.broadcast();
   final List<Timer> _timers = [];
 
-  /// Optional diff text to return for `get_diff` requests (projectPath mode).
+  /// Original diff text split by file for stateful stage/unstage tracking.
   String? _mockDiff;
+  final Set<String> _stagedFiles = {};
 
   /// Set mock diff data for projectPath-mode DiffScreen previews.
-  set mockDiff(String value) => _mockDiff = value;
+  set mockDiff(String value) {
+    _mockDiff = value;
+    _stagedFiles.clear();
+  }
 
   @override
   Stream<ServerMessage> get messages => _mockMessageController.stream;
@@ -191,18 +195,32 @@ class MockBridgeService extends BridgeService {
             totalLines: _mockFileContent(filePath).split('\n').length,
           ),
         );
-      // ---- Git Operations (mock) ----
+      // ---- Git Operations (mock, stateful) ----
       case 'get_diff':
+        final staged = json['staged'] as bool? ?? false;
+        final filtered = _filterDiffByStageState(staged);
         _scheduleMessage(
           const Duration(milliseconds: 300),
-          DiffResultMessage(diff: _mockDiff ?? ''),
+          DiffResultMessage(diff: filtered),
         );
       case 'git_stage':
+        final files = (json['files'] as List?)?.cast<String>() ?? [];
+        _stagedFiles.addAll(files);
+        // Also extract file paths from hunks
+        final hunks = json['hunks'] as List?;
+        if (hunks != null) {
+          for (final h in hunks) {
+            final file = (h as Map<String, dynamic>)['file'] as String?;
+            if (file != null) _stagedFiles.add(file);
+          }
+        }
         _scheduleMessage(
           const Duration(milliseconds: 200),
           const GitStageResultMessage(success: true),
         );
       case 'git_unstage':
+        final files = (json['files'] as List?)?.cast<String>() ?? [];
+        _stagedFiles.removeAll(files);
         _scheduleMessage(
           const Duration(milliseconds: 200),
           const GitUnstageResultMessage(success: true),
@@ -614,6 +632,53 @@ void main() {
       'css' => 'css',
       _ => null,
     };
+  }
+
+  /// Split _mockDiff into per-file sections and filter by stage state.
+  /// When [staged] is true, return only staged files' diffs.
+  /// When [staged] is false, return only unstaged files' diffs.
+  String _filterDiffByStageState(bool staged) {
+    final fullDiff = _mockDiff ?? '';
+    if (fullDiff.isEmpty || _stagedFiles.isEmpty) {
+      return staged ? '' : fullDiff;
+    }
+
+    // Split diff into per-file blocks (each starting with "diff --git")
+    final blocks = <String>[];
+    final filePaths = <String>[];
+    final lines = fullDiff.split('\n');
+    var currentBlock = StringBuffer();
+    String? currentFile;
+
+    for (final line in lines) {
+      if (line.startsWith('diff --git ')) {
+        // Save previous block
+        if (currentFile != null) {
+          blocks.add(currentBlock.toString());
+          filePaths.add(currentFile);
+        }
+        currentBlock = StringBuffer();
+        // Extract file path: "diff --git a/path b/path" → "path"
+        final match = RegExp(r'diff --git a/(.+) b/').firstMatch(line);
+        currentFile = match?.group(1) ?? '';
+      }
+      currentBlock.writeln(line);
+    }
+    // Save last block
+    if (currentFile != null) {
+      blocks.add(currentBlock.toString());
+      filePaths.add(currentFile);
+    }
+
+    // Filter: staged view shows staged files, unstaged view shows the rest
+    final filtered = StringBuffer();
+    for (var i = 0; i < blocks.length; i++) {
+      final isStaged = _stagedFiles.contains(filePaths[i]);
+      if (staged == isStaged) {
+        filtered.write(blocks[i]);
+      }
+    }
+    return filtered.toString().trimRight();
   }
 
   @override
