@@ -8,7 +8,13 @@ import '../../l10n/app_localizations.dart';
 import '../../models/messages.dart';
 import '../../services/bridge_service.dart';
 import '../../theme/app_theme.dart';
-import '../../theme/markdown_style.dart';
+import '../../theme/markdown_style.dart'
+    show
+        buildMarkdownStyle,
+        colorCodeInlineSyntaxes,
+        handleMarkdownLink,
+        highlightToTextSpans,
+        markdownBuilders;
 
 /// Resolves a potentially partial file path against the project's file list,
 /// then shows the file peek sheet.
@@ -215,6 +221,7 @@ class _FilePeekContent extends StatefulWidget {
 class _FilePeekContentState extends State<_FilePeekContent> {
   FileContentMessage? _result;
   bool _loading = true;
+  bool _showRaw = false;
   StreamSubscription<FileContentMessage>? _sub;
 
   @override
@@ -307,6 +314,16 @@ class _FilePeekContentState extends State<_FilePeekContent> {
                   ],
                 ),
               ),
+              if (isMarkdown && !_loading && _result?.error == null)
+                IconButton(
+                  icon: Icon(
+                    _showRaw ? Icons.article_outlined : Icons.code,
+                    size: 18,
+                  ),
+                  onPressed: () => setState(() => _showRaw = !_showRaw),
+                  tooltip: _showRaw ? 'Preview' : 'Raw',
+                  visualDensity: VisualDensity.compact,
+                ),
               IconButton(
                 icon: const Icon(Icons.copy, size: 18),
                 onPressed: _copyPath,
@@ -342,7 +359,7 @@ class _FilePeekContentState extends State<_FilePeekContent> {
               ? const Center(child: CircularProgressIndicator.adaptive())
               : _result?.error != null
                   ? _buildError(appColors)
-                  : isMarkdown
+                  : (isMarkdown && !_showRaw)
                       ? _buildMarkdownPreview()
                       : _buildCodeContent(appColors),
         ),
@@ -386,6 +403,8 @@ class _FilePeekContentState extends State<_FilePeekContent> {
   Widget _buildCodeContent(AppColors appColors) {
     final content = _result!.content;
     final language = _result!.language;
+    final lines = content.split('\n');
+    final gutterWidth = '${lines.length}'.length;
 
     final baseStyle = TextStyle(
       fontFamily: 'monospace',
@@ -394,19 +413,51 @@ class _FilePeekContentState extends State<_FilePeekContent> {
       color: Theme.of(context).colorScheme.onSurface,
     );
 
+    final gutterStyle = baseStyle.copyWith(
+      color: appColors.subtleText.withValues(alpha: 0.5),
+    );
+
+    // Get highlighted spans for each line.
+    final highlightedLines = <List<InlineSpan>>[];
+    final highlighted = highlightToTextSpans(
+      context: context,
+      source: content,
+      baseStyle: baseStyle,
+      language: language,
+    );
+
+    // Split highlighted spans into per-line lists.
+    if (highlighted.length == 1 && highlighted.first.text == content) {
+      // No highlighting — split plain text by line.
+      for (final line in lines) {
+        highlightedLines.add([TextSpan(text: line, style: baseStyle)]);
+      }
+    } else {
+      highlightedLines.addAll(_splitSpansByLine(highlighted, lines.length));
+    }
+
     return SingleChildScrollView(
       controller: widget.scrollController,
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        child: SelectableText.rich(
-          TextSpan(
-            style: baseStyle,
-            children: _buildHighlightedContent(
-              context: context,
-              source: content,
-              baseStyle: baseStyle,
-              language: language,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minWidth: MediaQuery.of(context).size.width,
+          ),
+          child: SelectableText.rich(
+            TextSpan(
+              style: baseStyle,
+              children: [
+                for (var i = 0; i < highlightedLines.length; i++) ...[
+                  TextSpan(
+                    text: '${' ${i + 1}'.padLeft(gutterWidth + 1)}  ',
+                    style: gutterStyle,
+                  ),
+                  ...highlightedLines[i],
+                  const TextSpan(text: '\n'),
+                ],
+              ],
             ),
           ),
         ),
@@ -414,32 +465,38 @@ class _FilePeekContentState extends State<_FilePeekContent> {
     );
   }
 
-  /// Reuses the existing syntax highlighting from markdown_style.dart's
-  /// approach, but directly as TextSpan children.
-  List<TextSpan> _buildHighlightedContent({
-    required BuildContext context,
-    required String source,
-    required TextStyle baseStyle,
-    required String? language,
-  }) {
-    // Add line numbers
-    final lines = source.split('\n');
-    final gutterWidth = '${lines.length}'.length;
+  /// Splits a flat list of highlighted [TextSpan]s into per-line groups.
+  List<List<InlineSpan>> _splitSpansByLine(
+    List<TextSpan> spans,
+    int lineCount,
+  ) {
+    final result = List.generate(lineCount, (_) => <InlineSpan>[]);
+    var lineIndex = 0;
 
-    final spans = <TextSpan>[];
-    final appColors = Theme.of(context).extension<AppColors>()!;
-
-    for (var i = 0; i < lines.length; i++) {
-      final lineNum = '${i + 1}'.padLeft(gutterWidth);
-      spans.add(TextSpan(
-        text: '$lineNum  ',
-        style: baseStyle.copyWith(
-          color: appColors.subtleText.withValues(alpha: 0.5),
-        ),
-      ));
-      spans.add(TextSpan(text: '${lines[i]}\n'));
+    void addText(String text, TextStyle? style) {
+      final parts = text.split('\n');
+      for (var i = 0; i < parts.length; i++) {
+        if (i > 0 && lineIndex < lineCount - 1) lineIndex++;
+        if (parts[i].isNotEmpty && lineIndex < lineCount) {
+          result[lineIndex].add(TextSpan(text: parts[i], style: style));
+        }
+      }
     }
 
-    return spans;
+    void walkSpan(TextSpan span) {
+      if (span.text != null) {
+        addText(span.text!, span.style);
+      }
+      if (span.children != null) {
+        for (final child in span.children!) {
+          if (child is TextSpan) walkSpan(child);
+        }
+      }
+    }
+
+    for (final span in spans) {
+      walkSpan(span);
+    }
+    return result;
   }
 }
