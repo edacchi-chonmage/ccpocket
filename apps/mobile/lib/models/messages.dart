@@ -556,13 +556,6 @@ sealed class ServerMessage {
         totalLines: json['totalLines'] as int?,
         truncated: json['truncated'] as bool? ?? false,
       ),
-      'dir_listing' => DirListingMessage(
-        dirPath: json['dirPath'] as String,
-        entries: (json['entries'] as List?)
-            ?.map((e) => DirEntry.fromJson(e as Map<String, dynamic>))
-            .toList() ?? const [],
-        error: json['error'] as String?,
-      ),
       'file_list' => FileListMessage(
         files: (json['files'] as List).cast<String>(),
       ),
@@ -1273,30 +1266,6 @@ class FileContentMessage implements ServerMessage {
     this.error,
     this.totalLines,
     this.truncated = false,
-  });
-}
-
-class DirEntry {
-  final String name;
-  final bool isDirectory;
-  final int? size;
-  const DirEntry({required this.name, required this.isDirectory, this.size});
-
-  factory DirEntry.fromJson(Map<String, dynamic> json) => DirEntry(
-    name: json['name'] as String,
-    isDirectory: json['isDirectory'] as bool,
-    size: json['size'] as int?,
-  );
-}
-
-class DirListingMessage implements ServerMessage {
-  final String dirPath;
-  final List<DirEntry> entries;
-  final String? error;
-  const DirListingMessage({
-    required this.dirPath,
-    required this.entries,
-    this.error,
   });
 }
 
@@ -2312,13 +2281,6 @@ class ClientMessage {
         'projectPath': projectPath,
         'filePath': filePath,
         'maxLines': ?maxLines,
-      });
-
-  factory ClientMessage.listDir(String projectPath, String dirPath) =>
-      ClientMessage._({
-        'type': 'list_dir',
-        'projectPath': projectPath,
-        'dirPath': dirPath,
       });
 
   factory ClientMessage.listFiles(String projectPath) =>

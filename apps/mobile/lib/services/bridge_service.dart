@@ -51,9 +51,6 @@ class BridgeService implements BridgeServiceBase {
       StreamController<PromptHistoryBackupInfoMessage>.broadcast();
   final _fileContentController =
       StreamController<FileContentMessage>.broadcast();
-  final _dirListingController =
-      StreamController<DirListingMessage>.broadcast();
-
   BridgeConnectionState _connectionState = BridgeConnectionState.disconnected;
   final List<ClientMessage> _messageQueue = [];
   List<SessionInfo> _sessions = [];
@@ -100,7 +97,6 @@ class BridgeService implements BridgeServiceBase {
   @override
   Stream<List<String>> get fileList => _fileListController.stream;
   Stream<FileContentMessage> get fileContent => _fileContentController.stream;
-  Stream<DirListingMessage> get dirListing => _dirListingController.stream;
   Stream<DiffResultMessage> get diffResults => _diffResultController.stream;
   Stream<DiffImageResultMessage> get diffImageResults =>
       _diffImageResultController.stream;
@@ -217,8 +213,6 @@ class BridgeService implements BridgeServiceBase {
                 _galleryController.add(_galleryImages);
               case FileContentMessage():
                 _fileContentController.add(msg);
-              case DirListingMessage():
-                _dirListingController.add(msg);
               case FileListMessage(:final files):
                 _fileListController.add(files);
               case ProjectHistoryMessage(:final projects):

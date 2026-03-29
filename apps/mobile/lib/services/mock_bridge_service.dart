@@ -28,11 +28,6 @@ class MockBridgeService extends BridgeService {
       .cast<FileContentMessage>();
 
   @override
-  Stream<DirListingMessage> get dirListing => _mockMessageController.stream
-      .where((m) => m is DirListingMessage)
-      .cast<DirListingMessage>();
-
-  @override
   void send(ClientMessage message) {
     final json = jsonDecode(message.toJson()) as Map<String, dynamic>;
     final type = json['type'] as String;
@@ -128,22 +123,6 @@ class MockBridgeService extends BridgeService {
             content: _mockFileContent(filePath),
             language: _mockFileLanguage(filePath),
             totalLines: _mockFileContent(filePath).split('\n').length,
-          ),
-        );
-      case 'list_dir':
-        final dirPath = json['dirPath'] as String? ?? '';
-        _scheduleMessage(
-          const Duration(milliseconds: 300),
-          DirListingMessage(
-            dirPath: dirPath,
-            entries: const [
-              DirEntry(name: 'lib', isDirectory: true),
-              DirEntry(name: 'test', isDirectory: true),
-              DirEntry(name: 'docs', isDirectory: true),
-              DirEntry(name: 'main.dart', isDirectory: false, size: 1024),
-              DirEntry(name: 'pubspec.yaml', isDirectory: false, size: 512),
-              DirEntry(name: 'README.md', isDirectory: false, size: 2048),
-            ],
           ),
         );
       default:

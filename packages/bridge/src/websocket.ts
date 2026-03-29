@@ -1,6 +1,6 @@
 import type { Server as HttpServer } from "node:http";
 import { execFile, execFileSync } from "node:child_process";
-import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { readFile, unlink } from "node:fs/promises";
 import { resolve, extname, basename, relative } from "node:path";
 import { promisify } from "node:util";
@@ -8,7 +8,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { SessionManager, type SessionInfo } from "./session.js";
 import { SdkProcess } from "./sdk-process.js";
 import { CodexProcess, type CodexThreadSummary } from "./codex-process.js";
-import { parseClientMessage, type ClientMessage, type DebugTraceEvent, type DirEntry, type ImageChange, type Provider, type ServerMessage } from "./parser.js";
+import { parseClientMessage, type ClientMessage, type DebugTraceEvent, type ImageChange, type Provider, type ServerMessage } from "./parser.js";
 import { getAllRecentSessions, getCodexSessionHistory, getSessionHistory, findSessionsByClaudeIds, extractMessageImages, getClaudeSessionName, loadCodexSessionNames, renameClaudeSession, renameCodexSession } from "./sessions-index.js";
 import type { ImageStore } from "./image-store.js";
 import type { GalleryStore } from "./gallery-store.js";
@@ -1801,40 +1801,6 @@ export class BridgeWebSocketServer {
             this.send(ws, { type: "file_content", filePath: msg.filePath, content: "", error: `Failed to read file: ${err}` });
           }
         })();
-        break;
-      }
-
-      case "list_dir": {
-        const absDir = resolve(msg.projectPath, msg.dirPath);
-        if (!this.isPathAllowed(absDir)) {
-          this.send(ws, { type: "dir_listing", dirPath: msg.dirPath, entries: [], error: "Path not allowed" });
-          break;
-        }
-        try {
-          if (!existsSync(absDir)) {
-            this.send(ws, { type: "dir_listing", dirPath: msg.dirPath, entries: [], error: "Directory not found" });
-            break;
-          }
-          const items = readdirSync(absDir);
-          const entries: DirEntry[] = [];
-          for (const name of items) {
-            if (name.startsWith(".")) continue; // skip hidden files
-            try {
-              const st = statSync(resolve(absDir, name));
-              entries.push({ name, isDirectory: st.isDirectory(), size: st.isFile() ? st.size : undefined });
-            } catch {
-              // skip unreadable entries
-            }
-          }
-          // Directories first, then files, alphabetically
-          entries.sort((a, b) => {
-            if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1;
-            return a.name.localeCompare(b.name);
-          });
-          this.send(ws, { type: "dir_listing", dirPath: msg.dirPath, entries });
-        } catch (err) {
-          this.send(ws, { type: "dir_listing", dirPath: msg.dirPath, entries: [], error: `Failed to list directory: ${err}` });
-        }
         break;
       }
 

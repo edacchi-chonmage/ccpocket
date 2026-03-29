@@ -114,7 +114,6 @@ export type ClientMessage =
     }
   | { type: "list_gallery"; project?: string; sessionId?: string }
   | { type: "read_file"; projectPath: string; filePath: string; maxLines?: number }
-  | { type: "list_dir"; projectPath: string; dirPath: string }
   | { type: "list_files"; projectPath: string }
   | { type: "get_diff"; projectPath: string }
   | { type: "get_diff_image"; projectPath: string; filePath: string; version: "old" | "new" | "both" }
@@ -155,12 +154,6 @@ export interface ImageChange {
   loadable: boolean;
   /** Whether the image qualifies for auto-display (≤ auto threshold). */
   autoDisplay?: boolean;
-}
-
-export interface DirEntry {
-  name: string;
-  isDirectory: boolean;
-  size?: number;
 }
 
 export interface DebugTraceEvent {
@@ -233,7 +226,6 @@ export type ServerMessage =
   | { type: "stream_delta"; text: string }
   | { type: "thinking_delta"; text: string }
   | { type: "file_content"; filePath: string; content: string; language?: string; error?: string; totalLines?: number; truncated?: boolean }
-  | { type: "dir_listing"; dirPath: string; entries: DirEntry[]; error?: string }
   | { type: "file_list"; files: string[] }
   | { type: "project_history"; projects: string[] }
   | { type: "diff_result"; diff: string; error?: string; errorCode?: string; imageChanges?: ImageChange[] }
@@ -444,10 +436,6 @@ export function parseClientMessage(data: string): ClientMessage | null {
       case "read_file":
         if (typeof msg.projectPath !== "string") return null;
         if (typeof msg.filePath !== "string") return null;
-        break;
-      case "list_dir":
-        if (typeof msg.projectPath !== "string") return null;
-        if (typeof msg.dirPath !== "string") return null;
         break;
       case "list_files":
         if (typeof msg.projectPath !== "string") return null;

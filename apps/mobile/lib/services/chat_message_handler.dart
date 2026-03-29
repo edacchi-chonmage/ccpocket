@@ -105,7 +105,6 @@ const _unsupportedActions = <String, UnsupportedAction>{
   'take_screenshot': UnsupportedAction.showUpdateHint,
   'archive_session': UnsupportedAction.showUpdateHint,
   'read_file': UnsupportedAction.showUpdateHint,
-  'list_dir': UnsupportedAction.showUpdateHint,
 };
 
 /// Processes [ServerMessage]s into [ChatStateUpdate]s.
