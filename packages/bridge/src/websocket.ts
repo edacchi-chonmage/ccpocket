@@ -16,6 +16,11 @@ import type { ProjectHistory } from "./project-history.js";
 import { ArchiveStore } from "./archive-store.js";
 import { WorktreeStore } from "./worktree-store.js";
 import { listWorktrees, removeWorktree, createWorktree, worktreeExists, getMainBranch } from "./worktree.js";
+import {
+  stageFiles, stageHunks, unstageFiles,
+  gitCommit, gitPush, ghPrCreate, gitStatus,
+  listBranches, createBranch, checkoutBranch,
+} from "./git-operations.js";
 import { listWindows, takeScreenshot } from "./screenshot.js";
 import { DebugTraceStore } from "./debug-trace-store.js";
 import { RecordingStore } from "./recording-store.js";
@@ -1922,7 +1927,7 @@ export class BridgeWebSocketServer {
               this.send(ws, { type: "diff_result", diff });
             }
           });
-        });
+        }, msg.staged ? { staged: true } : undefined);
         break;
       }
 
@@ -1992,6 +1997,163 @@ export class BridgeWebSocketServer {
           this.send(ws, { type: "worktree_removed", worktreePath: msg.worktreePath });
         } catch (err) {
           this.send(ws, { type: "error", message: `Failed to remove worktree: ${err}` });
+        }
+        break;
+      }
+
+      // ---- Git Operations (Phase 1-3) ----
+
+      case "git_stage": {
+        if (!this.isPathAllowed(msg.projectPath)) {
+          this.send(ws, this.buildPathNotAllowedError(msg.projectPath));
+          break;
+        }
+        try {
+          if (msg.files?.length) stageFiles(msg.projectPath, msg.files);
+          if (msg.hunks?.length) stageHunks(msg.projectPath, msg.hunks);
+          this.send(ws, { type: "git_stage_result", success: true });
+        } catch (err) {
+          this.send(ws, { type: "git_stage_result", success: false, error: String(err) });
+        }
+        break;
+      }
+
+      case "git_unstage": {
+        if (!this.isPathAllowed(msg.projectPath)) {
+          this.send(ws, this.buildPathNotAllowedError(msg.projectPath));
+          break;
+        }
+        try {
+          unstageFiles(msg.projectPath, msg.files ?? []);
+          this.send(ws, { type: "git_unstage_result", success: true });
+        } catch (err) {
+          this.send(ws, { type: "git_unstage_result", success: false, error: String(err) });
+        }
+        break;
+      }
+
+      case "git_commit": {
+        if (!this.isPathAllowed(msg.projectPath)) {
+          this.send(ws, this.buildPathNotAllowedError(msg.projectPath));
+          break;
+        }
+        try {
+          const result = gitCommit(msg.projectPath, msg.message ?? "");
+          this.send(ws, {
+            type: "git_commit_result",
+            success: true,
+            commitHash: result.hash,
+            message: result.message,
+          });
+        } catch (err) {
+          this.send(ws, { type: "git_commit_result", success: false, error: String(err) });
+        }
+        break;
+      }
+
+      case "git_push": {
+        if (!this.isPathAllowed(msg.projectPath)) {
+          this.send(ws, this.buildPathNotAllowedError(msg.projectPath));
+          break;
+        }
+        try {
+          const result = gitPush(msg.projectPath, msg.forceLease);
+          this.send(ws, {
+            type: "git_push_result",
+            success: true,
+            remote: result.remote,
+            branch: result.branch,
+          });
+        } catch (err) {
+          this.send(ws, { type: "git_push_result", success: false, error: String(err) });
+        }
+        break;
+      }
+
+      case "gh_pr_create": {
+        if (!this.isPathAllowed(msg.projectPath)) {
+          this.send(ws, this.buildPathNotAllowedError(msg.projectPath));
+          break;
+        }
+        try {
+          const result = ghPrCreate(msg.projectPath, {
+            title: msg.title,
+            body: msg.body,
+            draft: msg.draft,
+          });
+          this.send(ws, {
+            type: "gh_pr_result",
+            success: true,
+            prNumber: result.prNumber,
+            url: result.url,
+          });
+        } catch (err) {
+          this.send(ws, { type: "gh_pr_result", success: false, error: String(err) });
+        }
+        break;
+      }
+
+      case "git_status": {
+        if (!this.isPathAllowed(msg.projectPath)) {
+          this.send(ws, this.buildPathNotAllowedError(msg.projectPath));
+          break;
+        }
+        try {
+          const result = gitStatus(msg.projectPath);
+          this.send(ws, {
+            type: "git_status_result",
+            staged: result.staged,
+            unstaged: result.unstaged,
+            untracked: result.untracked,
+          });
+        } catch (err) {
+          this.send(ws, { type: "error", message: `Failed to get git status: ${err}` });
+        }
+        break;
+      }
+
+      case "git_branches": {
+        if (!this.isPathAllowed(msg.projectPath)) {
+          this.send(ws, this.buildPathNotAllowedError(msg.projectPath));
+          break;
+        }
+        try {
+          const result = listBranches(msg.projectPath, msg.query);
+          this.send(ws, {
+            type: "git_branches_result",
+            current: result.current,
+            branches: result.branches,
+          });
+        } catch (err) {
+          this.send(ws, { type: "git_branches_result", current: "", branches: [], error: String(err) });
+        }
+        break;
+      }
+
+      case "git_create_branch": {
+        if (!this.isPathAllowed(msg.projectPath)) {
+          this.send(ws, this.buildPathNotAllowedError(msg.projectPath));
+          break;
+        }
+        try {
+          createBranch(msg.projectPath, msg.name, msg.checkout);
+          this.send(ws, { type: "git_create_branch_result", success: true });
+        } catch (err) {
+          this.send(ws, { type: "git_create_branch_result", success: false, error: String(err) });
+        }
+        break;
+      }
+
+      case "git_checkout_branch": {
+        if (!this.isPathAllowed(msg.projectPath)) {
+          this.send(ws, this.buildPathNotAllowedError(msg.projectPath));
+          break;
+        }
+        try {
+          checkoutBranch(msg.projectPath, msg.branch);
+          this.send(ws, { type: "git_checkout_branch_result", success: true });
+        } catch (err) {
+          this.send(ws, { type: "git_checkout_branch_result", success: false, error: String(err) });
         }
         break;
       }
@@ -2640,8 +2802,21 @@ export class BridgeWebSocketServer {
   private collectGitDiff(
     cwd: string,
     callback: (result: { diff: string; error?: string }) => void,
+    options?: { staged?: boolean },
   ): void {
     const execOpts = { cwd, maxBuffer: 10 * 1024 * 1024 };
+
+    // For staged diffs, just run git diff --cached (no untracked file handling needed)
+    if (options?.staged) {
+      execFile("git", ["diff", "--cached", "--no-color"], execOpts, (err, stdout) => {
+        if (err) {
+          callback({ diff: "", error: err.message });
+          return;
+        }
+        callback({ diff: stdout });
+      });
+      return;
+    }
 
     // Collect untracked files so they appear in the diff.
     let untrackedFiles: string[] = [];

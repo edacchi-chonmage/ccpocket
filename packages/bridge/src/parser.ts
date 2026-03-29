@@ -115,7 +115,7 @@ export type ClientMessage =
   | { type: "list_gallery"; project?: string; sessionId?: string }
   | { type: "read_file"; projectPath: string; filePath: string; maxLines?: number }
   | { type: "list_files"; projectPath: string }
-  | { type: "get_diff"; projectPath: string }
+  | { type: "get_diff"; projectPath: string; staged?: boolean }
   | { type: "get_diff_image"; projectPath: string; filePath: string; version: "old" | "new" | "both" }
   | { type: "interrupt"; sessionId?: string }
   | { type: "list_project_history" }
@@ -135,7 +135,17 @@ export type ClientMessage =
   | { type: "restore_prompt_history" }
   | { type: "get_prompt_history_backup_info" }
   | { type: "archive_session"; sessionId: string; provider: Provider; projectPath: string }
-  | { type: "refresh_branch"; sessionId: string };
+  | { type: "refresh_branch"; sessionId: string }
+  // ---- Git Operations (Phase 1-3) ----
+  | { type: "git_stage"; projectPath: string; files?: string[]; hunks?: { file: string; hunkIndex: number }[] }
+  | { type: "git_unstage"; projectPath: string; files?: string[] }
+  | { type: "git_commit"; projectPath: string; message?: string; autoGenerate?: boolean }
+  | { type: "git_push"; projectPath: string; forceLease?: boolean }
+  | { type: "gh_pr_create"; projectPath: string; title?: string; body?: string; draft?: boolean; autoGenerate?: boolean }
+  | { type: "git_status"; projectPath: string }
+  | { type: "git_branches"; projectPath: string; query?: string }
+  | { type: "git_create_branch"; projectPath: string; name: string; checkout?: boolean }
+  | { type: "git_checkout_branch"; projectPath: string; branch: string };
 
 /** Image change detected in a git diff (binary image file). */
 export interface ImageChange {
@@ -275,7 +285,17 @@ export type ServerMessage =
   | { type: "prompt_history_backup_result"; success: boolean; backedUpAt?: string; error?: string }
   | { type: "prompt_history_restore_result"; success: boolean; data?: string; appVersion?: string; dbVersion?: number; backedUpAt?: string; error?: string }
   | { type: "prompt_history_backup_info"; exists: boolean; appVersion?: string; dbVersion?: number; backedUpAt?: string; sizeBytes?: number }
-  | { type: "rename_result"; sessionId: string; name: string | null; success: boolean; error?: string };
+  | { type: "rename_result"; sessionId: string; name: string | null; success: boolean; error?: string }
+  // ---- Git Operations (Phase 1-3) ----
+  | { type: "git_stage_result"; success: boolean; error?: string }
+  | { type: "git_unstage_result"; success: boolean; error?: string }
+  | { type: "git_commit_result"; success: boolean; commitHash?: string; message?: string; error?: string }
+  | { type: "git_push_result"; success: boolean; remote?: string; branch?: string; error?: string }
+  | { type: "gh_pr_result"; success: boolean; prNumber?: number; url?: string; error?: string }
+  | { type: "git_status_result"; staged: string[]; unstaged: string[]; untracked: string[] }
+  | { type: "git_branches_result"; current: string; branches: string[]; error?: string }
+  | { type: "git_create_branch_result"; success: boolean; error?: string }
+  | { type: "git_checkout_branch_result"; success: boolean; error?: string };
 
 export interface UsageWindowPayload {
   utilization: number;
@@ -501,6 +521,53 @@ export function parseClientMessage(data: string): ClientMessage | null {
         break;
       case "refresh_branch":
         if (typeof msg.sessionId !== "string") return null;
+        break;
+      // ---- Git Operations (Phase 1-3) ----
+      case "git_stage":
+        if (typeof msg.projectPath !== "string") return null;
+        if (!Array.isArray(msg.files) && !Array.isArray(msg.hunks)) return null;
+        if (msg.hunks !== undefined) {
+          if (!Array.isArray(msg.hunks)) return null;
+          for (const h of msg.hunks as unknown[]) {
+            const hunk = h as Record<string, unknown>;
+            if (typeof hunk?.file !== "string" || typeof hunk?.hunkIndex !== "number") return null;
+          }
+        }
+        break;
+      case "git_unstage":
+        if (typeof msg.projectPath !== "string") return null;
+        break;
+      case "git_commit":
+        if (typeof msg.projectPath !== "string") return null;
+        if (msg.message !== undefined && typeof msg.message !== "string") return null;
+        if (msg.autoGenerate !== undefined && typeof msg.autoGenerate !== "boolean") return null;
+        break;
+      case "git_push":
+        if (typeof msg.projectPath !== "string") return null;
+        if (msg.forceLease !== undefined && typeof msg.forceLease !== "boolean") return null;
+        break;
+      case "gh_pr_create":
+        if (typeof msg.projectPath !== "string") return null;
+        if (msg.title !== undefined && typeof msg.title !== "string") return null;
+        if (msg.body !== undefined && typeof msg.body !== "string") return null;
+        if (msg.draft !== undefined && typeof msg.draft !== "boolean") return null;
+        if (msg.autoGenerate !== undefined && typeof msg.autoGenerate !== "boolean") return null;
+        break;
+      case "git_status":
+        if (typeof msg.projectPath !== "string") return null;
+        break;
+      case "git_branches":
+        if (typeof msg.projectPath !== "string") return null;
+        if (msg.query !== undefined && typeof msg.query !== "string") return null;
+        break;
+      case "git_create_branch":
+        if (typeof msg.projectPath !== "string") return null;
+        if (typeof msg.name !== "string") return null;
+        if (msg.checkout !== undefined && typeof msg.checkout !== "boolean") return null;
+        break;
+      case "git_checkout_branch":
+        if (typeof msg.projectPath !== "string") return null;
+        if (typeof msg.branch !== "string") return null;
         break;
       case "archive_session":
         if (typeof msg.sessionId !== "string") return null;
