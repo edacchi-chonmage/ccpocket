@@ -287,9 +287,8 @@ class _FilePeekContentState extends State<_FilePeekContent> {
                 color: appColors.subtleText,
               ),
               const SizedBox(width: 8),
-              Flexible(
+              Expanded(
                 child: Row(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Flexible(
                       child: Text(
@@ -302,18 +301,18 @@ class _FilePeekContentState extends State<_FilePeekContent> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.content_copy, size: 14),
-                      onPressed: _copyPath,
-                      tooltip: 'Copy @path',
-                      visualDensity: VisualDensity.compact,
-                      padding: const EdgeInsets.all(4),
-                      constraints: const BoxConstraints(),
+                    const SizedBox(width: 4),
+                    GestureDetector(
+                      onTap: _copyPath,
+                      child: Icon(
+                        Icons.content_copy,
+                        size: 14,
+                        color: appColors.subtleText,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const Spacer(),
               if (isMarkdown && !_loading && _result?.error == null)
                 IconButton(
                   icon: Icon(
