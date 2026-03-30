@@ -541,11 +541,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get messagePlaceholder => '给 Claude 发消息...';
 
   @override
-  String filesMentioned(int count) {
-    return '已 @提及 $count 个文件';
-  }
-
-  @override
   String diffLines(int count) {
     return '$count 行 diff';
   }
@@ -637,12 +632,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get changes => '变更';
 
   @override
-  String get cancelSelection => '取消选择';
-
-  @override
-  String get selectAndAttach => '选择并附加';
-
-  @override
   String get refresh => '刷新';
 
   @override
@@ -673,21 +662,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diffNoImage => '没有图片';
 
   @override
-  String get filterFiles => '筛选文件';
-
-  @override
-  String attachFilesAndHunks(int files, int hunks) {
-    return '附加 $files 个文件，$hunks 个 hunk';
-  }
-
-  @override
-  String get filterFilesTitle => '筛选文件';
-
-  @override
   String get noChanges => '没有变更';
-
-  @override
-  String get allFilesFilteredOut => '所有文件都被筛掉了';
 
   @override
   String get showAll => '显示全部';

@@ -8,6 +8,7 @@ import 'package:ccpocket/models/messages.dart';
 import 'package:ccpocket/services/bridge_service.dart';
 import 'package:ccpocket/services/mock_bridge_service.dart';
 import 'package:ccpocket/theme/app_theme.dart';
+import 'package:ccpocket/utils/diff_parser.dart';
 
 Widget _wrap(Widget child, {BridgeService? bridge}) {
   return RepositoryProvider<BridgeService>.value(
@@ -90,14 +91,15 @@ void main() {
   });
 
   group('GitScreen - multi-file diff', () {
-    testWidgets('shows overflow menu for multi-file diffs', (tester) async {
+    testWidgets('does not show overflow menu for multi-file diffs', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(const GitScreen(initialDiff: _multiFileDiff)),
       );
       await tester.pumpAndSettle();
 
-      // Overflow menu (more_vert) should be present
-      expect(find.byIcon(Icons.more_vert), findsOneWidget);
+      expect(find.byIcon(Icons.more_vert), findsNothing);
     });
 
     testWidgets('shows file header with stats', (tester) async {
@@ -122,6 +124,24 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.longPress(find.text('@@ -1,2 +1,2 @@').first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Request Change'), findsOneWidget);
+      expect(find.text('Stage'), findsWidgets);
+    });
+
+    testWidgets('shows file action sheet on file header long press', (
+      tester,
+    ) async {
+      final bridge = MockBridgeService()..mockDiff = _multiFileDiff;
+      addTearDown(bridge.dispose);
+
+      await tester.pumpWidget(
+        _wrap(const GitScreen(projectPath: '/tmp/project'), bridge: bridge),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.longPress(find.text('file_a.dart').first);
       await tester.pumpAndSettle();
 
       expect(find.text('Request Change'), findsOneWidget);
@@ -218,6 +238,33 @@ void main() {
 
       // Line number 1 should appear (context line "void main() {")
       expect(find.text('1'), findsWidgets);
+    });
+  });
+
+  group('GitScreen - request change payload helpers', () {
+    test('file request change yields non-empty unified diff text', () {
+      final selection = DiffSelection(
+        diffText: reconstructUnifiedDiff(parseDiff(_multiFileDiff).first),
+      );
+
+      expect(selection.diffText, isNotEmpty);
+      expect(
+        selection.diffText,
+        contains('diff --git a/file_a.dart b/file_a.dart'),
+      );
+      expect(selection.diffText, contains('@@ -1,2 +1,2 @@'));
+    });
+
+    test('hunk request change yields only the selected hunk', () {
+      final selection = reconstructDiff(parseDiff(_multiFileDiff), {'1:0'});
+
+      expect(
+        selection.diffText,
+        contains('diff --git a/file_b.dart b/file_b.dart'),
+      );
+      expect(selection.diffText, contains('@@ -1,2 +1,3 @@'));
+      expect(selection.diffText, contains('+added'));
+      expect(selection.diffText, isNot(contains('file_a.dart')));
     });
   });
 }

@@ -11,10 +11,6 @@ class DiffFileHeader extends StatelessWidget {
   final DiffFile file;
   final bool collapsed;
   final VoidCallback onToggleCollapse;
-  final bool selectionMode;
-  final bool selected;
-  final bool partiallySelected;
-  final VoidCallback? onToggleSelection;
   final FileStageStatus stageStatus;
   final VoidCallback? onLongPress;
 
@@ -23,10 +19,6 @@ class DiffFileHeader extends StatelessWidget {
     required this.file,
     required this.collapsed,
     required this.onToggleCollapse,
-    this.selectionMode = false,
-    this.selected = false,
-    this.partiallySelected = false,
-    this.onToggleSelection,
     this.stageStatus = FileStageStatus.unknown,
     this.onLongPress,
   });
@@ -35,11 +27,8 @@ class DiffFileHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final appColors = Theme.of(context).extension<AppColors>()!;
     final stats = file.stats;
-    // In selection mode: tap on the row toggles selection,
-    // only the chevron icon toggles collapse.
-    // In normal mode: tap anywhere toggles collapse.
     return GestureDetector(
-      onTap: selectionMode ? onToggleSelection : onToggleCollapse,
+      onTap: onToggleCollapse,
       onLongPress: onLongPress,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -49,23 +38,7 @@ class DiffFileHeader extends StatelessWidget {
         ),
         child: Row(
           children: [
-            if (selectionMode)
-              SizedBox(
-                width: 24,
-                height: 24,
-                child: Checkbox(
-                  // tristate: null = partially selected
-                  value: partiallySelected ? null : selected,
-                  tristate: true,
-                  onChanged: onToggleSelection != null
-                      ? (_) => onToggleSelection!()
-                      : null,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  visualDensity: VisualDensity.compact,
-                ),
-              )
-            else
-              _buildLeadingIcon(appColors),
+            _buildLeadingIcon(appColors),
             const SizedBox(width: 8),
             Expanded(
               child: DiffFilePathText(
@@ -99,22 +72,11 @@ class DiffFileHeader extends StatelessWidget {
                 ),
               ),
             const SizedBox(width: 8),
-            // In selection mode, chevron toggles collapse independently.
-            if (selectionMode)
-              GestureDetector(
-                onTap: onToggleCollapse,
-                child: Icon(
-                  collapsed ? Icons.chevron_right : Icons.expand_more,
-                  size: 20,
-                  color: appColors.subtleText,
-                ),
-              )
-            else
-              Icon(
-                collapsed ? Icons.chevron_right : Icons.expand_more,
-                size: 20,
-                color: appColors.subtleText,
-              ),
+            Icon(
+              collapsed ? Icons.chevron_right : Icons.expand_more,
+              size: 20,
+              color: appColors.subtleText,
+            ),
           ],
         ),
       ),

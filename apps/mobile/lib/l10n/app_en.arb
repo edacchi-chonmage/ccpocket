@@ -216,7 +216,6 @@
   },
 
   "messagePlaceholder": "Message Claude...",
-  "filesMentioned": "{count} file(s) @mentioned",
   "diffLines": "{count} diff lines",
   "tapInterruptHoldStop": "Tap: interrupt, Hold: stop",
 
@@ -249,8 +248,6 @@
   "cannotBeUndone": "This action cannot be undone.",
 
   "changes": "Changes",
-  "cancelSelection": "Cancel selection",
-  "selectAndAttach": "Select & attach",
   "refresh": "Refresh",
   "diffCompareSideBySide": "Side by Side",
   "diffCompareSlider": "Slider",
@@ -261,11 +258,7 @@
   "diffNewFile": "New file",
   "diffDeleted": "Deleted",
   "diffNoImage": "No image",
-  "filterFiles": "Filter files",
-  "attachFilesAndHunks": "Attach {files} file(s), {hunks} hunk(s)",
-  "filterFilesTitle": "Filter Files",
   "noChanges": "No changes",
-  "allFilesFilteredOut": "All files filtered out",
   "showAll": "Show all",
 
   "setupGuideTitle": "Setup Guide",

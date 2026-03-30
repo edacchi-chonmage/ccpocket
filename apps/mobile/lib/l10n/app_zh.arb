@@ -233,7 +233,6 @@
       }
     }
   },
-  "filesMentioned": "已 @提及 {count} 个文件",
   "diffLines": "{count} 行 diff",
   "tapInterruptHoldStop": "点按：中断，长按：停止",
 
@@ -273,8 +272,6 @@
   "cannotBeUndone": "此操作无法撤销。",
 
   "changes": "变更",
-  "cancelSelection": "取消选择",
-  "selectAndAttach": "选择并附加",
   "refresh": "刷新",
   "diffCompareSideBySide": "并排",
   "diffCompareSlider": "滑块",
@@ -285,11 +282,7 @@
   "diffNewFile": "新文件",
   "diffDeleted": "已删除",
   "diffNoImage": "没有图片",
-  "filterFiles": "筛选文件",
-  "attachFilesAndHunks": "附加 {files} 个文件，{hunks} 个 hunk",
-  "filterFilesTitle": "筛选文件",
   "noChanges": "没有变更",
-  "allFilesFilteredOut": "所有文件都被筛掉了",
   "showAll": "显示全部",
 
   "setupGuideTitle": "设置指南",

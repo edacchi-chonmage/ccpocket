@@ -558,11 +558,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messagePlaceholder => 'Message Claude...';
 
   @override
-  String filesMentioned(int count) {
-    return '$count file(s) @mentioned';
-  }
-
-  @override
   String diffLines(int count) {
     return '$count diff lines';
   }
@@ -656,12 +651,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changes => 'Changes';
 
   @override
-  String get cancelSelection => 'Cancel selection';
-
-  @override
-  String get selectAndAttach => 'Select & attach';
-
-  @override
   String get refresh => 'Refresh';
 
   @override
@@ -692,21 +681,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diffNoImage => 'No image';
 
   @override
-  String get filterFiles => 'Filter files';
-
-  @override
-  String attachFilesAndHunks(int files, int hunks) {
-    return 'Attach $files file(s), $hunks hunk(s)';
-  }
-
-  @override
-  String get filterFilesTitle => 'Filter Files';
-
-  @override
   String get noChanges => 'No changes';
-
-  @override
-  String get allFilesFilteredOut => 'All files filtered out';
 
   @override
   String get showAll => 'Show all';

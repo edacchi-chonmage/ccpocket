@@ -333,23 +333,11 @@ class ChatInputWithOverlays extends HookWidget {
         onDiffSelectionCleared?.call();
       }
 
-      // Build final message text with @mentions and/or diff block prepended
+      // Build final message text with the requested diff prepended.
       var finalText = text;
       if (selection != null) {
-        final parts = <String>[];
-
-        // @mentions for fully selected files
-        if (selection.mentions.isNotEmpty) {
-          parts.add(selection.mentions.map((f) => '@$f').join(' '));
-        }
-
-        // Diff block for partially selected hunks
         if (selection.diffText.isNotEmpty) {
-          parts.add('```diff\n${selection.diffText}\n```');
-        }
-
-        if (parts.isNotEmpty) {
-          final prefix = parts.join('\n\n');
+          final prefix = '```diff\n${selection.diffText}\n```';
           finalText = finalText.isEmpty ? prefix : '$prefix\n\n$finalText';
         }
       }

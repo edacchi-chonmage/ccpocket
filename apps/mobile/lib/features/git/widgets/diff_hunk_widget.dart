@@ -67,11 +67,8 @@ const _codeStyle = TextStyle(
 class DiffHunkWidget extends StatefulWidget {
   final DiffHunk hunk;
   final double lineNumberWidth;
-  final bool selectionMode;
-  final bool selected;
   final bool lineWrapEnabled;
   final String dismissKey;
-  final VoidCallback? onToggleSelection;
   final VoidCallback? onLongPressHeader;
   final VoidCallback? onSwipeStage;
   final VoidCallback? onSwipeUnstage;
@@ -82,10 +79,7 @@ class DiffHunkWidget extends StatefulWidget {
     required this.hunk,
     required this.lineNumberWidth,
     required this.dismissKey,
-    this.selectionMode = false,
-    this.selected = false,
     this.lineWrapEnabled = false,
-    this.onToggleSelection,
     this.onLongPressHeader,
     this.onSwipeStage,
     this.onSwipeUnstage,
@@ -127,36 +121,26 @@ class _DiffHunkWidgetState extends State<DiffHunkWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final content = GestureDetector(
-      onTap: widget.selectionMode ? widget.onToggleSelection : null,
-      behavior: widget.selectionMode
-          ? HitTestBehavior.opaque
-          : HitTestBehavior.deferToChild,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (widget.hunk.header.isNotEmpty)
-            _DiffHunkHeader(
-              header: widget.hunk.header,
-              selectionMode: widget.selectionMode,
-              selected: widget.selected,
-              onToggleSelection: widget.onToggleSelection,
-              onLongPress: widget.onLongPressHeader,
-            ),
-          if (widget.hunk.lines.isNotEmpty)
-            _DiffHunkBody(
-              lines: widget.hunk.lines,
-              maxContentWidth: _maxContentWidth,
-              lineNumberWidth: widget.lineNumberWidth,
-              lineWrapEnabled: widget.lineWrapEnabled,
-            ),
-          const SizedBox(height: 4),
-        ],
-      ),
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (widget.hunk.header.isNotEmpty)
+          _DiffHunkHeader(
+            header: widget.hunk.header,
+            onLongPress: widget.onLongPressHeader,
+          ),
+        if (widget.hunk.lines.isNotEmpty)
+          _DiffHunkBody(
+            lines: widget.hunk.lines,
+            maxContentWidth: _maxContentWidth,
+            lineNumberWidth: widget.lineNumberWidth,
+            lineWrapEnabled: widget.lineWrapEnabled,
+          ),
+        const SizedBox(height: 4),
+      ],
     );
 
     if (!widget.lineWrapEnabled ||
-        widget.selectionMode ||
         (widget.onSwipeStage == null &&
             widget.onSwipeUnstage == null &&
             widget.onSwipeRevert == null)) {
@@ -175,18 +159,9 @@ class _DiffHunkWidgetState extends State<DiffHunkWidget> {
 
 class _DiffHunkHeader extends StatelessWidget {
   final String header;
-  final bool selectionMode;
-  final bool selected;
-  final VoidCallback? onToggleSelection;
   final VoidCallback? onLongPress;
 
-  const _DiffHunkHeader({
-    required this.header,
-    required this.selectionMode,
-    required this.selected,
-    this.onToggleSelection,
-    this.onLongPress,
-  });
+  const _DiffHunkHeader({required this.header, this.onLongPress});
 
   @override
   Widget build(BuildContext context) {
@@ -199,21 +174,6 @@ class _DiffHunkHeader extends StatelessWidget {
         color: appColors.codeBackground,
         child: Row(
           children: [
-            if (selectionMode) ...[
-              SizedBox(
-                width: 20,
-                height: 20,
-                child: Checkbox(
-                  value: selected,
-                  onChanged: onToggleSelection != null
-                      ? (_) => onToggleSelection!()
-                      : null,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
-              const SizedBox(width: 6),
-            ],
             Expanded(
               child: Text(
                 header,

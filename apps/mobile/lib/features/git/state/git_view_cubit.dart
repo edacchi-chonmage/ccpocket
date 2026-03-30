@@ -9,7 +9,7 @@ import '../../../services/bridge_service.dart';
 import '../../../utils/diff_parser.dart';
 import 'git_view_state.dart';
 
-/// Manages diff viewer state: file parsing, collapse/expand, and filtering.
+/// Manages diff viewer state: file parsing, collapse/expand, and git actions.
 ///
 /// Two modes controlled by constructor parameters:
 /// - [initialDiff] provided → parse immediately (individual tool result).
@@ -37,7 +37,6 @@ class GitViewCubit extends Cubit<GitViewState> {
     required BridgeService bridge,
     String? initialDiff,
     String? projectPath,
-    Set<String>? initialSelectedHunkKeys,
     String? worktreePath,
     String? sessionId,
   }) : _bridge = bridge,
@@ -47,12 +46,11 @@ class GitViewCubit extends Cubit<GitViewState> {
          _initialState(
            initialDiff,
            projectPath,
-           initialSelectedHunkKeys,
            isWorktree: worktreePath != null,
          ),
        ) {
     if (projectPath != null) {
-      _requestDiff(projectPath, initialSelectedHunkKeys);
+      _requestDiff(projectPath);
       _diffImageSub = _bridge.diffImageResults.listen(_onDiffImageResult);
       _stageSub = _bridge.gitStageResults.listen(_onStageResult);
       _unstageSub = _bridge.gitUnstageResults.listen(_onUnstageResult);
@@ -78,18 +76,11 @@ class GitViewCubit extends Cubit<GitViewState> {
 
   static GitViewState _initialState(
     String? initialDiff,
-    String? projectPath,
-    Set<String>? initialSelectedHunkKeys, {
+    String? projectPath, {
     bool isWorktree = false,
   }) {
-    final hasSelection =
-        initialSelectedHunkKeys != null && initialSelectedHunkKeys.isNotEmpty;
     if (initialDiff != null) {
-      return GitViewState(
-        files: parseDiff(initialDiff),
-        selectionMode: hasSelection,
-        selectedHunkKeys: initialSelectedHunkKeys ?? const {},
-      );
+      return GitViewState(files: parseDiff(initialDiff));
     }
     if (projectPath != null) {
       return GitViewState(loading: true, isWorktree: isWorktree);
@@ -97,9 +88,7 @@ class GitViewCubit extends Cubit<GitViewState> {
     return const GitViewState();
   }
 
-  void _requestDiff(String projectPath, Set<String>? initialSelectedHunkKeys) {
-    final hasSelection =
-        initialSelectedHunkKeys != null && initialSelectedHunkKeys.isNotEmpty;
+  void _requestDiff(String projectPath) {
     _diffSub = _bridge.diffResults.listen((result) {
       if (result.error != null) {
         emit(
@@ -116,14 +105,7 @@ class GitViewCubit extends Cubit<GitViewState> {
           parseDiff(result.diff),
           result.imageChanges,
         );
-        emit(
-          state.copyWith(
-            loading: false,
-            files: files,
-            selectionMode: hasSelection,
-            selectedHunkKeys: initialSelectedHunkKeys ?? const {},
-          ),
-        );
+        emit(state.copyWith(loading: false, files: files));
       }
     });
     _bridge.send(
@@ -339,120 +321,8 @@ class GitViewCubit extends Cubit<GitViewState> {
     );
   }
 
-  /// Replace hidden file indices with [indices].
-  void setHiddenFiles(Set<int> indices) {
-    emit(state.copyWith(hiddenFileIndices: indices));
-  }
-
-  /// Toggle visibility for a single file at [index].
-  void toggleFileVisibility(int index) {
-    final current = state.hiddenFileIndices;
-    emit(
-      state.copyWith(
-        hiddenFileIndices: current.contains(index)
-            ? (Set<int>.from(current)..remove(index))
-            : {...current, index},
-      ),
-    );
-  }
-
-  /// Show all files (clear hidden filter).
-  void clearHidden() {
-    emit(state.copyWith(hiddenFileIndices: const {}));
-  }
-
   void toggleLineWrap() {
     emit(state.copyWith(lineWrapEnabled: !state.lineWrapEnabled));
-  }
-
-  // ---------------------------------------------------------------------------
-  // Selection mode
-  // ---------------------------------------------------------------------------
-
-  /// Toggle selection mode on/off. Clears selection when turning off.
-  void toggleSelectionMode() {
-    emit(
-      state.copyWith(
-        selectionMode: !state.selectionMode,
-        selectedHunkKeys: const {},
-      ),
-    );
-  }
-
-  /// Toggle all hunks of a file.
-  void toggleFileSelection(int fileIdx) {
-    final file = state.files[fileIdx];
-    final allKeys = List.generate(
-      file.hunks.length,
-      (i) => '$fileIdx:$i',
-    ).toSet();
-    final current = state.selectedHunkKeys;
-
-    // If all hunks are selected → deselect all; otherwise → select all.
-    final allSelected = allKeys.every(current.contains);
-    if (allSelected) {
-      emit(
-        state.copyWith(
-          selectedHunkKeys: Set<String>.from(current)..removeAll(allKeys),
-        ),
-      );
-    } else {
-      emit(state.copyWith(selectedHunkKeys: {...current, ...allKeys}));
-    }
-  }
-
-  /// Toggle a single hunk.
-  void toggleHunkSelection(int fileIdx, int hunkIdx) {
-    final key = '$fileIdx:$hunkIdx';
-    final current = state.selectedHunkKeys;
-    emit(
-      state.copyWith(
-        selectedHunkKeys: current.contains(key)
-            ? (Set<String>.from(current)..remove(key))
-            : {...current, key},
-      ),
-    );
-  }
-
-  /// Whether all hunks in a file are selected.
-  bool isFileFullySelected(int fileIdx) {
-    final file = state.files[fileIdx];
-    if (file.hunks.isEmpty) return false;
-    return List.generate(
-      file.hunks.length,
-      (i) => '$fileIdx:$i',
-    ).every(state.selectedHunkKeys.contains);
-  }
-
-  /// Whether some (but not all) hunks in a file are selected.
-  bool isFilePartiallySelected(int fileIdx) {
-    final file = state.files[fileIdx];
-    if (file.hunks.isEmpty) return false;
-    final keys = List.generate(file.hunks.length, (i) => '$fileIdx:$i');
-    final selectedCount = keys.where(state.selectedHunkKeys.contains).length;
-    return selectedCount > 0 && selectedCount < keys.length;
-  }
-
-  /// Whether any hunk is selected.
-  bool get hasAnySelection => state.selectedHunkKeys.isNotEmpty;
-
-  /// Count of fully selected files and partially selected hunk count.
-  /// Returns (fullySelectedFiles, partialHunks).
-  ({int files, int hunks}) get selectionSummary {
-    var fullFiles = 0;
-    var partialHunks = 0;
-    for (var i = 0; i < state.files.length; i++) {
-      final file = state.files[i];
-      final keys = List.generate(file.hunks.length, (h) => '$i:$h');
-      final selected = keys.where(state.selectedHunkKeys.contains).length;
-      if (selected == 0) continue;
-      if (selected == file.hunks.length) {
-        fullFiles++;
-      } else {
-        partialHunks += selected;
-      }
-    }
-    return (files: fullFiles, hunks: partialHunks);
   }
 
   // ---------------------------------------------------------------------------
@@ -469,22 +339,6 @@ class GitViewCubit extends Cubit<GitViewState> {
         ClientMessage.getDiff(projectPath, staged: mode == GitViewMode.staged),
       );
     }
-  }
-
-  /// Stage the currently selected hunks.
-  void stageSelectedHunks() {
-    _sendHunkOperation(
-      (projectPath, hunks) =>
-          _bridge.send(ClientMessage.gitStage(projectPath, hunks: hunks)),
-    );
-  }
-
-  /// Unstage the currently selected hunks.
-  void unstageSelectedHunks() {
-    _sendHunkOperation(
-      (projectPath, hunks) =>
-          _bridge.send(ClientMessage.gitUnstageHunks(projectPath, hunks)),
-    );
   }
 
   /// Stage a single file by index.
@@ -587,7 +441,7 @@ class GitViewCubit extends Cubit<GitViewState> {
 
   void _onStageResult(GitStageResultMessage result) {
     if (result.success) {
-      emit(state.copyWith(staging: false, selectedHunkKeys: const {}));
+      emit(state.copyWith(staging: false));
       refreshDiffOnly();
     } else {
       emit(state.copyWith(staging: false, error: result.error));
@@ -614,7 +468,7 @@ class GitViewCubit extends Cubit<GitViewState> {
 
   void _onUnstageResult(GitUnstageResultMessage result) {
     if (result.success) {
-      emit(state.copyWith(staging: false, selectedHunkKeys: const {}));
+      emit(state.copyWith(staging: false));
       refreshDiffOnly();
     } else {
       emit(state.copyWith(staging: false, error: result.error));
@@ -623,43 +477,11 @@ class GitViewCubit extends Cubit<GitViewState> {
 
   void _onUnstageHunksResult(GitUnstageHunksResultMessage result) {
     if (result.success) {
-      emit(state.copyWith(staging: false, selectedHunkKeys: const {}));
+      emit(state.copyWith(staging: false));
       refreshDiffOnly();
     } else {
       emit(state.copyWith(staging: false, error: result.error));
     }
-  }
-
-  void _sendHunkOperation(
-    void Function(String projectPath, List<Map<String, dynamic>> hunks) send,
-  ) {
-    final projectPath = _projectPath;
-    if (projectPath == null || state.selectedHunkKeys.isEmpty) return;
-
-    emit(state.copyWith(staging: true));
-    send(projectPath, _selectedHunksPayload());
-  }
-
-  List<Map<String, dynamic>> _selectedHunksPayload() {
-    final fileHunks = <String, List<int>>{};
-    for (final key in state.selectedHunkKeys) {
-      final parts = key.split(':');
-      if (parts.length != 2) continue;
-      final fileIdx = int.tryParse(parts[0]);
-      final hunkIdx = int.tryParse(parts[1]);
-      if (fileIdx == null || hunkIdx == null) continue;
-      if (fileIdx >= state.files.length) continue;
-      final filePath = state.files[fileIdx].filePath;
-      (fileHunks[filePath] ??= []).add(hunkIdx);
-    }
-
-    final hunks = <Map<String, dynamic>>[];
-    for (final entry in fileHunks.entries) {
-      for (final idx in entry.value) {
-        hunks.add({'file': entry.key, 'hunkIndex': idx});
-      }
-    }
-    return hunks;
   }
 
   // ---------------------------------------------------------------------------

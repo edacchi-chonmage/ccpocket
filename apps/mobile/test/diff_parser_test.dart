@@ -274,4 +274,41 @@ diff --git a/test.dart b/test.dart
       expect(hunkStats.removed, 2);
     });
   });
+
+  group('Request Change reconstruction', () {
+    test('reconstructDiff always returns unified diff text', () {
+      const diff = '''
+diff --git a/file_a.dart b/file_a.dart
+--- a/file_a.dart
++++ b/file_a.dart
+@@ -1,2 +1,2 @@
+-old
++new
+ same
+''';
+      final files = parseDiff(diff);
+      final selection = reconstructDiff(files, {'0:0'});
+
+      expect(
+        selection.diffText,
+        contains('diff --git a/file_a.dart b/file_a.dart'),
+      );
+      expect(selection.diffText, contains('--- a/file_a.dart'));
+      expect(selection.diffText, contains('+++ b/file_a.dart'));
+      expect(selection.diffText, isNot(contains('@file_a.dart')));
+    });
+
+    test('reconstructUnifiedDiff includes binary file headers', () {
+      const diff = '''
+diff --git a/image.png b/image.png
+Binary files a/image.png and b/image.png differ
+''';
+      final file = parseDiff(diff).single;
+
+      expect(
+        reconstructUnifiedDiff(file),
+        'diff --git a/image.png b/image.png\nBinary files a/image.png and b/image.png differ',
+      );
+    });
+  });
 }

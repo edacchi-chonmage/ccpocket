@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:ccpocket/l10n/app_localizations.dart';
 import 'package:ccpocket/models/messages.dart';
+import 'package:ccpocket/utils/diff_parser.dart';
 import 'package:ccpocket/widgets/chat_input_bar.dart';
 
 void main() {
@@ -32,6 +33,7 @@ void main() {
     VoidCallback? onSlashCommand,
     VoidCallback? onMention,
     bool isInMentionContext = false,
+    DiffSelection? attachedDiffSelection,
   }) {
     return MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -55,6 +57,7 @@ void main() {
           onSlashCommand: onSlashCommand ?? () {},
           onMention: onMention ?? () {},
           isInMentionContext: isInMentionContext,
+          attachedDiffSelection: attachedDiffSelection,
         ),
       ),
     );
@@ -330,6 +333,22 @@ void main() {
         await tester.tap(find.byKey(const ValueKey('slash_command_button')));
         expect(tapped, isTrue);
       });
+    });
+
+    testWidgets('diff preview shows only diff line summary', (tester) async {
+      await tester.pumpWidget(
+        buildSubject(
+          hasInputText: true,
+          isInputEmpty: false,
+          attachedDiffSelection: const DiffSelection(
+            diffText:
+                'diff --git a/lib/a.dart b/lib/a.dart\n--- a/lib/a.dart\n+++ b/lib/a.dart',
+          ),
+        ),
+      );
+
+      expect(find.text('3 diff lines'), findsOneWidget);
+      expect(find.textContaining('@mentioned'), findsNothing);
     });
   });
 }

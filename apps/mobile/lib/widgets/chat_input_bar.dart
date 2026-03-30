@@ -485,27 +485,8 @@ class _DiffPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l = AppLocalizations.of(context);
-    final parts = <String>[];
-
-    // Build summary
-    final summaryParts = <String>[];
-    if (selection.mentions.isNotEmpty) {
-      summaryParts.add(l.filesMentioned(selection.mentions.length));
-    }
-    if (selection.diffText.isNotEmpty) {
-      final lineCount = selection.diffText.split('\n').length;
-      summaryParts.add(l.diffLines(lineCount));
-    }
-    final summary = summaryParts.join(', ');
-
-    // Build preview text
-    if (selection.mentions.isNotEmpty) {
-      parts.addAll(selection.mentions.map((f) => '@$f'));
-    }
-    if (selection.diffText.isNotEmpty) {
-      parts.add(selection.diffText.split('\n').take(2).join('\n'));
-    }
-    final preview = parts.join('\n');
+    final summary = l.diffLines(selection.diffText.split('\n').length);
+    final preview = selection.diffText.split('\n').take(2).join('\n');
 
     return GestureDetector(
       onTap: onTap,

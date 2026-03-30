@@ -576,7 +576,6 @@ class _ChatScreenBody extends HookWidget {
                         context,
                         worktreePath ?? projectPath!,
                         diffSelectionFromNav,
-                        existingSelection: diffSelectionFromNav.value,
                         sessionId: sessionId,
                         worktreePath: worktreePath,
                       );
@@ -834,11 +833,10 @@ class _ChatScreenBody extends HookWidget {
                     onDiffSelectionCleared: () =>
                         diffSelectionFromNav.value = null,
                     onOpenGitScreen: projectPath != null
-                        ? (currentSelection) => _openGitScreen(
+                        ? (_) => _openGitScreen(
                             context,
                             worktreePath ?? projectPath!,
                             diffSelectionFromNav,
-                            existingSelection: currentSelection,
                             sessionId: sessionId,
                             worktreePath: worktreePath,
                           )
@@ -861,28 +859,19 @@ Future<void> _openGitScreen(
   BuildContext context,
   String projectPath,
   ValueNotifier<DiffSelection?> diffSelectionNotifier, {
-  DiffSelection? existingSelection,
   String? sessionId,
   String? worktreePath,
 }) async {
   final selection = await context.router.push<DiffSelection>(
     GitRoute(
       projectPath: projectPath,
-      initialSelectedHunkKeys: existingSelection?.selectedHunkKeys,
       sessionId: sessionId,
       worktreePath: worktreePath,
     ),
   );
-  if (selection == null) return;
-  if (selection.requestChange) {
-    // Request Change: attach diff and focus input for the user to add feedback
-    diffSelectionNotifier.value = selection;
-  } else if (!selection.isEmpty) {
-    diffSelectionNotifier.value = selection;
-  } else {
-    // User cleared all selections
-    diffSelectionNotifier.value = null;
-  }
+  diffSelectionNotifier.value = selection != null && !selection.isEmpty
+      ? selection
+      : null;
 }
 
 // ---------------------------------------------------------------------------

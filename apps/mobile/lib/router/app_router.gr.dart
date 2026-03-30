@@ -342,7 +342,6 @@ class GitRoute extends PageRouteInfo<GitRouteArgs> {
     String? initialDiff,
     String? projectPath,
     String? title,
-    Set<String>? initialSelectedHunkKeys,
     String? worktreePath,
     String? sessionId,
     List<PageRouteInfo>? children,
@@ -353,7 +352,6 @@ class GitRoute extends PageRouteInfo<GitRouteArgs> {
            initialDiff: initialDiff,
            projectPath: projectPath,
            title: title,
-           initialSelectedHunkKeys: initialSelectedHunkKeys,
            worktreePath: worktreePath,
            sessionId: sessionId,
          ),
@@ -373,7 +371,6 @@ class GitRoute extends PageRouteInfo<GitRouteArgs> {
         initialDiff: args.initialDiff,
         projectPath: args.projectPath,
         title: args.title,
-        initialSelectedHunkKeys: args.initialSelectedHunkKeys,
         worktreePath: args.worktreePath,
         sessionId: args.sessionId,
       );
@@ -387,7 +384,6 @@ class GitRouteArgs {
     this.initialDiff,
     this.projectPath,
     this.title,
-    this.initialSelectedHunkKeys,
     this.worktreePath,
     this.sessionId,
   });
@@ -400,15 +396,13 @@ class GitRouteArgs {
 
   final String? title;
 
-  final Set<String>? initialSelectedHunkKeys;
-
   final String? worktreePath;
 
   final String? sessionId;
 
   @override
   String toString() {
-    return 'GitRouteArgs{key: $key, initialDiff: $initialDiff, projectPath: $projectPath, title: $title, initialSelectedHunkKeys: $initialSelectedHunkKeys, worktreePath: $worktreePath, sessionId: $sessionId}';
+    return 'GitRouteArgs{key: $key, initialDiff: $initialDiff, projectPath: $projectPath, title: $title, worktreePath: $worktreePath, sessionId: $sessionId}';
   }
 
   @override
@@ -419,10 +413,6 @@ class GitRouteArgs {
         initialDiff == other.initialDiff &&
         projectPath == other.projectPath &&
         title == other.title &&
-        const SetEquality<String>().equals(
-          initialSelectedHunkKeys,
-          other.initialSelectedHunkKeys,
-        ) &&
         worktreePath == other.worktreePath &&
         sessionId == other.sessionId;
   }
@@ -433,7 +423,6 @@ class GitRouteArgs {
       initialDiff.hashCode ^
       projectPath.hashCode ^
       title.hashCode ^
-      const SetEquality<String>().hash(initialSelectedHunkKeys) ^
       worktreePath.hashCode ^
       sessionId.hashCode;
 }

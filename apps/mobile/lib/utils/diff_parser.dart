@@ -426,43 +426,12 @@ DiffHunk _parseRawDiffLines(List<String> lines) {
   return DiffHunk(header: '', oldStart: 1, newStart: 1, lines: diffLines);
 }
 
-/// Reconstruct unified diff text from selected hunks.
-///
-/// [files] is the full list of parsed diff files.
-/// [selectedHunkKeys] contains keys in the format "$fileIdx:$hunkIdx".
-/// Returns a valid unified diff string suitable for embedding in a code block.
-/// Result of [reconstructDiff] containing @-mentions for fully selected files
-/// and unified diff text for partially selected files.
 class DiffSelection {
-  /// File paths where all hunks are selected (use @mention).
-  final List<String> mentions;
-
-  /// Unified diff text for files with partial hunk selection.
   final String diffText;
 
-  /// Original hunk keys for restoring selection state when re-entering
-  /// the diff screen.
-  final Set<String> selectedHunkKeys;
+  const DiffSelection({required this.diffText});
 
-  /// Whether this is a "Request Change" action (send file/hunk back to AI).
-  final bool requestChange;
-
-  const DiffSelection({
-    required this.mentions,
-    required this.diffText,
-    this.selectedHunkKeys = const {},
-    this.requestChange = false,
-  });
-
-  /// Convenience constructor for Request Change from the context menu.
-  DiffSelection.forRequestChange({
-    required String diff,
-    required this.selectedHunkKeys,
-  })  : mentions = const [],
-        diffText = diff,
-        requestChange = true;
-
-  bool get isEmpty => mentions.isEmpty && diffText.isEmpty;
+  bool get isEmpty => diffText.isEmpty;
 }
 
 DiffSelection reconstructDiff(
@@ -470,10 +439,9 @@ DiffSelection reconstructDiff(
   Set<String> selectedHunkKeys,
 ) {
   if (selectedHunkKeys.isEmpty) {
-    return const DiffSelection(mentions: [], diffText: '');
+    return const DiffSelection(diffText: '');
   }
 
-  final mentions = <String>[];
   final buffer = StringBuffer();
 
   for (var fileIdx = 0; fileIdx < files.length; fileIdx++) {
@@ -488,26 +456,8 @@ DiffSelection reconstructDiff(
     }
     if (selectedHunks.isEmpty) continue;
 
-    // If all hunks are selected, use @mention instead of diff text.
-    if (selectedHunks.length == file.hunks.length && !file.isBinary) {
-      mentions.add(file.filePath);
-      continue;
-    }
-
-    // File header
-    buffer.writeln('diff --git a/${file.filePath} b/${file.filePath}');
-    if (file.isNewFile) buffer.writeln('new file mode 100644');
-    if (file.isDeleted) buffer.writeln('deleted file mode 100644');
-
-    if (file.isBinary) {
-      buffer.writeln(
-        'Binary files a/${file.filePath} and b/${file.filePath} differ',
-      );
-      continue;
-    }
-
-    buffer.writeln('--- a/${file.filePath}');
-    buffer.writeln('+++ b/${file.filePath}');
+    _writeFileHeader(buffer, file);
+    if (file.isBinary) continue;
 
     for (final hunkIdx in selectedHunks) {
       final hunk = file.hunks[hunkIdx];
@@ -523,11 +473,7 @@ DiffSelection reconstructDiff(
     }
   }
 
-  return DiffSelection(
-    mentions: mentions,
-    diffText: buffer.toString().trimRight(),
-    selectedHunkKeys: Set<String>.from(selectedHunkKeys),
-  );
+  return DiffSelection(diffText: buffer.toString().trimRight());
 }
 
 // ─── Synthesize DiffFile from Edit/Write/MultiEdit tool input ────────────
@@ -628,12 +574,9 @@ DiffHunk _buildHunkFromStrings(String oldString, String newString) {
 /// Used to pass synthesized diff data to [GitScreen].
 String reconstructUnifiedDiff(DiffFile file) {
   final buffer = StringBuffer();
-  if (file.isNewFile) {
-    buffer.writeln('--- /dev/null');
-  } else {
-    buffer.writeln('--- a/${file.filePath}');
-  }
-  buffer.writeln('+++ b/${file.filePath}');
+  _writeFileHeader(buffer, file);
+  if (file.isBinary) return buffer.toString().trimRight();
+
   for (final hunk in file.hunks) {
     if (hunk.header.isNotEmpty) buffer.writeln(hunk.header);
     for (final line in hunk.lines) {
@@ -646,6 +589,20 @@ String reconstructUnifiedDiff(DiffFile file) {
     }
   }
   return buffer.toString().trimRight();
+}
+
+void _writeFileHeader(StringBuffer buffer, DiffFile file) {
+  buffer.writeln('diff --git a/${file.filePath} b/${file.filePath}');
+  if (file.isNewFile) buffer.writeln('new file mode 100644');
+  if (file.isDeleted) buffer.writeln('deleted file mode 100644');
+  if (file.isBinary) {
+    buffer.writeln(
+      'Binary files a/${file.filePath} and b/${file.filePath} differ',
+    );
+    return;
+  }
+  buffer.writeln(file.isNewFile ? '--- /dev/null' : '--- a/${file.filePath}');
+  buffer.writeln(file.isDeleted ? '+++ /dev/null' : '+++ b/${file.filePath}');
 }
 
 /// Extract file path from `diff --git a/path b/path`.

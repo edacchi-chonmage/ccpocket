@@ -5,7 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/bridge_service.dart';
 import '../../theme/app_theme.dart';
-import '../../utils/diff_parser.dart';
+import '../../utils/diff_parser.dart'
+    show DiffSelection, reconstructDiff, reconstructUnifiedDiff;
 import 'state/commit_cubit.dart';
 import 'state/git_view_cubit.dart';
 import 'state/git_view_state.dart';
@@ -14,8 +15,6 @@ import 'widgets/commit_bottom_sheet.dart';
 import 'widgets/diff_content_list.dart';
 import 'widgets/diff_empty_state.dart';
 import 'widgets/diff_error_state.dart';
-import 'widgets/diff_file_path_text.dart';
-import 'widgets/diff_stats_badge.dart';
 
 /// Dedicated screen for viewing unified diffs.
 ///
@@ -23,8 +22,7 @@ import 'widgets/diff_stats_badge.dart';
 /// - **Individual diff**: Pass [initialDiff] with raw diff text (from tool_result).
 /// - **Session-wide diff**: Pass [projectPath] to request `git diff` from Bridge.
 ///
-/// Returns a [String] (reconstructed diff) via [Navigator.pop] when the user
-/// selects hunks and taps the send-to-chat FAB.
+/// Returns a [DiffSelection] via [Navigator.pop] when Request Change is chosen.
 @RoutePage()
 class GitScreen extends StatelessWidget {
   /// Raw diff text for immediate display (individual tool result).
@@ -35,9 +33,6 @@ class GitScreen extends StatelessWidget {
 
   /// Display title (e.g. file path for individual diff).
   final String? title;
-
-  /// Pre-selected hunk keys to restore selection state.
-  final Set<String>? initialSelectedHunkKeys;
 
   /// Worktree path (if the session runs in a worktree).
   final String? worktreePath;
@@ -50,7 +45,6 @@ class GitScreen extends StatelessWidget {
     this.initialDiff,
     this.projectPath,
     this.title,
-    this.initialSelectedHunkKeys,
     this.worktreePath,
     this.sessionId,
   });
@@ -67,7 +61,6 @@ class GitScreen extends StatelessWidget {
             bridge: bridge,
             initialDiff: initialDiff,
             projectPath: projectPath,
-            initialSelectedHunkKeys: initialSelectedHunkKeys,
             worktreePath: worktreePath,
             sessionId: sessionId,
           ),
@@ -93,7 +86,6 @@ class _GitScreenBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.watch<GitViewCubit>().state;
     final cubit = context.read<GitViewCubit>();
-    final appColors = Theme.of(context).extension<AppColors>()!;
     final l = AppLocalizations.of(context);
 
     final screenTitle = title ?? l.changes;
@@ -124,52 +116,14 @@ class _GitScreenBody extends StatelessWidget {
             : null,
         actions: [
           // Refresh (projectPath mode only)
-          if (cubit.canRefresh && !state.selectionMode && !state.loading)
+          if (cubit.canRefresh && !state.loading)
             IconButton(
               icon: const Icon(Icons.refresh),
               tooltip: l.refresh,
               onPressed: cubit.refresh,
             ),
-          // Overflow menu for secondary actions
-          if (state.files.isNotEmpty)
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert),
-              onSelected: (value) =>
-                  _handleMenuAction(value, context, cubit, appColors),
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'select',
-                  child: ListTile(
-                    leading: Icon(
-                      Icons.alternate_email,
-                      color: state.selectionMode
-                          ? Theme.of(context).colorScheme.primary
-                          : null,
-                    ),
-                    title: Text(
-                      state.selectionMode
-                          ? l.cancelSelection
-                          : l.selectAndAttach,
-                    ),
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-                if (state.files.length > 1 && !state.selectionMode)
-                  PopupMenuItem(
-                    value: 'filter',
-                    child: ListTile(
-                      leading: const Icon(Icons.filter_list),
-                      title: Text(l.filterFiles),
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ),
-              ],
-            ),
         ],
       ),
-      floatingActionButton: _buildFab(context, state, cubit, l),
       bottomNavigationBar: isProjectMode
           ? _DiffBottomBar(
               state: state,
@@ -187,16 +141,8 @@ class _GitScreenBody extends StatelessWidget {
           ? DiffEmptyState(viewMode: isProjectMode ? state.viewMode : null)
           : DiffContentList(
               files: state.files,
-              hiddenFileIndices: state.hiddenFileIndices,
               collapsedFileIndices: state.collapsedFileIndices,
               onToggleCollapse: cubit.toggleCollapse,
-              onClearHidden: cubit.clearHidden,
-              selectionMode: state.selectionMode,
-              selectedHunkKeys: state.selectedHunkKeys,
-              onToggleFileSelection: cubit.toggleFileSelection,
-              onToggleHunkSelection: cubit.toggleHunkSelection,
-              isFileFullySelected: cubit.isFileFullySelected,
-              isFilePartiallySelected: cubit.isFilePartiallySelected,
               onLoadImage: cubit.loadImage,
               loadingImageIndices: state.loadingImageIndices,
               // Staged tab: only unstage swipe. Changes tab: stage + revert.
@@ -325,15 +271,8 @@ class _GitScreenBody extends StatelessWidget {
               subtitle: const Text('Send this file back to AI with feedback'),
               onTap: () {
                 Navigator.pop(context);
-                final hunkKeys = Set<String>.from(
-                  List.generate(file.hunks.length, (i) => '$fileIdx:$i'),
-                );
-                final selection = reconstructDiff(state.files, hunkKeys);
                 context.router.maybePop(
-                  DiffSelection.forRequestChange(
-                    diff: selection.diffText,
-                    selectedHunkKeys: hunkKeys,
-                  ),
+                  DiffSelection(diffText: reconstructUnifiedDiff(file)),
                 );
               },
             ),
@@ -426,13 +365,8 @@ class _GitScreenBody extends StatelessWidget {
               subtitle: const Text('Send this hunk back to AI with feedback'),
               onTap: () {
                 Navigator.pop(context);
-                final hunkKeys = {'$fileIdx:$hunkIdx'};
-                final selection = reconstructDiff(state.files, hunkKeys);
                 context.router.maybePop(
-                  DiffSelection.forRequestChange(
-                    diff: selection.diffText,
-                    selectedHunkKeys: hunkKeys,
-                  ),
+                  reconstructDiff(state.files, {'$fileIdx:$hunkIdx'}),
                 );
               },
             ),
@@ -469,130 +403,6 @@ class _GitScreenBody extends StatelessWidget {
     if (confirmed == true) {
       onConfirm();
     }
-  }
-
-  void _handleMenuAction(
-    String action,
-    BuildContext context,
-    GitViewCubit cubit,
-    AppColors appColors,
-  ) {
-    switch (action) {
-      case 'select':
-        cubit.toggleSelectionMode();
-      case 'filter':
-        _showFilterBottomSheet(context, appColors, cubit);
-    }
-  }
-
-  Widget? _buildFab(
-    BuildContext context,
-    GitViewState state,
-    GitViewCubit cubit,
-    AppLocalizations l,
-  ) {
-    // Send-to-chat FAB (selection mode)
-    if (state.selectionMode && cubit.hasAnySelection) {
-      return FloatingActionButton.extended(
-        key: const ValueKey('send_to_chat_fab'),
-        onPressed: () {
-          final selection = reconstructDiff(
-            state.files,
-            state.selectedHunkKeys,
-          );
-          context.router.maybePop(selection);
-        },
-        icon: const Icon(Icons.attach_file),
-        label: Text(
-          l.attachFilesAndHunks(
-            cubit.selectionSummary.files,
-            cubit.selectionSummary.hunks,
-          ),
-        ),
-      );
-    }
-
-    return null;
-  }
-
-  void _showFilterBottomSheet(
-    BuildContext context,
-    AppColors appColors,
-    GitViewCubit cubit,
-  ) {
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (sheetContext) {
-        return BlocBuilder<GitViewCubit, GitViewState>(
-          bloc: cubit,
-          builder: (context, state) {
-            final l = AppLocalizations.of(context);
-            return SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 8, 8),
-                    child: Row(
-                      children: [
-                        Text(
-                          l.filterFilesTitle,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: appColors.toolResultTextExpanded,
-                          ),
-                        ),
-                        const Spacer(),
-                        TextButton(
-                          onPressed: cubit.clearHidden,
-                          child: Text(l.all),
-                        ),
-                        TextButton(
-                          onPressed: () => cubit.setHiddenFiles(
-                            Set<int>.from(
-                              List.generate(state.files.length, (i) => i),
-                            ),
-                          ),
-                          child: Text(l.none),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  Flexible(
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: state.files.length,
-                      itemBuilder: (context, index) {
-                        final file = state.files[index];
-                        final visible = !state.hiddenFileIndices.contains(
-                          index,
-                        );
-                        return CheckboxListTile(
-                          value: visible,
-                          onChanged: (_) => cubit.toggleFileVisibility(index),
-                          title: DiffFilePathText(
-                            filePath: file.filePath,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontFamily: 'monospace',
-                            ),
-                          ),
-                          secondary: DiffStatsBadge(file: file),
-                          controlAffinity: ListTileControlAffinity.leading,
-                          dense: true,
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
   }
 }
 

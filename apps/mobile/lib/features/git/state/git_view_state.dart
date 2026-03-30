@@ -14,9 +14,6 @@ abstract class GitViewState with _$GitViewState {
     /// Parsed diff files.
     @Default([]) List<DiffFile> files,
 
-    /// Indices of files hidden by the filter.
-    @Default({}) Set<int> hiddenFileIndices,
-
     /// Indices of files whose hunks are collapsed.
     @Default({}) Set<int> collapsedFileIndices,
 
@@ -28,12 +25,6 @@ abstract class GitViewState with _$GitViewState {
 
     /// Error code for categorized error handling (e.g. 'git_not_available').
     String? errorCode,
-
-    /// Whether selection mode is active.
-    @Default(false) bool selectionMode,
-
-    /// Selected hunk keys in the format "$fileIdx:$hunkIdx".
-    @Default({}) Set<String> selectedHunkKeys,
 
     /// Indices of image files currently loading on demand.
     @Default({}) Set<int> loadingImageIndices,

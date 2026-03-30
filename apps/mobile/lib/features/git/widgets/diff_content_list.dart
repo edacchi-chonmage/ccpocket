@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../l10n/app_localizations.dart';
-import '../../../theme/app_theme.dart';
 import '../../../utils/diff_parser.dart';
 import 'diff_binary_notice.dart';
 import 'diff_file_header.dart';
@@ -10,16 +8,8 @@ import 'diff_image_widget.dart';
 
 class DiffContentList extends StatelessWidget {
   final List<DiffFile> files;
-  final Set<int> hiddenFileIndices;
   final Set<int> collapsedFileIndices;
   final ValueChanged<int> onToggleCollapse;
-  final VoidCallback onClearHidden;
-  final bool selectionMode;
-  final Set<String> selectedHunkKeys;
-  final ValueChanged<int>? onToggleFileSelection;
-  final void Function(int fileIdx, int hunkIdx)? onToggleHunkSelection;
-  final bool Function(int fileIdx)? isFileFullySelected;
-  final bool Function(int fileIdx)? isFilePartiallySelected;
   final ValueChanged<int>? onLoadImage;
   final Set<int> loadingImageIndices;
   final ValueChanged<int>? onSwipeStage;
@@ -36,16 +26,8 @@ class DiffContentList extends StatelessWidget {
   const DiffContentList({
     super.key,
     required this.files,
-    required this.hiddenFileIndices,
     required this.collapsedFileIndices,
     required this.onToggleCollapse,
-    required this.onClearHidden,
-    this.selectionMode = false,
-    this.selectedHunkKeys = const {},
-    this.onToggleFileSelection,
-    this.onToggleHunkSelection,
-    this.isFileFullySelected,
-    this.isFilePartiallySelected,
     this.onLoadImage,
     this.loadingImageIndices = const {},
     this.onSwipeStage,
@@ -69,8 +51,6 @@ class DiffContentList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final appColors = Theme.of(context).extension<AppColors>()!;
-
     // Single-file mode: show file header + hunks (no filter/divider)
     if (files.length == 1) {
       final file = files.first;
@@ -92,38 +72,14 @@ class DiffContentList extends StatelessWidget {
     }
 
     // Multi-file mode: all visible files in one scrollable list
-    final visibleFiles = <int>[];
-    for (var i = 0; i < files.length; i++) {
-      if (!hiddenFileIndices.contains(i)) visibleFiles.add(i);
-    }
-
-    if (visibleFiles.isEmpty) {
-      final l = AppLocalizations.of(context);
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.filter_list_off, size: 48, color: appColors.subtleText),
-            const SizedBox(height: 12),
-            Text(
-              l.allFilesFilteredOut,
-              style: TextStyle(fontSize: 16, color: appColors.subtleText),
-            ),
-            const SizedBox(height: 8),
-            TextButton(onPressed: onClearHidden, child: Text(l.showAll)),
-          ],
-        ),
-      );
-    }
-
     return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: visibleFiles.length * 2 - 1,
+      itemCount: files.length * 2 - 1,
       itemBuilder: (context, index) {
         if (index.isOdd) {
-          return Divider(height: 24, thickness: 1, color: appColors.codeBorder);
+          return const Divider(height: 24, thickness: 1);
         }
-        final fileIdx = visibleFiles[index ~/ 2];
+        final fileIdx = index ~/ 2;
         return _buildFileSection(fileIdx, files[fileIdx]);
       },
     );
@@ -135,12 +91,6 @@ class DiffContentList extends StatelessWidget {
       file: file,
       collapsed: collapsed,
       onToggleCollapse: () => onToggleCollapse(fileIdx),
-      selectionMode: selectionMode,
-      selected: isFileFullySelected?.call(fileIdx) ?? false,
-      partiallySelected: isFilePartiallySelected?.call(fileIdx) ?? false,
-      onToggleSelection: onToggleFileSelection != null
-          ? () => onToggleFileSelection!(fileIdx)
-          : null,
       stageStatus: _stageStatusFor(file),
       onLongPress: onLongPressFile != null
           ? () => onLongPressFile!(fileIdx)
@@ -192,22 +142,17 @@ class DiffContentList extends StatelessWidget {
           hunk: file.hunks[hunkIdx],
           lineNumberWidth: lineNumberWidth,
           dismissKey: '${file.filePath}:$hunkIdx',
-          selectionMode: selectionMode,
-          selected: selectedHunkKeys.contains('$fileIdx:$hunkIdx'),
           lineWrapEnabled: lineWrapEnabled,
-          onToggleSelection: onToggleHunkSelection != null
-              ? () => onToggleHunkSelection!(fileIdx, hunkIdx)
-              : null,
-          onLongPressHeader: !selectionMode && onLongPressHunk != null
+          onLongPressHeader: onLongPressHunk != null
               ? () => onLongPressHunk!(fileIdx, hunkIdx)
               : null,
-          onSwipeStage: !selectionMode && onSwipeStageHunk != null
+          onSwipeStage: onSwipeStageHunk != null
               ? () => onSwipeStageHunk!(fileIdx, hunkIdx)
               : null,
-          onSwipeUnstage: !selectionMode && onSwipeUnstageHunk != null
+          onSwipeUnstage: onSwipeUnstageHunk != null
               ? () => onSwipeUnstageHunk!(fileIdx, hunkIdx)
               : null,
-          onSwipeRevert: !selectionMode && onSwipeRevertHunk != null
+          onSwipeRevert: onSwipeRevertHunk != null
               ? () => onSwipeRevertHunk!(fileIdx, hunkIdx)
               : null,
         ),

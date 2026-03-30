@@ -545,11 +545,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get messagePlaceholder => 'Claude にメッセージ...';
 
   @override
-  String filesMentioned(int count) {
-    return '$count ファイルを @メンション中';
-  }
-
-  @override
   String diffLines(int count) {
     return '$count 行の diff';
   }
@@ -641,12 +636,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get changes => '変更';
 
   @override
-  String get cancelSelection => '選択をキャンセル';
-
-  @override
-  String get selectAndAttach => '選択して添付';
-
-  @override
   String get refresh => '更新';
 
   @override
@@ -677,21 +666,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get diffNoImage => '画像なし';
 
   @override
-  String get filterFiles => 'ファイルをフィルター';
-
-  @override
-  String attachFilesAndHunks(int files, int hunks) {
-    return '添付 $files ファイル, $hunks ハンク';
-  }
-
-  @override
-  String get filterFilesTitle => 'ファイルをフィルター';
-
-  @override
   String get noChanges => '変更なし';
-
-  @override
-  String get allFilesFilteredOut => 'すべてのファイルがフィルターされています';
 
   @override
   String get showAll => 'すべて表示';

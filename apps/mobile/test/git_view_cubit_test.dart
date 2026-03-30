@@ -223,39 +223,6 @@ void main() {
     });
   });
 
-  group('GitViewCubit - hidden file management', () {
-    test('setHiddenFiles replaces all hidden indices', () {
-      final cubit = _createCubit(initialDiff: _multiFileDiff);
-      addTearDown(cubit.close);
-
-      cubit.setHiddenFiles({0, 1});
-
-      expect(cubit.state.hiddenFileIndices, {0, 1});
-    });
-
-    test('toggleFileVisibility adds then removes', () {
-      final cubit = _createCubit(initialDiff: _multiFileDiff);
-      addTearDown(cubit.close);
-
-      cubit.toggleFileVisibility(1);
-      expect(cubit.state.hiddenFileIndices, {1});
-
-      cubit.toggleFileVisibility(1);
-      expect(cubit.state.hiddenFileIndices, isEmpty);
-    });
-
-    test('clearHidden resets all hidden files', () {
-      final cubit = _createCubit(initialDiff: _multiFileDiff);
-      addTearDown(cubit.close);
-
-      cubit.setHiddenFiles({0, 1, 2});
-      expect(cubit.state.hiddenFileIndices.length, 3);
-
-      cubit.clearHidden();
-      expect(cubit.state.hiddenFileIndices, isEmpty);
-    });
-  });
-
   group('GitViewCubit - default state', () {
     test('returns empty state when no params provided', () {
       final cubit = GitViewCubit(bridge: BridgeService());
@@ -408,31 +375,6 @@ void main() {
     });
   });
 
-  group('GitViewCubit - collapse and visibility combined', () {
-    test('collapsed and hidden states are independent', () {
-      final cubit = _createCubit(initialDiff: _multiFileDiff);
-      addTearDown(cubit.close);
-
-      cubit.toggleCollapse(0);
-      cubit.toggleFileVisibility(1);
-
-      expect(cubit.state.collapsedFileIndices, {0});
-      expect(cubit.state.hiddenFileIndices, {1});
-    });
-
-    test('clearHidden does not affect collapsed state', () {
-      final cubit = _createCubit(initialDiff: _multiFileDiff);
-      addTearDown(cubit.close);
-
-      cubit.toggleCollapse(0);
-      cubit.toggleFileVisibility(1);
-      cubit.clearHidden();
-
-      expect(cubit.state.collapsedFileIndices, {0});
-      expect(cubit.state.hiddenFileIndices, isEmpty);
-    });
-  });
-
   group('GitViewCubit - staging mode', () {
     test('switchMode emits viewMode change and requests staged diff', () async {
       final mockBridge = MockDiffBridgeService();
@@ -529,34 +471,6 @@ void main() {
       });
     });
 
-    test('stageSelectedHunks sends git_stage with selected hunks', () async {
-      final mockBridge = MockDiffBridgeService();
-      final cubit = GitViewCubit(
-        bridge: mockBridge,
-        projectPath: '/home/user/project',
-      );
-      addTearDown(() {
-        cubit.close();
-        mockBridge.dispose();
-      });
-
-      mockBridge.emitDiff(const DiffResultMessage(diff: _multiFileDiff));
-      await Future.microtask(() {});
-
-      // Select hunk 0 of file_a.dart (index 0) and hunk 0 of file_b.dart (index 1)
-      cubit.toggleSelectionMode();
-      cubit.toggleHunkSelection(0, 0);
-      cubit.toggleHunkSelection(1, 0);
-      cubit.stageSelectedHunks();
-
-      expect(cubit.state.staging, isTrue);
-      final json =
-          jsonDecode(mockBridge.sentMessages.last.toJson())
-              as Map<String, dynamic>;
-      expect(json['type'], 'git_stage');
-      expect(json['hunks'], hasLength(2));
-    });
-
     test('successful stage result triggers refresh', () async {
       final mockBridge = MockDiffBridgeService();
       final cubit = GitViewCubit(
@@ -576,7 +490,6 @@ void main() {
       await Future.microtask(() {});
 
       expect(cubit.state.staging, isFalse);
-      expect(cubit.state.selectedHunkKeys, isEmpty);
       // Should have sent a refresh getDiff
       expect(
         mockBridge.sentMessages.where((m) => m.type == 'get_diff').length,
