@@ -1120,17 +1120,29 @@ abstract class AppLocalizations {
   /// **'Claude にメッセージ...'**
   String get messagePlaceholder;
 
-  /// No description provided for @filesMentioned.
-  ///
-  /// In ja, this message translates to:
-  /// **'{count} ファイルを @メンション中'**
-  String filesMentioned(int count);
-
   /// No description provided for @diffLines.
   ///
   /// In ja, this message translates to:
   /// **'{count} 行の diff'**
   String diffLines(int count);
+
+  /// No description provided for @changedLines.
+  ///
+  /// In ja, this message translates to:
+  /// **'変更{count}行'**
+  String changedLines(int count);
+
+  /// No description provided for @hunkCount.
+  ///
+  /// In ja, this message translates to:
+  /// **'{count}ハンク'**
+  String hunkCount(int count);
+
+  /// No description provided for @fileCount.
+  ///
+  /// In ja, this message translates to:
+  /// **'{count}ファイル'**
+  String fileCount(int count);
 
   /// No description provided for @tapInterruptHoldStop.
   ///
@@ -1288,18 +1300,6 @@ abstract class AppLocalizations {
   /// **'変更'**
   String get changes;
 
-  /// No description provided for @cancelSelection.
-  ///
-  /// In ja, this message translates to:
-  /// **'選択をキャンセル'**
-  String get cancelSelection;
-
-  /// No description provided for @selectAndAttach.
-  ///
-  /// In ja, this message translates to:
-  /// **'選択して添付'**
-  String get selectAndAttach;
-
   /// No description provided for @refresh.
   ///
   /// In ja, this message translates to:
@@ -1360,35 +1360,11 @@ abstract class AppLocalizations {
   /// **'画像なし'**
   String get diffNoImage;
 
-  /// No description provided for @filterFiles.
-  ///
-  /// In ja, this message translates to:
-  /// **'ファイルをフィルター'**
-  String get filterFiles;
-
-  /// No description provided for @attachFilesAndHunks.
-  ///
-  /// In ja, this message translates to:
-  /// **'添付 {files} ファイル, {hunks} ハンク'**
-  String attachFilesAndHunks(int files, int hunks);
-
-  /// No description provided for @filterFilesTitle.
-  ///
-  /// In ja, this message translates to:
-  /// **'ファイルをフィルター'**
-  String get filterFilesTitle;
-
   /// No description provided for @noChanges.
   ///
   /// In ja, this message translates to:
   /// **'変更なし'**
   String get noChanges;
-
-  /// No description provided for @allFilesFilteredOut.
-  ///
-  /// In ja, this message translates to:
-  /// **'すべてのファイルがフィルターされています'**
-  String get allFilesFilteredOut;
 
   /// No description provided for @showAll.
   ///

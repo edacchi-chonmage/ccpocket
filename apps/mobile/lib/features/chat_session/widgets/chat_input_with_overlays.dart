@@ -36,7 +36,7 @@ class ChatInputWithOverlays extends HookWidget {
   final VoidCallback onScrollToBottom;
   final TextEditingController inputController;
 
-  /// Diff selection to attach (set by parent when returning from DiffScreen).
+  /// Diff selection to attach (set by parent when returning from GitScreen).
   final DiffSelection? initialDiffSelection;
 
   /// Called after the diff selection is consumed into local state.
@@ -46,7 +46,7 @@ class ChatInputWithOverlays extends HookWidget {
   final VoidCallback? onDiffSelectionCleared;
 
   /// Opens the diff screen with current selection state.
-  final void Function(DiffSelection? currentSelection)? onOpenDiffScreen;
+  final void Function(DiffSelection? currentSelection)? onOpenGitScreen;
 
   /// Custom hint text for the input field (e.g. provider-specific).
   final String? hintText;
@@ -60,7 +60,7 @@ class ChatInputWithOverlays extends HookWidget {
     this.initialDiffSelection,
     this.onDiffSelectionConsumed,
     this.onDiffSelectionCleared,
-    this.onOpenDiffScreen,
+    this.onOpenGitScreen,
     this.hintText,
   });
 
@@ -333,23 +333,11 @@ class ChatInputWithOverlays extends HookWidget {
         onDiffSelectionCleared?.call();
       }
 
-      // Build final message text with @mentions and/or diff block prepended
+      // Build final message text with the requested diff prepended.
       var finalText = text;
       if (selection != null) {
-        final parts = <String>[];
-
-        // @mentions for fully selected files
-        if (selection.mentions.isNotEmpty) {
-          parts.add(selection.mentions.map((f) => '@$f').join(' '));
-        }
-
-        // Diff block for partially selected hunks
         if (selection.diffText.isNotEmpty) {
-          parts.add('```diff\n${selection.diffText}\n```');
-        }
-
-        if (parts.isNotEmpty) {
-          final prefix = parts.join('\n\n');
+          final prefix = '```diff\n${selection.diffText}\n```';
           finalText = finalText.isEmpty ? prefix : '$prefix\n\n$finalText';
         }
       }
@@ -738,8 +726,8 @@ class ChatInputWithOverlays extends HookWidget {
               onClearImage: clearAttachment,
               attachedDiffSelection: attachedDiffSelection.value,
               onClearDiffSelection: clearDiffSelection,
-              onTapDiffPreview: onOpenDiffScreen != null
-                  ? () => onOpenDiffScreen!(attachedDiffSelection.value)
+              onTapDiffPreview: onOpenGitScreen != null
+                  ? () => onOpenGitScreen!(attachedDiffSelection.value)
                   : null,
               hintText: hintText,
               onPasteImage: isDesktopPlatform ? tryPasteImage : null,

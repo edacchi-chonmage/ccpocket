@@ -1,8 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  normalizeToolResultContent,
-  parseClientMessage,
-} from "./parser.js";
+import { normalizeToolResultContent, parseClientMessage } from "./parser.js";
 
 // ---- normalizeToolResultContent ----
 
@@ -55,7 +52,9 @@ describe("parseClientMessage", () => {
   });
 
   it("parses start with optional fields", () => {
-    const msg = parseClientMessage('{"type":"start","projectPath":"/p","sessionId":"s1","continue":true,"permissionMode":"acceptEdits"}');
+    const msg = parseClientMessage(
+      '{"type":"start","projectPath":"/p","sessionId":"s1","continue":true,"permissionMode":"acceptEdits"}',
+    );
     expect(msg).toEqual({
       type: "start",
       projectPath: "/p",
@@ -102,13 +101,21 @@ describe("parseClientMessage", () => {
   });
 
   it("parses push_register message", () => {
-    const msg = parseClientMessage('{"type":"push_register","token":"t1","platform":"ios"}');
-    expect(msg).toEqual({ type: "push_register", token: "t1", platform: "ios" });
+    const msg = parseClientMessage(
+      '{"type":"push_register","token":"t1","platform":"ios"}',
+    );
+    expect(msg).toEqual({
+      type: "push_register",
+      token: "t1",
+      platform: "ios",
+    });
   });
 
   it("rejects push_register with invalid platform", () => {
     expect(
-      parseClientMessage('{"type":"push_register","token":"t1","platform":"desktop"}'),
+      parseClientMessage(
+        '{"type":"push_register","token":"t1","platform":"desktop"}',
+      ),
     ).toBeNull();
   });
 
@@ -134,9 +141,7 @@ describe("parseClientMessage", () => {
 
   it("rejects set_permission_mode with invalid mode", () => {
     expect(
-      parseClientMessage(
-        '{"type":"set_permission_mode","mode":"unsupported"}',
-      ),
+      parseClientMessage('{"type":"set_permission_mode","mode":"unsupported"}'),
     ).toBeNull();
   });
 
@@ -176,7 +181,9 @@ describe("parseClientMessage", () => {
   });
 
   it("parses reject message", () => {
-    const msg = parseClientMessage('{"type":"reject","id":"tu3","message":"no"}');
+    const msg = parseClientMessage(
+      '{"type":"reject","id":"tu3","message":"no"}',
+    );
     expect(msg).toEqual({ type: "reject", id: "tu3", message: "no" });
   });
 
@@ -185,7 +192,9 @@ describe("parseClientMessage", () => {
   });
 
   it("parses answer message", () => {
-    const msg = parseClientMessage('{"type":"answer","toolUseId":"tu4","result":"yes"}');
+    const msg = parseClientMessage(
+      '{"type":"answer","toolUseId":"tu4","result":"yes"}',
+    );
     expect(msg).toEqual({ type: "answer", toolUseId: "tu4", result: "yes" });
   });
 
@@ -194,7 +203,9 @@ describe("parseClientMessage", () => {
   });
 
   it("rejects answer without result", () => {
-    expect(parseClientMessage('{"type":"answer","toolUseId":"tu4"}')).toBeNull();
+    expect(
+      parseClientMessage('{"type":"answer","toolUseId":"tu4"}'),
+    ).toBeNull();
   });
 
   it("parses list_sessions message", () => {
@@ -226,7 +237,9 @@ describe("parseClientMessage", () => {
   });
 
   it("parses list_recent_sessions with offset and projectPath", () => {
-    const msg = parseClientMessage('{"type":"list_recent_sessions","limit":10,"offset":20,"projectPath":"/tmp/project"}');
+    const msg = parseClientMessage(
+      '{"type":"list_recent_sessions","limit":10,"offset":20,"projectPath":"/tmp/project"}',
+    );
     expect(msg).toEqual({
       type: "list_recent_sessions",
       limit: 10,
@@ -236,13 +249,26 @@ describe("parseClientMessage", () => {
   });
 
   it("parses resume_session message", () => {
-    const msg = parseClientMessage('{"type":"resume_session","sessionId":"s3","projectPath":"/p"}');
-    expect(msg).toEqual({ type: "resume_session", sessionId: "s3", projectPath: "/p" });
+    const msg = parseClientMessage(
+      '{"type":"resume_session","sessionId":"s3","projectPath":"/p"}',
+    );
+    expect(msg).toEqual({
+      type: "resume_session",
+      sessionId: "s3",
+      projectPath: "/p",
+    });
   });
 
   it("parses resume_session with provider", () => {
-    const msg = parseClientMessage('{"type":"resume_session","sessionId":"s3","projectPath":"/p","provider":"codex"}');
-    expect(msg).toEqual({ type: "resume_session", sessionId: "s3", projectPath: "/p", provider: "codex" });
+    const msg = parseClientMessage(
+      '{"type":"resume_session","sessionId":"s3","projectPath":"/p","provider":"codex"}',
+    );
+    expect(msg).toEqual({
+      type: "resume_session",
+      sessionId: "s3",
+      projectPath: "/p",
+      provider: "codex",
+    });
   });
 
   it("parses resume_session with advanced Claude options", () => {
@@ -265,20 +291,30 @@ describe("parseClientMessage", () => {
 
   it("rejects resume_session with invalid effort", () => {
     expect(
-      parseClientMessage('{"type":"resume_session","sessionId":"s3","projectPath":"/p","effort":"xhigh"}'),
+      parseClientMessage(
+        '{"type":"resume_session","sessionId":"s3","projectPath":"/p","effort":"xhigh"}',
+      ),
     ).toBeNull();
   });
 
   it("rejects resume_session without sessionId", () => {
-    expect(parseClientMessage('{"type":"resume_session","projectPath":"/p"}')).toBeNull();
+    expect(
+      parseClientMessage('{"type":"resume_session","projectPath":"/p"}'),
+    ).toBeNull();
   });
 
   it("rejects resume_session without projectPath", () => {
-    expect(parseClientMessage('{"type":"resume_session","sessionId":"s3"}')).toBeNull();
+    expect(
+      parseClientMessage('{"type":"resume_session","sessionId":"s3"}'),
+    ).toBeNull();
   });
 
   it("rejects resume_session with invalid provider", () => {
-    expect(parseClientMessage('{"type":"resume_session","sessionId":"s3","projectPath":"/p","provider":"foo"}')).toBeNull();
+    expect(
+      parseClientMessage(
+        '{"type":"resume_session","sessionId":"s3","projectPath":"/p","provider":"foo"}',
+      ),
+    ).toBeNull();
   });
 
   it("parses list_gallery message", () => {
@@ -338,7 +374,9 @@ describe("parseClientMessage", () => {
   });
 
   it("parses remove_project_history message", () => {
-    const msg = parseClientMessage('{"type":"remove_project_history","projectPath":"/p"}');
+    const msg = parseClientMessage(
+      '{"type":"remove_project_history","projectPath":"/p"}',
+    );
     expect(msg).toEqual({ type: "remove_project_history", projectPath: "/p" });
   });
 
@@ -431,9 +469,7 @@ describe("parseClientMessage", () => {
 
   it("rejects rewind without targetUuid", () => {
     expect(
-      parseClientMessage(
-        '{"type":"rewind","sessionId":"s1","mode":"both"}',
-      ),
+      parseClientMessage('{"type":"rewind","sessionId":"s1","mode":"both"}'),
     ).toBeNull();
   });
 
@@ -459,6 +495,262 @@ describe("parseClientMessage", () => {
   it("rejects rewind_dry_run without targetUuid", () => {
     expect(
       parseClientMessage('{"type":"rewind_dry_run","sessionId":"s1"}'),
+    ).toBeNull();
+  });
+
+  // ---- Git Operations (Phase 1-3) ----
+
+  // git_stage
+  it("parses git_stage with files", () => {
+    const msg = parseClientMessage(
+      '{"type":"git_stage","projectPath":"/p","files":["a.txt","b.txt"]}',
+    );
+    expect(msg).toEqual({
+      type: "git_stage",
+      projectPath: "/p",
+      files: ["a.txt", "b.txt"],
+    });
+  });
+
+  it("parses git_stage with hunks", () => {
+    const msg = parseClientMessage(
+      '{"type":"git_stage","projectPath":"/p","hunks":[{"file":"a.txt","hunkIndex":0}]}',
+    );
+    expect(msg).toEqual({
+      type: "git_stage",
+      projectPath: "/p",
+      hunks: [{ file: "a.txt", hunkIndex: 0 }],
+    });
+  });
+
+  it("parses git_stage with both files and hunks", () => {
+    const msg = parseClientMessage(
+      '{"type":"git_stage","projectPath":"/p","files":["a.txt"],"hunks":[{"file":"b.txt","hunkIndex":1}]}',
+    );
+    expect(msg).not.toBeNull();
+  });
+
+  it("rejects git_stage without projectPath", () => {
+    expect(
+      parseClientMessage('{"type":"git_stage","files":["a.txt"]}'),
+    ).toBeNull();
+  });
+
+  it("rejects git_stage without files or hunks", () => {
+    expect(
+      parseClientMessage('{"type":"git_stage","projectPath":"/p"}'),
+    ).toBeNull();
+  });
+
+  it("rejects git_stage with invalid hunk shape", () => {
+    expect(
+      parseClientMessage(
+        '{"type":"git_stage","projectPath":"/p","hunks":[{"file":123}]}',
+      ),
+    ).toBeNull();
+  });
+
+  // git_unstage
+  it("parses git_unstage", () => {
+    const msg = parseClientMessage(
+      '{"type":"git_unstage","projectPath":"/p","files":["a.txt"]}',
+    );
+    expect(msg).toEqual({
+      type: "git_unstage",
+      projectPath: "/p",
+      files: ["a.txt"],
+    });
+  });
+
+  it("rejects git_unstage without projectPath", () => {
+    expect(
+      parseClientMessage('{"type":"git_unstage","files":["a.txt"]}'),
+    ).toBeNull();
+  });
+
+  it("parses git_unstage_hunks", () => {
+    const msg = parseClientMessage(
+      '{"type":"git_unstage_hunks","projectPath":"/p","hunks":[{"file":"a.txt","hunkIndex":0}]}',
+    );
+    expect(msg).toEqual({
+      type: "git_unstage_hunks",
+      projectPath: "/p",
+      hunks: [{ file: "a.txt", hunkIndex: 0 }],
+    });
+  });
+
+  it("rejects git_unstage_hunks without hunks", () => {
+    expect(
+      parseClientMessage('{"type":"git_unstage_hunks","projectPath":"/p"}'),
+    ).toBeNull();
+  });
+
+  // git_commit
+  it("parses git_commit with message", () => {
+    const msg = parseClientMessage(
+      '{"type":"git_commit","projectPath":"/p","message":"feat: add feature"}',
+    );
+    expect(msg).toEqual({
+      type: "git_commit",
+      projectPath: "/p",
+      message: "feat: add feature",
+    });
+  });
+
+  it("parses git_commit with autoGenerate", () => {
+    const msg = parseClientMessage(
+      '{"type":"git_commit","projectPath":"/p","autoGenerate":true}',
+    );
+    expect(msg).toEqual({
+      type: "git_commit",
+      projectPath: "/p",
+      autoGenerate: true,
+    });
+  });
+
+  it("rejects git_commit without projectPath", () => {
+    expect(
+      parseClientMessage('{"type":"git_commit","message":"x"}'),
+    ).toBeNull();
+  });
+
+  // git_push
+  it("parses git_push", () => {
+    const msg = parseClientMessage('{"type":"git_push","projectPath":"/p"}');
+    expect(msg).toEqual({ type: "git_push", projectPath: "/p" });
+  });
+
+  it("parses git_push with forceLease", () => {
+    const msg = parseClientMessage(
+      '{"type":"git_push","projectPath":"/p","forceLease":true}',
+    );
+    expect(msg).toEqual({
+      type: "git_push",
+      projectPath: "/p",
+      forceLease: true,
+    });
+  });
+
+  it("rejects git_push without projectPath", () => {
+    expect(parseClientMessage('{"type":"git_push"}')).toBeNull();
+  });
+
+  // git_status
+  it("parses git_status", () => {
+    const msg = parseClientMessage('{"type":"git_status","projectPath":"/p"}');
+    expect(msg).toEqual({ type: "git_status", projectPath: "/p" });
+  });
+
+  it("rejects git_status without projectPath", () => {
+    expect(parseClientMessage('{"type":"git_status"}')).toBeNull();
+  });
+
+  // git_branches
+  it("parses git_branches", () => {
+    const msg = parseClientMessage(
+      '{"type":"git_branches","projectPath":"/p"}',
+    );
+    expect(msg).toEqual({ type: "git_branches", projectPath: "/p" });
+  });
+
+  it("parses git_branches with query", () => {
+    const msg = parseClientMessage(
+      '{"type":"git_branches","projectPath":"/p","query":"feat"}',
+    );
+    expect(msg).toEqual({
+      type: "git_branches",
+      projectPath: "/p",
+      query: "feat",
+    });
+  });
+
+  it("rejects git_branches without projectPath", () => {
+    expect(parseClientMessage('{"type":"git_branches"}')).toBeNull();
+  });
+
+  // git_create_branch
+  it("parses git_create_branch", () => {
+    const msg = parseClientMessage(
+      '{"type":"git_create_branch","projectPath":"/p","name":"feat/x","checkout":true}',
+    );
+    expect(msg).toEqual({
+      type: "git_create_branch",
+      projectPath: "/p",
+      name: "feat/x",
+      checkout: true,
+    });
+  });
+
+  it("rejects git_create_branch without name", () => {
+    expect(
+      parseClientMessage('{"type":"git_create_branch","projectPath":"/p"}'),
+    ).toBeNull();
+  });
+
+  it("rejects git_create_branch without projectPath", () => {
+    expect(
+      parseClientMessage('{"type":"git_create_branch","name":"feat/x"}'),
+    ).toBeNull();
+  });
+
+  // git_checkout_branch
+  it("parses git_checkout_branch", () => {
+    const msg = parseClientMessage(
+      '{"type":"git_checkout_branch","projectPath":"/p","branch":"main"}',
+    );
+    expect(msg).toEqual({
+      type: "git_checkout_branch",
+      projectPath: "/p",
+      branch: "main",
+    });
+  });
+
+  it("rejects git_checkout_branch without branch", () => {
+    expect(
+      parseClientMessage('{"type":"git_checkout_branch","projectPath":"/p"}'),
+    ).toBeNull();
+  });
+
+  it("rejects git_checkout_branch without projectPath", () => {
+    expect(
+      parseClientMessage('{"type":"git_checkout_branch","branch":"main"}'),
+    ).toBeNull();
+  });
+
+  // git_revert_file
+  it("parses git_revert_file", () => {
+    const msg = parseClientMessage(
+      '{"type":"git_revert_file","projectPath":"/p","files":["a.txt"]}',
+    );
+    expect(msg).toEqual({
+      type: "git_revert_file",
+      projectPath: "/p",
+      files: ["a.txt"],
+    });
+  });
+
+  it("rejects git_revert_file without files", () => {
+    expect(
+      parseClientMessage('{"type":"git_revert_file","projectPath":"/p"}'),
+    ).toBeNull();
+  });
+
+  it("parses git_revert_hunks", () => {
+    const msg = parseClientMessage(
+      '{"type":"git_revert_hunks","projectPath":"/p","hunks":[{"file":"a.txt","hunkIndex":1}]}',
+    );
+    expect(msg).toEqual({
+      type: "git_revert_hunks",
+      projectPath: "/p",
+      hunks: [{ file: "a.txt", hunkIndex: 1 }],
+    });
+  });
+
+  it("rejects git_revert_hunks with invalid hunk shape", () => {
+    expect(
+      parseClientMessage(
+        '{"type":"git_revert_hunks","projectPath":"/p","hunks":[{"file":"a.txt"}]}',
+      ),
     ).toBeNull();
   });
 });

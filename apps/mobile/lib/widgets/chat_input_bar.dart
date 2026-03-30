@@ -485,27 +485,36 @@ class _DiffPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l = AppLocalizations.of(context);
-    final parts = <String>[];
-
-    // Build summary
+    final previewSummary = summarizeDiffSelection(selection.diffText);
     final summaryParts = <String>[];
-    if (selection.mentions.isNotEmpty) {
-      summaryParts.add(l.filesMentioned(selection.mentions.length));
+    if (previewSummary.changedLineCount > 0) {
+      summaryParts.add(l.changedLines(previewSummary.changedLineCount));
     }
-    if (selection.diffText.isNotEmpty) {
-      final lineCount = selection.diffText.split('\n').length;
-      summaryParts.add(l.diffLines(lineCount));
+    if (previewSummary.hunkCount > 0) {
+      summaryParts.add(l.hunkCount(previewSummary.hunkCount));
+    } else if (previewSummary.fileCount > 0) {
+      summaryParts.add(l.fileCount(previewSummary.fileCount));
     }
-    final summary = summaryParts.join(', ');
 
-    // Build preview text
-    if (selection.mentions.isNotEmpty) {
-      parts.addAll(selection.mentions.map((f) => '@$f'));
+    final summary = summaryParts.isNotEmpty
+        ? summaryParts.join(' · ')
+        : l.fileCount(
+            previewSummary.fileCount > 0 ? previewSummary.fileCount : 1,
+          );
+
+    final previewLines = <String>[];
+    final filePath = previewSummary.primaryFilePath;
+    if (filePath != null && filePath.isNotEmpty) {
+      previewLines.add(filePath);
     }
-    if (selection.diffText.isNotEmpty) {
-      parts.add(selection.diffText.split('\n').take(2).join('\n'));
+    final hunkHeader = previewSummary.primaryHunkHeader;
+    if (hunkHeader != null && hunkHeader.isNotEmpty) {
+      previewLines.add(hunkHeader);
     }
-    final preview = parts.join('\n');
+    if (previewLines.isEmpty) {
+      previewLines.add(summary);
+    }
+    final preview = previewLines.join('\n');
 
     return GestureDetector(
       onTap: onTap,

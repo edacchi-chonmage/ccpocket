@@ -216,8 +216,31 @@
   },
 
   "messagePlaceholder": "Message Claude...",
-  "filesMentioned": "{count} file(s) @mentioned",
   "diffLines": "{count} diff lines",
+  "changedLines": "{count, plural, =1{{count} changed line} other{{count} changed lines}}",
+  "@changedLines": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hunkCount": "{count, plural, =1{{count} hunk} other{{count} hunks}}",
+  "@hunkCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fileCount": "{count, plural, =1{{count} file} other{{count} files}}",
+  "@fileCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "tapInterruptHoldStop": "Tap: interrupt, Hold: stop",
 
   "rewindToHere": "Rewind to here",
@@ -249,8 +272,6 @@
   "cannotBeUndone": "This action cannot be undone.",
 
   "changes": "Changes",
-  "cancelSelection": "Cancel selection",
-  "selectAndAttach": "Select & attach",
   "refresh": "Refresh",
   "diffCompareSideBySide": "Side by Side",
   "diffCompareSlider": "Slider",
@@ -261,11 +282,7 @@
   "diffNewFile": "New file",
   "diffDeleted": "Deleted",
   "diffNoImage": "No image",
-  "filterFiles": "Filter files",
-  "attachFilesAndHunks": "Attach {files} file(s), {hunks} hunk(s)",
-  "filterFilesTitle": "Filter Files",
   "noChanges": "No changes",
-  "allFilesFilteredOut": "All files filtered out",
   "showAll": "Show all",
 
   "setupGuideTitle": "Setup Guide",

@@ -29,13 +29,11 @@ import '../../widgets/new_session_sheet.dart'
 import '../../widgets/approval_bar.dart';
 import '../../widgets/bubbles/ask_user_question_widget.dart';
 import '../../widgets/screenshot_sheet.dart';
-import '../../widgets/worktree_list_sheet.dart';
 import '../../widgets/plan_detail_sheet.dart';
 import '../chat_session/state/chat_session_cubit.dart';
 import '../chat_session/state/chat_session_state.dart';
 import '../../theme/app_theme.dart';
 import '../chat_session/state/streaming_state_cubit.dart';
-import '../chat_session/widgets/branch_chip.dart';
 import '../chat_session/widgets/chat_input_with_overlays.dart';
 import '../chat_session/widgets/bottom_overlay_layout.dart';
 import '../chat_session/widgets/chat_message_list.dart';
@@ -364,7 +362,7 @@ class _CodexChatBody extends HookWidget {
     );
     useEffect(() => scrollToUserEntry.dispose, const []);
 
-    // Diff selection from DiffScreen navigation
+    // Diff selection from GitScreen navigation
     final diffSelectionFromNav = useState<DiffSelection?>(null);
 
     // --- Bloc state ---
@@ -560,26 +558,12 @@ class _CodexChatBody extends HookWidget {
                       minHeight: 32,
                     ),
                     onPressed: () {
-                      _openDiffScreen(
+                      _openGitScreen(
                         context,
                         worktreePath ?? projectPath!,
                         diffSelectionFromNav,
-                        existingSelection: diffSelectionFromNav.value,
-                      );
-                    },
-                  ),
-                // Branch chip
-                if (projectPath != null)
-                  BranchChip(
-                    branchName: currentBranch.value,
-                    isWorktree: worktreePath != null,
-                    onTap: () {
-                      context.read<BridgeService>().refreshBranch(sessionId);
-                      showWorktreeListSheet(
-                        context: context,
-                        bridge: context.read<BridgeService>(),
-                        projectPath: projectPath!,
-                        currentWorktreePath: worktreePath,
+                        sessionId: sessionId,
+                        worktreePath: worktreePath,
                       );
                     },
                   ),
@@ -852,12 +836,13 @@ class _CodexChatBody extends HookWidget {
                     onDiffSelectionConsumed: () {},
                     onDiffSelectionCleared: () =>
                         diffSelectionFromNav.value = null,
-                    onOpenDiffScreen: projectPath != null
-                        ? (currentSelection) => _openDiffScreen(
+                    onOpenGitScreen: projectPath != null
+                        ? (_) => _openGitScreen(
                             context,
                             worktreePath ?? projectPath!,
                             diffSelectionFromNav,
-                            existingSelection: currentSelection,
+                            sessionId: sessionId,
+                            worktreePath: worktreePath,
                           )
                         : null,
                   ),
@@ -874,23 +859,23 @@ class _CodexChatBody extends HookWidget {
 // Helpers
 // ---------------------------------------------------------------------------
 
-Future<void> _openDiffScreen(
+Future<void> _openGitScreen(
   BuildContext context,
   String projectPath,
   ValueNotifier<DiffSelection?> diffSelectionNotifier, {
-  DiffSelection? existingSelection,
+  String? sessionId,
+  String? worktreePath,
 }) async {
   final selection = await context.router.push<DiffSelection>(
-    DiffRoute(
+    GitRoute(
       projectPath: projectPath,
-      initialSelectedHunkKeys: existingSelection?.selectedHunkKeys,
+      sessionId: sessionId,
+      worktreePath: worktreePath,
     ),
   );
-  if (selection != null && !selection.isEmpty) {
-    diffSelectionNotifier.value = selection;
-  } else if (selection != null && selection.isEmpty) {
-    diffSelectionNotifier.value = null;
-  }
+  diffSelectionNotifier.value = selection != null && !selection.isEmpty
+      ? selection
+      : null;
 }
 
 void _executeSideEffects(

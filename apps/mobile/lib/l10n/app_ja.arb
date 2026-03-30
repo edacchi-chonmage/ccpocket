@@ -244,14 +244,26 @@
   },
 
   "messagePlaceholder": "Claude にメッセージ...",
-  "filesMentioned": "{count} ファイルを @メンション中",
-  "@filesMentioned": {
+  "diffLines": "{count} 行の diff",
+  "@diffLines": {
     "placeholders": {
       "count": { "type": "int" }
     }
   },
-  "diffLines": "{count} 行の diff",
-  "@diffLines": {
+  "changedLines": "変更{count}行",
+  "@changedLines": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "hunkCount": "{count}ハンク",
+  "@hunkCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "fileCount": "{count}ファイル",
+  "@fileCount": {
     "placeholders": {
       "count": { "type": "int" }
     }
@@ -308,8 +320,6 @@
   "cannotBeUndone": "この操作は取り消せません。",
 
   "changes": "変更",
-  "cancelSelection": "選択をキャンセル",
-  "selectAndAttach": "選択して添付",
   "refresh": "更新",
   "diffCompareSideBySide": "並べて比較",
   "diffCompareSlider": "スライダー",
@@ -320,17 +330,7 @@
   "diffNewFile": "新規ファイル",
   "diffDeleted": "削除済み",
   "diffNoImage": "画像なし",
-  "filterFiles": "ファイルをフィルター",
-  "attachFilesAndHunks": "添付 {files} ファイル, {hunks} ハンク",
-  "@attachFilesAndHunks": {
-    "placeholders": {
-      "files": { "type": "int" },
-      "hunks": { "type": "int" }
-    }
-  },
-  "filterFilesTitle": "ファイルをフィルター",
   "noChanges": "変更なし",
-  "allFilesFilteredOut": "すべてのファイルがフィルターされています",
   "showAll": "すべて表示",
 
   "setupGuideTitle": "セットアップガイド",

@@ -9,6 +9,16 @@ class MockBridgeService extends BridgeService {
   final _mockMessageController = StreamController<ServerMessage>.broadcast();
   final List<Timer> _timers = [];
 
+  /// Original diff text split by file for stateful stage/unstage tracking.
+  String? _mockDiff;
+  final Set<String> _stagedFiles = {};
+
+  /// Set mock diff data for projectPath-mode GitScreen previews.
+  set mockDiff(String value) {
+    _mockDiff = value;
+    _stagedFiles.clear();
+  }
+
   @override
   Stream<ServerMessage> get messages => _mockMessageController.stream;
 
@@ -26,6 +36,96 @@ class MockBridgeService extends BridgeService {
   Stream<FileContentMessage> get fileContent => _mockMessageController.stream
       .where((m) => m is FileContentMessage)
       .cast<FileContentMessage>();
+
+  @override
+  Stream<DiffResultMessage> get diffResults => _mockMessageController.stream
+      .where((m) => m is DiffResultMessage)
+      .cast<DiffResultMessage>();
+
+  // Git Operations streams
+  @override
+  Stream<GitStageResultMessage> get gitStageResults => _mockMessageController
+      .stream
+      .where((m) => m is GitStageResultMessage)
+      .cast<GitStageResultMessage>();
+
+  @override
+  Stream<GitUnstageResultMessage> get gitUnstageResults =>
+      _mockMessageController.stream
+          .where((m) => m is GitUnstageResultMessage)
+          .cast<GitUnstageResultMessage>();
+
+  @override
+  Stream<GitUnstageHunksResultMessage> get gitUnstageHunksResults =>
+      _mockMessageController.stream
+          .where((m) => m is GitUnstageHunksResultMessage)
+          .cast<GitUnstageHunksResultMessage>();
+
+  @override
+  Stream<GitCommitResultMessage> get gitCommitResults => _mockMessageController
+      .stream
+      .where((m) => m is GitCommitResultMessage)
+      .cast<GitCommitResultMessage>();
+
+  @override
+  Stream<GitPushResultMessage> get gitPushResults => _mockMessageController
+      .stream
+      .where((m) => m is GitPushResultMessage)
+      .cast<GitPushResultMessage>();
+
+  @override
+  Stream<GitStatusResultMessage> get gitStatusResults => _mockMessageController
+      .stream
+      .where((m) => m is GitStatusResultMessage)
+      .cast<GitStatusResultMessage>();
+
+  @override
+  Stream<GitBranchesResultMessage> get gitBranchesResults =>
+      _mockMessageController.stream
+          .where((m) => m is GitBranchesResultMessage)
+          .cast<GitBranchesResultMessage>();
+
+  @override
+  Stream<GitCreateBranchResultMessage> get gitCreateBranchResults =>
+      _mockMessageController.stream
+          .where((m) => m is GitCreateBranchResultMessage)
+          .cast<GitCreateBranchResultMessage>();
+
+  @override
+  Stream<GitCheckoutBranchResultMessage> get gitCheckoutBranchResults =>
+      _mockMessageController.stream
+          .where((m) => m is GitCheckoutBranchResultMessage)
+          .cast<GitCheckoutBranchResultMessage>();
+
+  @override
+  Stream<GitRevertFileResultMessage> get gitRevertFileResults =>
+      _mockMessageController.stream
+          .where((m) => m is GitRevertFileResultMessage)
+          .cast<GitRevertFileResultMessage>();
+
+  @override
+  Stream<GitRevertHunksResultMessage> get gitRevertHunksResults =>
+      _mockMessageController.stream
+          .where((m) => m is GitRevertHunksResultMessage)
+          .cast<GitRevertHunksResultMessage>();
+
+  @override
+  Stream<GitFetchResultMessage> get gitFetchResults => _mockMessageController
+      .stream
+      .where((m) => m is GitFetchResultMessage)
+      .cast<GitFetchResultMessage>();
+
+  @override
+  Stream<GitPullResultMessage> get gitPullResults => _mockMessageController
+      .stream
+      .where((m) => m is GitPullResultMessage)
+      .cast<GitPullResultMessage>();
+
+  @override
+  Stream<GitRemoteStatusResultMessage> get gitRemoteStatusResults =>
+      _mockMessageController.stream
+          .where((m) => m is GitRemoteStatusResultMessage)
+          .cast<GitRemoteStatusResultMessage>();
 
   @override
   void send(ClientMessage message) {
@@ -125,6 +225,150 @@ class MockBridgeService extends BridgeService {
             totalLines: _mockFileContent(filePath).split('\n').length,
           ),
         );
+      // ---- Git Operations (mock, stateful) ----
+      case 'get_diff':
+        final stagedParam = json['staged'] as bool?;
+        // null (all mode) → return full diff; true → staged only; false → unstaged only
+        final filtered = stagedParam == null
+            ? (_mockDiff ?? '')
+            : _filterDiffByStageState(stagedParam);
+        _scheduleMessage(
+          const Duration(milliseconds: 300),
+          DiffResultMessage(diff: filtered),
+        );
+      case 'git_stage':
+        final files = (json['files'] as List?)?.cast<String>() ?? [];
+        _stagedFiles.addAll(files);
+        // Also extract file paths from hunks
+        final hunks = json['hunks'] as List?;
+        if (hunks != null) {
+          for (final h in hunks) {
+            final file = (h as Map<String, dynamic>)['file'] as String?;
+            if (file != null) _stagedFiles.add(file);
+          }
+        }
+        _scheduleMessage(
+          const Duration(milliseconds: 200),
+          const GitStageResultMessage(success: true),
+        );
+      case 'git_unstage':
+        final files = (json['files'] as List?)?.cast<String>() ?? [];
+        _stagedFiles.removeAll(files);
+        _scheduleMessage(
+          const Duration(milliseconds: 200),
+          const GitUnstageResultMessage(success: true),
+        );
+      case 'git_unstage_hunks':
+        _scheduleMessage(
+          const Duration(milliseconds: 200),
+          const GitUnstageHunksResultMessage(success: true),
+        );
+      case 'git_commit':
+        _scheduleMessage(
+          const Duration(milliseconds: 500),
+          GitCommitResultMessage(
+            success: true,
+            commitHash: 'abc1234',
+            message: json['message'] as String? ?? 'mock commit',
+          ),
+        );
+      case 'git_push':
+        _scheduleMessage(
+          const Duration(milliseconds: 600),
+          const GitPushResultMessage(
+            success: true,
+            remote: 'origin',
+            branch: 'feat/mock',
+          ),
+        );
+      case 'git_status':
+        _scheduleMessage(
+          const Duration(milliseconds: 200),
+          const GitStatusResultMessage(
+            staged: ['lib/main.dart', 'lib/app.dart'],
+            unstaged: ['lib/screen.dart'],
+            untracked: ['lib/new_file.dart'],
+          ),
+        );
+      case 'git_branches':
+        _scheduleMessage(
+          const Duration(milliseconds: 200),
+          const GitBranchesResultMessage(
+            current: 'feat/mock',
+            branches: ['main', 'feat/mock', 'feat/login', 'fix/bug-123'],
+            remoteStatusByBranch: {
+              'main': GitBranchRemoteStatus(
+                ahead: 0,
+                behind: 0,
+                hasUpstream: true,
+              ),
+              'feat/mock': GitBranchRemoteStatus(
+                ahead: 2,
+                behind: 1,
+                hasUpstream: true,
+              ),
+              'feat/login': GitBranchRemoteStatus(
+                ahead: 0,
+                behind: 3,
+                hasUpstream: true,
+              ),
+              'fix/bug-123': GitBranchRemoteStatus(
+                ahead: 0,
+                behind: 0,
+                hasUpstream: false,
+              ),
+            },
+          ),
+        );
+      case 'git_create_branch':
+        _scheduleMessage(
+          const Duration(milliseconds: 300),
+          const GitCreateBranchResultMessage(success: true),
+        );
+      case 'git_checkout_branch':
+        _scheduleMessage(
+          const Duration(milliseconds: 300),
+          const GitCheckoutBranchResultMessage(success: true),
+        );
+      case 'git_revert_file':
+        // In mock, "revert" removes the file from the diff
+        // (simulated by clearing the mock diff for those files, but for simplicity
+        //  we just return success and let the diff refresh handle it)
+        _scheduleMessage(
+          const Duration(milliseconds: 200),
+          const GitRevertFileResultMessage(success: true),
+        );
+      case 'git_revert_hunks':
+        _scheduleMessage(
+          const Duration(milliseconds: 200),
+          const GitRevertHunksResultMessage(success: true),
+        );
+      case 'git_fetch':
+        _scheduleMessage(
+          const Duration(milliseconds: 200),
+          const GitFetchResultMessage(success: true),
+        );
+      case 'git_remote_status':
+        _scheduleMessage(
+          const Duration(milliseconds: 100),
+          const GitRemoteStatusResultMessage(
+            ahead: 0,
+            behind: 0,
+            branch: 'feat/mock',
+            hasUpstream: false,
+          ),
+        );
+      case 'git_pull':
+        _scheduleMessage(
+          const Duration(milliseconds: 500),
+          const GitPullResultMessage(
+            success: true,
+            message: 'Already up to date.',
+          ),
+        );
+      case 'refresh_branch':
+        // No-op for mock (session branch refresh)
+        break;
       default:
         break;
     }
@@ -306,7 +550,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0''',
-    'packages/bridge/src/index.ts': '''import { startServer } from "./websocket.js";
+    'packages/bridge/src/index.ts':
+        '''import { startServer } from "./websocket.js";
 
 const PORT = Number(process.env.BRIDGE_PORT ?? 8765);
 const HOST = process.env.BRIDGE_HOST ?? "0.0.0.0";
@@ -478,6 +723,53 @@ void main() {
       'css' => 'css',
       _ => null,
     };
+  }
+
+  /// Split _mockDiff into per-file sections and filter by stage state.
+  /// When [staged] is true, return only staged files' diffs.
+  /// When [staged] is false, return only unstaged files' diffs.
+  String _filterDiffByStageState(bool staged) {
+    final fullDiff = _mockDiff ?? '';
+    if (fullDiff.isEmpty || _stagedFiles.isEmpty) {
+      return staged ? '' : fullDiff;
+    }
+
+    // Split diff into per-file blocks (each starting with "diff --git")
+    final blocks = <String>[];
+    final filePaths = <String>[];
+    final lines = fullDiff.split('\n');
+    var currentBlock = StringBuffer();
+    String? currentFile;
+
+    for (final line in lines) {
+      if (line.startsWith('diff --git ')) {
+        // Save previous block
+        if (currentFile != null) {
+          blocks.add(currentBlock.toString());
+          filePaths.add(currentFile);
+        }
+        currentBlock = StringBuffer();
+        // Extract file path: "diff --git a/path b/path" → "path"
+        final match = RegExp(r'diff --git a/(.+) b/').firstMatch(line);
+        currentFile = match?.group(1) ?? '';
+      }
+      currentBlock.writeln(line);
+    }
+    // Save last block
+    if (currentFile != null) {
+      blocks.add(currentBlock.toString());
+      filePaths.add(currentFile);
+    }
+
+    // Filter: staged view shows staged files, unstaged view shows the rest
+    final filtered = StringBuffer();
+    for (var i = 0; i < blocks.length; i++) {
+      final isStaged = _stagedFiles.contains(filePaths[i]);
+      if (staged == isStaged) {
+        filtered.write(blocks[i]);
+      }
+    }
+    return filtered.toString().trimRight();
   }
 
   @override

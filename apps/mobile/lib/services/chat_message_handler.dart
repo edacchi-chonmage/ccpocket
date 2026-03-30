@@ -105,6 +105,17 @@ const _unsupportedActions = <String, UnsupportedAction>{
   'take_screenshot': UnsupportedAction.showUpdateHint,
   'archive_session': UnsupportedAction.showUpdateHint,
   'read_file': UnsupportedAction.showUpdateHint,
+  // Git Operations (Phase 1-3)
+  'git_stage': UnsupportedAction.showUpdateHint,
+  'git_unstage': UnsupportedAction.showUpdateHint,
+  'git_unstage_hunks': UnsupportedAction.showUpdateHint,
+  'git_commit': UnsupportedAction.showUpdateHint,
+  'git_push': UnsupportedAction.showUpdateHint,
+  'git_status': UnsupportedAction.showUpdateHint,
+  'git_branches': UnsupportedAction.showUpdateHint,
+  'git_create_branch': UnsupportedAction.showUpdateHint,
+  'git_checkout_branch': UnsupportedAction.showUpdateHint,
+  'git_revert_hunks': UnsupportedAction.showUpdateHint,
 };
 
 /// Processes [ServerMessage]s into [ChatStateUpdate]s.

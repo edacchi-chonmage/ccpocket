@@ -51,6 +51,35 @@ class BridgeService implements BridgeServiceBase {
       StreamController<PromptHistoryBackupInfoMessage>.broadcast();
   final _fileContentController =
       StreamController<FileContentMessage>.broadcast();
+  // ---- Git Operations (Phase 1-3) ----
+  final _gitStageResultController =
+      StreamController<GitStageResultMessage>.broadcast();
+  final _gitUnstageResultController =
+      StreamController<GitUnstageResultMessage>.broadcast();
+  final _gitUnstageHunksResultController =
+      StreamController<GitUnstageHunksResultMessage>.broadcast();
+  final _gitCommitResultController =
+      StreamController<GitCommitResultMessage>.broadcast();
+  final _gitPushResultController =
+      StreamController<GitPushResultMessage>.broadcast();
+  final _gitStatusResultController =
+      StreamController<GitStatusResultMessage>.broadcast();
+  final _gitBranchesResultController =
+      StreamController<GitBranchesResultMessage>.broadcast();
+  final _gitCreateBranchResultController =
+      StreamController<GitCreateBranchResultMessage>.broadcast();
+  final _gitCheckoutBranchResultController =
+      StreamController<GitCheckoutBranchResultMessage>.broadcast();
+  final _gitRevertFileResultController =
+      StreamController<GitRevertFileResultMessage>.broadcast();
+  final _gitRevertHunksResultController =
+      StreamController<GitRevertHunksResultMessage>.broadcast();
+  final _gitFetchResultController =
+      StreamController<GitFetchResultMessage>.broadcast();
+  final _gitPullResultController =
+      StreamController<GitPullResultMessage>.broadcast();
+  final _gitRemoteStatusResultController =
+      StreamController<GitRemoteStatusResultMessage>.broadcast();
   BridgeConnectionState _connectionState = BridgeConnectionState.disconnected;
   final List<ClientMessage> _messageQueue = [];
   List<SessionInfo> _sessions = [];
@@ -117,6 +146,35 @@ class BridgeService implements BridgeServiceBase {
       _restoreResultController.stream;
   Stream<PromptHistoryBackupInfoMessage> get backupInfo =>
       _backupInfoController.stream;
+  // Git Operations
+  Stream<GitStageResultMessage> get gitStageResults =>
+      _gitStageResultController.stream;
+  Stream<GitUnstageResultMessage> get gitUnstageResults =>
+      _gitUnstageResultController.stream;
+  Stream<GitUnstageHunksResultMessage> get gitUnstageHunksResults =>
+      _gitUnstageHunksResultController.stream;
+  Stream<GitCommitResultMessage> get gitCommitResults =>
+      _gitCommitResultController.stream;
+  Stream<GitPushResultMessage> get gitPushResults =>
+      _gitPushResultController.stream;
+  Stream<GitStatusResultMessage> get gitStatusResults =>
+      _gitStatusResultController.stream;
+  Stream<GitBranchesResultMessage> get gitBranchesResults =>
+      _gitBranchesResultController.stream;
+  Stream<GitCreateBranchResultMessage> get gitCreateBranchResults =>
+      _gitCreateBranchResultController.stream;
+  Stream<GitCheckoutBranchResultMessage> get gitCheckoutBranchResults =>
+      _gitCheckoutBranchResultController.stream;
+  Stream<GitRevertFileResultMessage> get gitRevertFileResults =>
+      _gitRevertFileResultController.stream;
+  Stream<GitRevertHunksResultMessage> get gitRevertHunksResults =>
+      _gitRevertHunksResultController.stream;
+  Stream<GitFetchResultMessage> get gitFetchResults =>
+      _gitFetchResultController.stream;
+  Stream<GitPullResultMessage> get gitPullResults =>
+      _gitPullResultController.stream;
+  Stream<GitRemoteStatusResultMessage> get gitRemoteStatusResults =>
+      _gitRemoteStatusResultController.stream;
   BridgeConnectionState get currentBridgeConnectionState => _connectionState;
   @override
   bool get isConnected => _connectionState == BridgeConnectionState.connected;
@@ -243,6 +301,35 @@ class BridgeService implements BridgeServiceBase {
                 _restoreResultController.add(msg);
               case PromptHistoryBackupInfoMessage():
                 _backupInfoController.add(msg);
+              // Git Operations
+              case GitStageResultMessage():
+                _gitStageResultController.add(msg);
+              case GitUnstageResultMessage():
+                _gitUnstageResultController.add(msg);
+              case GitUnstageHunksResultMessage():
+                _gitUnstageHunksResultController.add(msg);
+              case GitCommitResultMessage():
+                _gitCommitResultController.add(msg);
+              case GitPushResultMessage():
+                _gitPushResultController.add(msg);
+              case GitStatusResultMessage():
+                _gitStatusResultController.add(msg);
+              case GitBranchesResultMessage():
+                _gitBranchesResultController.add(msg);
+              case GitCreateBranchResultMessage():
+                _gitCreateBranchResultController.add(msg);
+              case GitCheckoutBranchResultMessage():
+                _gitCheckoutBranchResultController.add(msg);
+              case GitRevertFileResultMessage():
+                _gitRevertFileResultController.add(msg);
+              case GitRevertHunksResultMessage():
+                _gitRevertHunksResultController.add(msg);
+              case GitFetchResultMessage():
+                _gitFetchResultController.add(msg);
+              case GitPullResultMessage():
+                _gitPullResultController.add(msg);
+              case GitRemoteStatusResultMessage():
+                _gitRemoteStatusResultController.add(msg);
               case ArchiveResultMessage(:final success):
                 if (success) {
                   // Refresh the recent sessions list to reflect the archived session
@@ -1032,6 +1119,21 @@ class BridgeService implements BridgeServiceBase {
     _backupResultController.close();
     _restoreResultController.close();
     _backupInfoController.close();
+    // Git Operations
+    _gitStageResultController.close();
+    _gitUnstageResultController.close();
+    _gitUnstageHunksResultController.close();
+    _gitCommitResultController.close();
+    _gitPushResultController.close();
+    _gitStatusResultController.close();
+    _gitBranchesResultController.close();
+    _gitCreateBranchResultController.close();
+    _gitCheckoutBranchResultController.close();
+    _gitRevertFileResultController.close();
+    _gitRevertHunksResultController.close();
+    _gitFetchResultController.close();
+    _gitPullResultController.close();
+    _gitRemoteStatusResultController.close();
     clearDiffImageCache();
   }
 }

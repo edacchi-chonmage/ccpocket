@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:ccpocket/l10n/app_localizations.dart';
 import 'package:ccpocket/models/messages.dart';
+import 'package:ccpocket/utils/diff_parser.dart';
 import 'package:ccpocket/widgets/chat_input_bar.dart';
 
 void main() {
@@ -32,6 +33,7 @@ void main() {
     VoidCallback? onSlashCommand,
     VoidCallback? onMention,
     bool isInMentionContext = false,
+    DiffSelection? attachedDiffSelection,
   }) {
     return MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -55,6 +57,7 @@ void main() {
           onSlashCommand: onSlashCommand ?? () {},
           onMention: onMention ?? () {},
           isInMentionContext: isInMentionContext,
+          attachedDiffSelection: attachedDiffSelection,
         ),
       ),
     );
@@ -331,5 +334,73 @@ void main() {
         expect(tapped, isTrue);
       });
     });
+
+    testWidgets('diff preview shows hunk-focused summary and metadata', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildSubject(
+          hasInputText: true,
+          isInputEmpty: false,
+          attachedDiffSelection: const DiffSelection(
+            diffText:
+                'diff --git a/lib/todo_list.dart b/lib/todo_list.dart\n'
+                '--- a/lib/todo_list.dart\n'
+                '+++ b/lib/todo_list.dart\n'
+                '@@ -5,7 +5,7 @@ class TodoList {\n'
+                ' List<Todo> get items => List.unmodifiable(_items);\n'
+                '-void add(String title) {\n'
+                '+void add(String title, {Priority priority = Priority.medium}) {\n'
+                '   final id = DateTime.now().millisecondsSinceEpoch.toString();\n'
+                '   _items.add(Todo(id: id, title: title));\n'
+                ' }',
+          ),
+        ),
+      );
+
+      expect(find.text('2 changed lines · 1 hunk'), findsOneWidget);
+      expect(find.textContaining('lib/todo_list.dart'), findsOneWidget);
+      expect(
+        find.textContaining('@@ -5,7 +5,7 @@ class TodoList {'),
+        findsOneWidget,
+      );
+      expect(find.text('12 diff lines'), findsNothing);
+      expect(
+        find.textContaining('diff --git a/lib/todo_list.dart'),
+        findsNothing,
+      );
+      expect(find.textContaining('@mentioned'), findsNothing);
+    });
+
+    testWidgets(
+      'diff preview summarizes file request changes by changed lines and hunks',
+      (tester) async {
+        await tester.pumpWidget(
+          buildSubject(
+            hasInputText: true,
+            isInputEmpty: false,
+            attachedDiffSelection: const DiffSelection(
+              diffText:
+                  'diff --git a/lib/a.dart b/lib/a.dart\n'
+                  '--- a/lib/a.dart\n'
+                  '+++ b/lib/a.dart\n'
+                  '@@ -1,2 +1,2 @@\n'
+                  '-old\n'
+                  '+new\n'
+                  ' same\n'
+                  '@@ -10,2 +10,2 @@\n'
+                  '-old2\n'
+                  '+new2\n'
+                  ' same2',
+            ),
+          ),
+        );
+
+        expect(find.text('4 changed lines · 2 hunks'), findsOneWidget);
+        expect(find.textContaining('lib/a.dart'), findsOneWidget);
+        expect(find.textContaining('@@ -1,2 +1,2 @@'), findsOneWidget);
+        expect(find.textContaining('--- a/lib/a.dart'), findsNothing);
+      },
+    );
   });
 }

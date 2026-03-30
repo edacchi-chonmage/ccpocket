@@ -558,13 +558,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messagePlaceholder => 'Message Claude...';
 
   @override
-  String filesMentioned(int count) {
-    return '$count file(s) @mentioned';
+  String diffLines(int count) {
+    return '$count diff lines';
   }
 
   @override
-  String diffLines(int count) {
-    return '$count diff lines';
+  String changedLines(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count changed lines',
+      one: '$count changed line',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String hunkCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hunks',
+      one: '$count hunk',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String fileCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files',
+      one: '$count file',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -656,12 +684,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changes => 'Changes';
 
   @override
-  String get cancelSelection => 'Cancel selection';
-
-  @override
-  String get selectAndAttach => 'Select & attach';
-
-  @override
   String get refresh => 'Refresh';
 
   @override
@@ -692,21 +714,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diffNoImage => 'No image';
 
   @override
-  String get filterFiles => 'Filter files';
-
-  @override
-  String attachFilesAndHunks(int files, int hunks) {
-    return 'Attach $files file(s), $hunks hunk(s)';
-  }
-
-  @override
-  String get filterFilesTitle => 'Filter Files';
-
-  @override
   String get noChanges => 'No changes';
-
-  @override
-  String get allFilesFilteredOut => 'All files filtered out';
 
   @override
   String get showAll => 'Show all';

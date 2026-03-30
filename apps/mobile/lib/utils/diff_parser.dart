@@ -426,31 +426,79 @@ DiffHunk _parseRawDiffLines(List<String> lines) {
   return DiffHunk(header: '', oldStart: 1, newStart: 1, lines: diffLines);
 }
 
-/// Reconstruct unified diff text from selected hunks.
-///
-/// [files] is the full list of parsed diff files.
-/// [selectedHunkKeys] contains keys in the format "$fileIdx:$hunkIdx".
-/// Returns a valid unified diff string suitable for embedding in a code block.
-/// Result of [reconstructDiff] containing @-mentions for fully selected files
-/// and unified diff text for partially selected files.
 class DiffSelection {
-  /// File paths where all hunks are selected (use @mention).
-  final List<String> mentions;
-
-  /// Unified diff text for files with partial hunk selection.
   final String diffText;
 
-  /// Original hunk keys for restoring selection state when re-entering
-  /// the diff screen.
-  final Set<String> selectedHunkKeys;
+  const DiffSelection({required this.diffText});
 
-  const DiffSelection({
-    required this.mentions,
-    required this.diffText,
-    this.selectedHunkKeys = const {},
+  bool get isEmpty => diffText.isEmpty;
+}
+
+class DiffSelectionPreviewSummary {
+  final int fileCount;
+  final int hunkCount;
+  final int changedLineCount;
+  final String? primaryFilePath;
+  final String? primaryHunkHeader;
+
+  const DiffSelectionPreviewSummary({
+    required this.fileCount,
+    required this.hunkCount,
+    required this.changedLineCount,
+    this.primaryFilePath,
+    this.primaryHunkHeader,
   });
 
-  bool get isEmpty => mentions.isEmpty && diffText.isEmpty;
+  bool get isSingleFile => fileCount == 1;
+
+  bool get isSingleHunk => hunkCount == 1;
+}
+
+DiffSelectionPreviewSummary summarizeDiffSelection(String diffText) {
+  if (diffText.trim().isEmpty) {
+    return const DiffSelectionPreviewSummary(
+      fileCount: 0,
+      hunkCount: 0,
+      changedLineCount: 0,
+    );
+  }
+
+  final files = parseDiff(diffText);
+  var hunkCount = 0;
+  var changedLineCount = 0;
+  String? primaryFilePath;
+  String? primaryHunkHeader;
+
+  for (final file in files) {
+    if ((primaryFilePath == null || primaryFilePath.isEmpty) &&
+        file.filePath.isNotEmpty) {
+      primaryFilePath = file.filePath;
+    }
+
+    hunkCount += file.hunks.length;
+
+    for (final hunk in file.hunks) {
+      if ((primaryHunkHeader == null || primaryHunkHeader.isEmpty) &&
+          hunk.header.isNotEmpty) {
+        primaryHunkHeader = hunk.header;
+      }
+
+      for (final line in hunk.lines) {
+        if (line.type == DiffLineType.addition ||
+            line.type == DiffLineType.deletion) {
+          changedLineCount++;
+        }
+      }
+    }
+  }
+
+  return DiffSelectionPreviewSummary(
+    fileCount: files.length,
+    hunkCount: hunkCount,
+    changedLineCount: changedLineCount,
+    primaryFilePath: primaryFilePath,
+    primaryHunkHeader: primaryHunkHeader,
+  );
 }
 
 DiffSelection reconstructDiff(
@@ -458,10 +506,9 @@ DiffSelection reconstructDiff(
   Set<String> selectedHunkKeys,
 ) {
   if (selectedHunkKeys.isEmpty) {
-    return const DiffSelection(mentions: [], diffText: '');
+    return const DiffSelection(diffText: '');
   }
 
-  final mentions = <String>[];
   final buffer = StringBuffer();
 
   for (var fileIdx = 0; fileIdx < files.length; fileIdx++) {
@@ -476,26 +523,8 @@ DiffSelection reconstructDiff(
     }
     if (selectedHunks.isEmpty) continue;
 
-    // If all hunks are selected, use @mention instead of diff text.
-    if (selectedHunks.length == file.hunks.length && !file.isBinary) {
-      mentions.add(file.filePath);
-      continue;
-    }
-
-    // File header
-    buffer.writeln('diff --git a/${file.filePath} b/${file.filePath}');
-    if (file.isNewFile) buffer.writeln('new file mode 100644');
-    if (file.isDeleted) buffer.writeln('deleted file mode 100644');
-
-    if (file.isBinary) {
-      buffer.writeln(
-        'Binary files a/${file.filePath} and b/${file.filePath} differ',
-      );
-      continue;
-    }
-
-    buffer.writeln('--- a/${file.filePath}');
-    buffer.writeln('+++ b/${file.filePath}');
+    _writeFileHeader(buffer, file);
+    if (file.isBinary) continue;
 
     for (final hunkIdx in selectedHunks) {
       final hunk = file.hunks[hunkIdx];
@@ -511,11 +540,7 @@ DiffSelection reconstructDiff(
     }
   }
 
-  return DiffSelection(
-    mentions: mentions,
-    diffText: buffer.toString().trimRight(),
-    selectedHunkKeys: Set<String>.from(selectedHunkKeys),
-  );
+  return DiffSelection(diffText: buffer.toString().trimRight());
 }
 
 // ─── Synthesize DiffFile from Edit/Write/MultiEdit tool input ────────────
@@ -613,15 +638,12 @@ DiffHunk _buildHunkFromStrings(String oldString, String newString) {
 
 /// Reconstruct unified diff text from a [DiffFile].
 ///
-/// Used to pass synthesized diff data to [DiffScreen].
+/// Used to pass synthesized diff data to [GitScreen].
 String reconstructUnifiedDiff(DiffFile file) {
   final buffer = StringBuffer();
-  if (file.isNewFile) {
-    buffer.writeln('--- /dev/null');
-  } else {
-    buffer.writeln('--- a/${file.filePath}');
-  }
-  buffer.writeln('+++ b/${file.filePath}');
+  _writeFileHeader(buffer, file);
+  if (file.isBinary) return buffer.toString().trimRight();
+
   for (final hunk in file.hunks) {
     if (hunk.header.isNotEmpty) buffer.writeln(hunk.header);
     for (final line in hunk.lines) {
@@ -634,6 +656,20 @@ String reconstructUnifiedDiff(DiffFile file) {
     }
   }
   return buffer.toString().trimRight();
+}
+
+void _writeFileHeader(StringBuffer buffer, DiffFile file) {
+  buffer.writeln('diff --git a/${file.filePath} b/${file.filePath}');
+  if (file.isNewFile) buffer.writeln('new file mode 100644');
+  if (file.isDeleted) buffer.writeln('deleted file mode 100644');
+  if (file.isBinary) {
+    buffer.writeln(
+      'Binary files a/${file.filePath} and b/${file.filePath} differ',
+    );
+    return;
+  }
+  buffer.writeln(file.isNewFile ? '--- /dev/null' : '--- a/${file.filePath}');
+  buffer.writeln(file.isDeleted ? '+++ /dev/null' : '+++ b/${file.filePath}');
 }
 
 /// Extract file path from `diff --git a/path b/path`.
