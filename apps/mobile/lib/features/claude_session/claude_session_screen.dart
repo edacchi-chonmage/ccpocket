@@ -873,9 +873,13 @@ Future<void> _openGitScreen(
       worktreePath: worktreePath,
     ),
   );
-  if (selection != null && !selection.isEmpty) {
+  if (selection == null) return;
+  if (selection.requestChange) {
+    // Request Change: attach diff and focus input for the user to add feedback
     diffSelectionNotifier.value = selection;
-  } else if (selection != null && selection.isEmpty) {
+  } else if (!selection.isEmpty) {
+    diffSelectionNotifier.value = selection;
+  } else {
     // User cleared all selections
     diffSelectionNotifier.value = null;
   }
