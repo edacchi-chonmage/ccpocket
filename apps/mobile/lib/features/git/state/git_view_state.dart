@@ -42,7 +42,7 @@ abstract class GitViewState with _$GitViewState {
     @Default(GitViewMode.unstaged) GitViewMode viewMode,
 
     /// Whether long diff lines should wrap instead of horizontal scrolling.
-    @Default(false) bool lineWrapEnabled,
+    @Default(true) bool lineWrapEnabled,
 
     /// Whether a stage/unstage operation is in progress.
     @Default(false) bool staging,

@@ -85,41 +85,9 @@ class DiffContentList extends StatelessWidget {
         }
         return const DiffBinaryNotice();
       }
-      final collapsed = collapsedFileIndices.contains(0);
-      final hunkCount = collapsed ? 0 : file.hunks.length;
-      final lineNumberWidth = calcLineNumberWidth(file);
-      return ListView.builder(
+      return ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
-        itemCount: 1 + hunkCount,
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            return _buildFileHeader(0, file, collapsed);
-          }
-          final hunkIdx = index - 1;
-          return DiffHunkWidget(
-            hunk: file.hunks[hunkIdx],
-            lineNumberWidth: lineNumberWidth,
-            dismissKey: '${file.filePath}:$hunkIdx',
-            selectionMode: selectionMode,
-            selected: selectedHunkKeys.contains('0:$hunkIdx'),
-            lineWrapEnabled: lineWrapEnabled,
-            onToggleSelection: onToggleHunkSelection != null
-                ? () => onToggleHunkSelection!(0, hunkIdx)
-                : null,
-            onLongPressHeader: !selectionMode && onLongPressHunk != null
-                ? () => onLongPressHunk!(0, hunkIdx)
-                : null,
-            onSwipeStage: !selectionMode && onSwipeStageHunk != null
-                ? () => onSwipeStageHunk!(0, hunkIdx)
-                : null,
-            onSwipeUnstage: !selectionMode && onSwipeUnstageHunk != null
-                ? () => onSwipeUnstageHunk!(0, hunkIdx)
-                : null,
-            onSwipeRevert: !selectionMode && onSwipeRevertHunk != null
-                ? () => onSwipeRevertHunk!(0, hunkIdx)
-                : null,
-          );
-        },
+        children: [_buildFileSection(0, file)],
       );
     }
 
@@ -148,43 +116,21 @@ class DiffContentList extends StatelessWidget {
       );
     }
 
-    final lineNumberWidths = {
-      for (final i in visibleFiles) i: calcLineNumberWidth(files[i]),
-    };
-
     return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: _countListItems(visibleFiles),
-      itemBuilder: (context, index) => _DiffListItem(
-        index: index,
-        visibleFiles: visibleFiles,
-        files: files,
-        lineNumberWidths: lineNumberWidths,
-        collapsedFileIndices: collapsedFileIndices,
-        selectionMode: selectionMode,
-        selectedHunkKeys: selectedHunkKeys,
-        onToggleCollapse: onToggleCollapse,
-        onToggleFileSelection: onToggleFileSelection,
-        onToggleHunkSelection: onToggleHunkSelection,
-        isFileFullySelected: isFileFullySelected,
-        isFilePartiallySelected: isFilePartiallySelected,
-        onLoadImage: onLoadImage,
-        loadingImageIndices: loadingImageIndices,
-        onSwipeStage: onSwipeStage,
-        onSwipeUnstage: onSwipeUnstage,
-        onSwipeRevert: onSwipeRevert,
-        onLongPressFile: onLongPressFile,
-        onSwipeStageHunk: onSwipeStageHunk,
-        onSwipeUnstageHunk: onSwipeUnstageHunk,
-        onSwipeRevertHunk: onSwipeRevertHunk,
-        onLongPressHunk: onLongPressHunk,
-        lineWrapEnabled: lineWrapEnabled,
-        stagedFilePaths: stagedFilePaths,
-      ),
+      itemCount: visibleFiles.length * 2 - 1,
+      itemBuilder: (context, index) {
+        if (index.isOdd) {
+          return Divider(height: 24, thickness: 1, color: appColors.codeBorder);
+        }
+        final fileIdx = visibleFiles[index ~/ 2];
+        return _buildFileSection(fileIdx, files[fileIdx]);
+      },
     );
   }
 
-  Widget _buildFileHeader(int fileIdx, DiffFile file, bool collapsed) {
+  Widget _buildFileSection(int fileIdx, DiffFile file) {
+    final collapsed = collapsedFileIndices.contains(fileIdx);
     final header = DiffFileHeader(
       file: file,
       collapsed: collapsed,
@@ -200,159 +146,51 @@ class DiffContentList extends StatelessWidget {
           ? () => onLongPressFile!(fileIdx)
           : null,
     );
+
+    Widget section = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        header,
+        if (!collapsed)
+          if (file.isBinary)
+            if (file.isImage && file.imageData != null)
+              DiffImageWidget(
+                file: file,
+                imageData: file.imageData!,
+                onLoadRequested: onLoadImage != null
+                    ? () => onLoadImage!(fileIdx)
+                    : null,
+                loading: loadingImageIndices.contains(fileIdx),
+              )
+            else
+              const DiffBinaryNotice()
+          else
+            ..._buildHunkWidgets(fileIdx, file),
+      ],
+    );
+
     if (onSwipeStage != null ||
         onSwipeUnstage != null ||
         onSwipeRevert != null) {
-      return _SwipeStageDismissible(
+      section = _SwipeStageDismissible(
         fileIdx: fileIdx,
         filePath: file.filePath,
         onSwipeStage: onSwipeStage,
         onSwipeUnstage: onSwipeUnstage,
         onSwipeRevert: onSwipeRevert,
-        child: header,
+        child: section,
       );
     }
-    return header;
+    return section;
   }
 
-  int _countListItems(List<int> visibleFiles) {
-    var count = 0;
-    for (var i = 0; i < visibleFiles.length; i++) {
-      final fileIdx = visibleFiles[i];
-      final file = files[fileIdx];
-      final collapsed = collapsedFileIndices.contains(fileIdx);
-      count += 1; // header
-      if (!collapsed) {
-        count += file.isBinary ? 1 : file.hunks.length;
-      }
-      if (i < visibleFiles.length - 1) count += 1; // divider
-    }
-    return count;
-  }
-}
-
-class _DiffListItem extends StatelessWidget {
-  final int index;
-  final List<int> visibleFiles;
-  final List<DiffFile> files;
-  final Map<int, double> lineNumberWidths;
-  final Set<int> collapsedFileIndices;
-  final bool selectionMode;
-  final Set<String> selectedHunkKeys;
-  final ValueChanged<int> onToggleCollapse;
-  final ValueChanged<int>? onToggleFileSelection;
-  final void Function(int fileIdx, int hunkIdx)? onToggleHunkSelection;
-  final bool Function(int fileIdx)? isFileFullySelected;
-  final bool Function(int fileIdx)? isFilePartiallySelected;
-  final ValueChanged<int>? onLoadImage;
-  final Set<int> loadingImageIndices;
-  final ValueChanged<int>? onSwipeStage;
-  final ValueChanged<int>? onSwipeUnstage;
-  final ValueChanged<int>? onSwipeRevert;
-  final ValueChanged<int>? onLongPressFile;
-  final void Function(int fileIdx, int hunkIdx)? onSwipeStageHunk;
-  final void Function(int fileIdx, int hunkIdx)? onSwipeUnstageHunk;
-  final void Function(int fileIdx, int hunkIdx)? onSwipeRevertHunk;
-  final void Function(int fileIdx, int hunkIdx)? onLongPressHunk;
-  final bool lineWrapEnabled;
-  final Set<String> stagedFilePaths;
-
-  const _DiffListItem({
-    required this.index,
-    required this.visibleFiles,
-    required this.files,
-    required this.lineNumberWidths,
-    required this.collapsedFileIndices,
-    required this.selectionMode,
-    required this.selectedHunkKeys,
-    required this.onToggleCollapse,
-    this.onToggleFileSelection,
-    this.onToggleHunkSelection,
-    this.isFileFullySelected,
-    this.isFilePartiallySelected,
-    this.onLoadImage,
-    this.loadingImageIndices = const {},
-    this.onSwipeStage,
-    this.onSwipeUnstage,
-    this.onSwipeRevert,
-    this.onLongPressFile,
-    this.onSwipeStageHunk,
-    this.onSwipeUnstageHunk,
-    this.onSwipeRevertHunk,
-    this.onLongPressHunk,
-    this.lineWrapEnabled = false,
-    this.stagedFilePaths = const {},
-  });
-
-  FileStageStatus _stageStatusFor(DiffFile file) {
-    if (stagedFilePaths.isEmpty) return FileStageStatus.unknown;
-    return stagedFilePaths.contains(file.filePath)
-        ? FileStageStatus.staged
-        : FileStageStatus.unstaged;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final appColors = Theme.of(context).extension<AppColors>()!;
-    var offset = 0;
-    for (var i = 0; i < visibleFiles.length; i++) {
-      final fileIdx = visibleFiles[i];
-      final file = files[fileIdx];
-      final collapsed = collapsedFileIndices.contains(fileIdx);
-      final contentCount = collapsed
-          ? 0
-          : (file.isBinary ? 1 : file.hunks.length);
-      final sectionSize = 1 + contentCount;
-
-      if (index < offset + sectionSize) {
-        final localIdx = index - offset;
-        if (localIdx == 0) {
-          final header = DiffFileHeader(
-            file: file,
-            collapsed: collapsed,
-            onToggleCollapse: () => onToggleCollapse(fileIdx),
-            selectionMode: selectionMode,
-            selected: isFileFullySelected?.call(fileIdx) ?? false,
-            partiallySelected: isFilePartiallySelected?.call(fileIdx) ?? false,
-            onToggleSelection: onToggleFileSelection != null
-                ? () => onToggleFileSelection!(fileIdx)
-                : null,
-            stageStatus: _stageStatusFor(file),
-            onLongPress: onLongPressFile != null
-                ? () => onLongPressFile!(fileIdx)
-                : null,
-          );
-          if (onSwipeStage != null ||
-              onSwipeUnstage != null ||
-              onSwipeRevert != null) {
-            return _SwipeStageDismissible(
-              fileIdx: fileIdx,
-              filePath: file.filePath,
-              onSwipeStage: onSwipeStage,
-              onSwipeUnstage: onSwipeUnstage,
-              onSwipeRevert: onSwipeRevert,
-              child: header,
-            );
-          }
-          return header;
-        }
-        if (file.isBinary) {
-          if (file.isImage && file.imageData != null) {
-            return DiffImageWidget(
-              file: file,
-              imageData: file.imageData!,
-              onLoadRequested: onLoadImage != null
-                  ? () => onLoadImage!(fileIdx)
-                  : null,
-              loading: loadingImageIndices.contains(fileIdx),
-            );
-          }
-          return const DiffBinaryNotice();
-        }
-        final hunkIdx = localIdx - 1;
-        return DiffHunkWidget(
+  List<Widget> _buildHunkWidgets(int fileIdx, DiffFile file) {
+    final lineNumberWidth = calcLineNumberWidth(file);
+    return [
+      for (var hunkIdx = 0; hunkIdx < file.hunks.length; hunkIdx++)
+        DiffHunkWidget(
           hunk: file.hunks[hunkIdx],
-          lineNumberWidth: lineNumberWidths[fileIdx]!,
+          lineNumberWidth: lineNumberWidth,
           dismissKey: '${file.filePath}:$hunkIdx',
           selectionMode: selectionMode,
           selected: selectedHunkKeys.contains('$fileIdx:$hunkIdx'),
@@ -372,20 +210,8 @@ class _DiffListItem extends StatelessWidget {
           onSwipeRevert: !selectionMode && onSwipeRevertHunk != null
               ? () => onSwipeRevertHunk!(fileIdx, hunkIdx)
               : null,
-        );
-      }
-
-      offset += sectionSize;
-
-      // Divider between files
-      if (i < visibleFiles.length - 1) {
-        if (index == offset) {
-          return Divider(height: 24, thickness: 1, color: appColors.codeBorder);
-        }
-        offset += 1;
-      }
-    }
-    return const SizedBox.shrink();
+        ),
+    ];
   }
 }
 

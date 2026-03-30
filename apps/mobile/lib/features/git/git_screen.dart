@@ -123,19 +123,6 @@ class _GitScreenBody extends StatelessWidget {
               )
             : null,
         actions: [
-          if (state.files.isNotEmpty && !state.selectionMode)
-            TextButton(
-              key: const ValueKey('toggle_wrap_button'),
-              onPressed: cubit.toggleLineWrap,
-              child: Text(
-                'Wrap',
-                style: TextStyle(
-                  color: state.lineWrapEnabled
-                      ? Theme.of(context).colorScheme.primary
-                      : null,
-                ),
-              ),
-            ),
           // Refresh (projectPath mode only)
           if (cubit.canRefresh && !state.selectionMode && !state.loading)
             IconButton(

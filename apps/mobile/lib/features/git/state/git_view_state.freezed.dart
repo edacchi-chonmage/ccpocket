@@ -245,7 +245,7 @@ return $default(_that.files,_that.hiddenFileIndices,_that.collapsedFileIndices,_
 
 
 class _GitViewState implements GitViewState {
-  const _GitViewState({final  List<DiffFile> files = const [], final  Set<int> hiddenFileIndices = const {}, final  Set<int> collapsedFileIndices = const {}, this.loading = false, this.error, this.errorCode, this.selectionMode = false, final  Set<String> selectedHunkKeys = const {}, final  Set<int> loadingImageIndices = const {}, this.viewMode = GitViewMode.unstaged, this.lineWrapEnabled = false, this.staging = false, this.commitsAhead = 0, this.commitsBehind = 0, this.hasUpstream = false, this.fetching = false, this.pulling = false, this.pushing = false, this.currentBranch, this.isWorktree = false}): _files = files,_hiddenFileIndices = hiddenFileIndices,_collapsedFileIndices = collapsedFileIndices,_selectedHunkKeys = selectedHunkKeys,_loadingImageIndices = loadingImageIndices;
+  const _GitViewState({final  List<DiffFile> files = const [], final  Set<int> hiddenFileIndices = const {}, final  Set<int> collapsedFileIndices = const {}, this.loading = false, this.error, this.errorCode, this.selectionMode = false, final  Set<String> selectedHunkKeys = const {}, final  Set<int> loadingImageIndices = const {}, this.viewMode = GitViewMode.unstaged, this.lineWrapEnabled = true, this.staging = false, this.commitsAhead = 0, this.commitsBehind = 0, this.hasUpstream = false, this.fetching = false, this.pulling = false, this.pushing = false, this.currentBranch, this.isWorktree = false}): _files = files,_hiddenFileIndices = hiddenFileIndices,_collapsedFileIndices = collapsedFileIndices,_selectedHunkKeys = selectedHunkKeys,_loadingImageIndices = loadingImageIndices;
   
 
 /// Parsed diff files.

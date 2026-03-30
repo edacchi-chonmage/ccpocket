@@ -264,6 +264,7 @@ void main() {
       expect(cubit.state, const GitViewState());
       expect(cubit.state.files, isEmpty);
       expect(cubit.state.loading, false);
+      expect(cubit.state.lineWrapEnabled, isTrue);
       expect(cubit.state.error, isNull);
     });
   });

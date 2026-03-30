@@ -112,19 +112,6 @@ void main() {
   });
 
   group('GitScreen - project mode hunk actions', () {
-    testWidgets('shows Wrap toggle in project mode', (tester) async {
-      final bridge = MockBridgeService()..mockDiff = _multiFileDiff;
-      addTearDown(bridge.dispose);
-
-      await tester.pumpWidget(
-        _wrap(const GitScreen(projectPath: '/tmp/project'), bridge: bridge),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.byKey(const ValueKey('toggle_wrap_button')), findsOneWidget);
-      expect(find.text('Wrap'), findsOneWidget);
-    });
-
     testWidgets('shows hunk action sheet on header long press', (tester) async {
       final bridge = MockBridgeService()..mockDiff = _multiFileDiff;
       addTearDown(bridge.dispose);
@@ -141,7 +128,7 @@ void main() {
       expect(find.text('Stage'), findsWidgets);
     });
 
-    testWidgets('enables hunk swipe only when Wrap is on', (tester) async {
+    testWidgets('hunk swipe is enabled by default', (tester) async {
       final bridge = MockBridgeService()..mockDiff = _multiFileDiff;
       addTearDown(bridge.dispose);
 
@@ -152,14 +139,29 @@ void main() {
 
       expect(
         find.byKey(const ValueKey('hunk_swipe_file_a.dart:0')),
-        findsNothing,
+        findsOneWidget,
       );
+    });
 
-      await tester.tap(find.byKey(const ValueKey('toggle_wrap_button')));
+    testWidgets('wraps each file section in the file swipe dismissible', (
+      tester,
+    ) async {
+      final bridge = MockBridgeService()..mockDiff = _multiFileDiff;
+      addTearDown(bridge.dispose);
+
+      await tester.pumpWidget(
+        _wrap(const GitScreen(projectPath: '/tmp/project'), bridge: bridge),
+      );
       await tester.pumpAndSettle();
 
+      final fileSwipe = find.byKey(const ValueKey('swipe_stage_file_a.dart'));
+      expect(fileSwipe, findsOneWidget);
       expect(
-        find.byKey(const ValueKey('hunk_swipe_file_a.dart:0')),
+        find.descendant(of: fileSwipe, matching: find.text('file_a.dart')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: fileSwipe, matching: find.text('@@ -1,2 +1,2 @@')),
         findsOneWidget,
       );
     });
@@ -196,9 +198,6 @@ void main() {
       await tester.pumpWidget(
         _wrap(const GitScreen(projectPath: '/tmp/project'), bridge: bridge),
       );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byKey(const ValueKey('toggle_wrap_button')));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Staged'));
