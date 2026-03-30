@@ -280,6 +280,10 @@ class _DiffGutterRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final (bgColor, textColor, prefix) = _lineStyle(line, appColors);
 
+    // Show a single line number column: new line number for additions/context,
+    // old line number for deletions (since deletions don't have a new line number).
+    final displayNumber = line.newLineNumber ?? line.oldLineNumber;
+
     return Container(
       color: bgColor,
       padding: const EdgeInsets.symmetric(vertical: 1),
@@ -289,19 +293,7 @@ class _DiffGutterRow extends StatelessWidget {
           SizedBox(
             width: lineNumberWidth,
             child: Text(
-              line.oldLineNumber?.toString() ?? '',
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: _lineNumberFontSize,
-                fontFamily: 'monospace',
-                color: appColors.subtleText,
-              ),
-            ),
-          ),
-          SizedBox(
-            width: lineNumberWidth,
-            child: Text(
-              line.newLineNumber?.toString() ?? '',
+              displayNumber?.toString() ?? '',
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: _lineNumberFontSize,

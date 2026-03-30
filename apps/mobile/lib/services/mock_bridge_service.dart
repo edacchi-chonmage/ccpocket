@@ -98,6 +98,24 @@ class MockBridgeService extends BridgeService {
           .cast<GitCheckoutBranchResultMessage>();
 
   @override
+  Stream<GitFetchResultMessage> get gitFetchResults =>
+      _mockMessageController.stream
+          .where((m) => m is GitFetchResultMessage)
+          .cast<GitFetchResultMessage>();
+
+  @override
+  Stream<GitPullResultMessage> get gitPullResults =>
+      _mockMessageController.stream
+          .where((m) => m is GitPullResultMessage)
+          .cast<GitPullResultMessage>();
+
+  @override
+  Stream<GitRemoteStatusResultMessage> get gitRemoteStatusResults =>
+      _mockMessageController.stream
+          .where((m) => m is GitRemoteStatusResultMessage)
+          .cast<GitRemoteStatusResultMessage>();
+
+  @override
   void send(ClientMessage message) {
     final json = jsonDecode(message.toJson()) as Map<String, dynamic>;
     final type = json['type'] as String;
@@ -282,6 +300,29 @@ class MockBridgeService extends BridgeService {
           const Duration(milliseconds: 300),
           const GitCheckoutBranchResultMessage(success: true),
         );
+      case 'git_fetch':
+        _scheduleMessage(
+          const Duration(milliseconds: 200),
+          const GitFetchResultMessage(success: true),
+        );
+      case 'git_remote_status':
+        _scheduleMessage(
+          const Duration(milliseconds: 100),
+          const GitRemoteStatusResultMessage(
+            ahead: 0,
+            behind: 0,
+            branch: 'feat/mock',
+            hasUpstream: false,
+          ),
+        );
+      case 'git_pull':
+        _scheduleMessage(
+          const Duration(milliseconds: 500),
+          const GitPullResultMessage(success: true, message: 'Already up to date.'),
+        );
+      case 'refresh_branch':
+        // No-op for mock (session branch refresh)
+        break;
       default:
         break;
     }

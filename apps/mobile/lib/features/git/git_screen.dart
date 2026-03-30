@@ -205,7 +205,10 @@ class _GitScreenBody extends StatelessWidget {
               isFilePartiallySelected: cubit.isFilePartiallySelected,
               onLoadImage: cubit.loadImage,
               loadingImageIndices: state.loadingImageIndices,
-              onSwipeStage: isProjectMode ? cubit.stageFile : null,
+              // Staged tab: only unstage swipe. Changes tab: both.
+              onSwipeStage: isProjectMode && state.viewMode != GitViewMode.staged
+                  ? cubit.stageFile
+                  : null,
               onSwipeUnstage: isProjectMode ? cubit.unstageFile : null,
               // Long-press to enter selection mode
               onLongPressFile: isProjectMode && !state.selectionMode
@@ -500,7 +503,7 @@ class _DiffBottomBar extends StatelessWidget {
                   ],
                 ),
               ),
-              // Action buttons row
+              // Action buttons row: Pull | Push | Commit
               Row(
                 children: [
                   Expanded(
@@ -518,16 +521,6 @@ class _DiffBottomBar extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    flex: 2,
-                    child: FilledButton.icon(
-                      key: const ValueKey('commit_button'),
-                      onPressed: _isBusy ? null : onCommit,
-                      icon: const Icon(Icons.check, size: 18),
-                      label: const Text('Commit'),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
                     child: _ActionButton(
                       key: const ValueKey('push_button'),
                       icon: Icons.upload,
@@ -538,6 +531,16 @@ class _DiffBottomBar extends StatelessWidget {
                       onPressed: _isBusy || state.commitsAhead == 0
                           ? null
                           : onPush,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _ActionButton(
+                      key: const ValueKey('commit_button'),
+                      icon: Icons.check,
+                      label: 'Commit',
+                      primary: true,
+                      onPressed: _isBusy ? null : onCommit,
                     ),
                   ),
                 ],
@@ -593,6 +596,7 @@ class _ActionButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
   final bool loading;
+  final bool primary;
 
   const _ActionButton({
     super.key,
@@ -600,31 +604,42 @@ class _ActionButton extends StatelessWidget {
     required this.label,
     this.onPressed,
     this.loading = false,
+    this.primary = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final child = Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (loading)
+          const SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        else
+          Icon(icon, size: 16),
+        const SizedBox(width: 4),
+        Text(label, style: const TextStyle(fontSize: 13)),
+      ],
+    );
+
+    final effectiveOnPressed = loading ? null : onPressed;
+    const padding = EdgeInsets.symmetric(horizontal: 8, vertical: 10);
+
+    if (primary) {
+      return FilledButton(
+        onPressed: effectiveOnPressed,
+        style: FilledButton.styleFrom(padding: padding),
+        child: child,
+      );
+    }
     return OutlinedButton(
-      onPressed: loading ? null : onPressed,
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (loading)
-            const SizedBox(
-              width: 14,
-              height: 14,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          else
-            Icon(icon, size: 16),
-          const SizedBox(width: 4),
-          Text(label, style: const TextStyle(fontSize: 13)),
-        ],
-      ),
+      onPressed: effectiveOnPressed,
+      style: OutlinedButton.styleFrom(padding: padding),
+      child: child,
     );
   }
 }
