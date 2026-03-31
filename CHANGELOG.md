@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.51.1] - 2026-03-31
+
+### Fixed
+- Enable Apple Keychain storage for API keys on iOS and macOS
+- Support secure Bridge connections via `wss://` and `https://`
+
 ## [1.51.0] - 2026-03-30
 
 ### Added
