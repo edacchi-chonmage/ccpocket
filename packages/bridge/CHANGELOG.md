@@ -2,6 +2,11 @@
 
 All notable changes to `@ccpocket/bridge` will be documented in this file.
 
+## [1.31.1] - 2026-04-01
+
+### Fixed
+- Support public startup deep links and QR codes for reverse proxy / ngrok setups via `BRIDGE_PUBLIC_WS_URL` or `--public-ws-url`
+
 ## [1.31.0] - 2026-03-30
 
 ### Added
