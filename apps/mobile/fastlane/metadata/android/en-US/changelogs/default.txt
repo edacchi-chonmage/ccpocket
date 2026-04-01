@@ -1,1 +1,2 @@
-- File Peek: tap file paths in messages to preview contents in a bottom sheet
+- Git Operations: stage, unstage, commit, branch checkout, fetch/pull/push directly from the app
+- Bug fixes
