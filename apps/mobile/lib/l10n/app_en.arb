@@ -251,7 +251,12 @@
   "toolResult": "Tool Result",
 
   "answered": "Answered",
-  "claudeIsAsking": "Claude is asking",
+  "agentIsAsking": "{agent} is asking",
+  "@agentIsAsking": {
+    "placeholders": {
+      "agent": {}
+    }
+  },
   "submitAllAnswers": "Submit All Answers",
   "submitWithCount": "Submit ({count} selected)",
   "selectOptionsToSubmit": "Select options to submit",

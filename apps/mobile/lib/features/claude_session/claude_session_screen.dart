@@ -721,6 +721,7 @@ class _ChatScreenBody extends HookWidget {
                                     AskUserQuestionWidget(
                                       toolUseId: askToolUseId,
                                       input: askInput,
+                                      agentName: 'Claude',
                                       onAnswer: answerQuestion,
                                       scrollable: false,
                                     ),

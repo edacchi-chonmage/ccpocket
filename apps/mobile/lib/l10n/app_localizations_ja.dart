@@ -590,7 +590,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get answered => '回答済み';
 
   @override
-  String get claudeIsAsking => 'Claude が質問しています';
+  String agentIsAsking(Object agent) => '$agent が質問しています';
 
   @override
   String get submitAllAnswers => 'すべての回答を送信';

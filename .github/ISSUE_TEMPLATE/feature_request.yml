@@ -7,6 +7,10 @@ body:
       value: |
         Thanks for suggesting a feature!
 
+        If this request is mainly about an experimental / best-effort platform
+        such as Bridge Server on Windows or the Flutter mobile app on macOS,
+        please explain why existing supported setups are insufficient and how you expect to validate the change.
+
   - type: dropdown
     id: component
     attributes:
@@ -49,6 +53,6 @@ body:
     id: context
     attributes:
       label: Additional context
-      description: Any other context, screenshots, or mockups.
+      description: Any other context, screenshots, mockups, or target platform details.
     validations:
       required: false

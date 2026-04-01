@@ -621,7 +621,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get answered => 'Answered';
 
   @override
-  String get claudeIsAsking => 'Claude is asking';
+  String agentIsAsking(Object agent) => '$agent is asking';
 
   @override
   String get submitAllAnswers => 'Submit All Answers';

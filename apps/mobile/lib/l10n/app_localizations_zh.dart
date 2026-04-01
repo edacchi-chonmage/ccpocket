@@ -586,7 +586,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get answered => '已回答';
 
   @override
-  String get claudeIsAsking => 'Claude 正在提问';
+  String agentIsAsking(Object agent) => '$agent 正在提问';
 
   @override
   String get submitAllAnswers => '提交全部答案';

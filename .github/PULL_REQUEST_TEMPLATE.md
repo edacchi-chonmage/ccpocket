@@ -16,6 +16,15 @@
 - [ ] Flutter tests pass (`cd apps/mobile && flutter test`)
 - [ ] Manual testing done
 
+## Platform validation
+
+<!-- Required for platform-specific fixes, especially experimental / best-effort platforms like Windows Bridge or macOS mobile. -->
+
+- Target platform:
+- Platform version:
+- What I validated on that platform:
+- Logs / screenshots / notes:
+
 ## Notes
 
 <!-- Anything reviewers should know? Breaking changes, migration steps, etc. -->

@@ -1186,11 +1186,11 @@ abstract class AppLocalizations {
   /// **'回答済み'**
   String get answered;
 
-  /// No description provided for @claudeIsAsking.
+  /// No description provided for @agentIsAsking.
   ///
   /// In ja, this message translates to:
-  /// **'Claude が質問しています'**
-  String get claudeIsAsking;
+  /// **'{agent} が質問しています'**
+  String agentIsAsking(Object agent);
 
   /// No description provided for @submitAllAnswers.
   ///

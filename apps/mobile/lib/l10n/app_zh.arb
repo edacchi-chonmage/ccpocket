@@ -268,7 +268,12 @@
   "toolResult": "工具结果",
 
   "answered": "已回答",
-  "claudeIsAsking": "Claude 正在提问",
+  "agentIsAsking": "{agent} 正在提问",
+  "@agentIsAsking": {
+    "placeholders": {
+      "agent": {}
+    }
+  },
   "codexIsAsking": "Codex 正在提问",
   "questionNeedsYourAnswer": "问题需要你回答",
   "toolApprovalNeeded": "需要你批准工具操作",

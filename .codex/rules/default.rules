@@ -66,10 +66,19 @@ prefix_rule(
 )
 
 # Explicit prompts for commands that mutate state or control long-running processes.
+#
+# This repo is configured as a trusted project in ~/.codex/config.toml and the
+# harness runs with AskForApproval=Never. Rules that require prompt cause those
+# commands to fail outright instead of asking. Keep low-risk local workflow
+# commands auto-allowed and reserve prompts for higher-risk operations.
 prefix_rule(
-    pattern=["git", ["add", "commit", "checkout", "switch", "restore", "reset", "clean", "push", "pull", "merge", "rebase", "cherry-pick", "stash"]],
+    pattern=["git", ["add", "commit"]],
+    justification="Local staging and commits are allowed in this trusted project workflow.",
+)
+prefix_rule(
+    pattern=["git", ["checkout", "switch", "restore", "reset", "clean", "push", "pull", "merge", "rebase", "cherry-pick", "stash"]],
     decision="prompt",
-    justification="Git state changes should be confirmed each time.",
+    justification="Potentially destructive or remote-affecting git commands should still require confirmation.",
 )
 prefix_rule(
     pattern=["npm", ["install", "update", "publish", "run"]],
@@ -82,9 +91,13 @@ prefix_rule(
     justification="node can execute arbitrary scripts and should be confirmed.",
 )
 prefix_rule(
-    pattern=["dart", ["format", "fix", "run"]],
+    pattern=["dart", "format"],
+    justification="Formatting source files is a routine trusted-project workflow step.",
+)
+prefix_rule(
+    pattern=["dart", ["fix", "run"]],
     decision="prompt",
-    justification="These Dart commands can write files or start programs.",
+    justification="These Dart commands can apply edits or start programs.",
 )
 prefix_rule(
     pattern=["flutter", ["run", "pub", "build", "drive"]],

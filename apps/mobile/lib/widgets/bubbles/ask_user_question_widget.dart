@@ -12,6 +12,7 @@ const _buttonHeight = 44.0;
 class AskUserQuestionWidget extends StatefulWidget {
   final String toolUseId;
   final Map<String, dynamic> input;
+  final String agentName;
   final void Function(String toolUseId, String result) onAnswer;
   final bool scrollable;
 
@@ -19,6 +20,7 @@ class AskUserQuestionWidget extends StatefulWidget {
     super.key,
     required this.toolUseId,
     required this.input,
+    this.agentName = 'Claude',
     required this.onAnswer,
     this.scrollable = true,
   });
@@ -371,7 +373,7 @@ class _AskUserQuestionWidgetState extends State<AskUserQuestionWidget> {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    l.claudeIsAsking,
+                    l.agentIsAsking(widget.agentName),
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 14,

@@ -726,6 +726,7 @@ class _CodexChatBody extends HookWidget {
                                       AskUserQuestionWidget(
                                         toolUseId: askId,
                                         input: askInput,
+                                        agentName: 'Codex',
                                         onAnswer: answerQuestion,
                                         scrollable: false,
                                       ),
