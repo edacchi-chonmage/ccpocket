@@ -534,16 +534,14 @@ class AppLocalizationsJa extends AppLocalizations {
       'trusted コマンドだけ自動実行し、それ以外は確認します';
 
   @override
-  String get codexApprovalOnRequestDescription =>
-      '必要だと判断した操作だけ確認します';
+  String get codexApprovalOnRequestDescription => '必要だと判断した操作だけ確認します';
 
   @override
   String get codexApprovalOnFailureDescription =>
       '通常は確認せず実行し、失敗時だけ追加権限を確認します（非推奨）';
 
   @override
-  String get codexApprovalNeverDescription =>
-      '確認せず実行し、失敗時も承認を求めません';
+  String get codexApprovalNeverDescription => '確認せず実行し、失敗時も承認を求めません';
 
   @override
   String get enablePlanModeTitle => 'Plan Mode を有効化';
@@ -614,7 +612,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get answered => '回答済み';
 
   @override
-  String agentIsAsking(Object agent) => '$agent が質問しています';
+  String agentIsAsking(Object agent) {
+    return '$agent が質問しています';
+  }
 
   @override
   String get submitAllAnswers => 'すべての回答を送信';

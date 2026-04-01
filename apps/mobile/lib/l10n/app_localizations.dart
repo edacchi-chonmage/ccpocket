@@ -1090,9 +1090,28 @@ abstract class AppLocalizations {
   /// **'{mode} に切り替えるとセッションが再起動します。会話は保持されます。'**
   String changeApprovalPolicyBody(String mode);
 
+  /// No description provided for @codexApprovalUntrustedDescription.
+  ///
+  /// In ja, this message translates to:
+  /// **'trusted コマンドだけ自動実行し、それ以外は確認します'**
   String get codexApprovalUntrustedDescription;
+
+  /// No description provided for @codexApprovalOnRequestDescription.
+  ///
+  /// In ja, this message translates to:
+  /// **'必要だと判断した操作だけ確認します'**
   String get codexApprovalOnRequestDescription;
+
+  /// No description provided for @codexApprovalOnFailureDescription.
+  ///
+  /// In ja, this message translates to:
+  /// **'通常は確認せず実行し、失敗時だけ追加権限を確認します（非推奨）'**
   String get codexApprovalOnFailureDescription;
+
+  /// No description provided for @codexApprovalNeverDescription.
+  ///
+  /// In ja, this message translates to:
+  /// **'確認せず実行し、失敗時も承認を求めません'**
   String get codexApprovalNeverDescription;
 
   /// No description provided for @enablePlanModeTitle.

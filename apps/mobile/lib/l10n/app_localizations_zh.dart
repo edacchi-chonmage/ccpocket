@@ -526,16 +526,13 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get codexApprovalUntrustedDescription =>
-      '仅自动运行受信任命令，其他操作都需要确认';
+  String get codexApprovalUntrustedDescription => '仅自动运行受信任命令，其他操作都需要确认';
 
   @override
-  String get codexApprovalOnRequestDescription =>
-      '仅在代理判断需要时请求确认';
+  String get codexApprovalOnRequestDescription => '仅在代理判断需要时请求确认';
 
   @override
-  String get codexApprovalOnFailureDescription =>
-      '默认直接执行，仅在失败时请求额外权限（已弃用）';
+  String get codexApprovalOnFailureDescription => '默认直接执行，仅在失败时请求额外权限（已弃用）';
 
   @override
   String get codexApprovalNeverDescription => '永不请求确认，失败会立即返回';
@@ -609,7 +606,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get answered => '已回答';
 
   @override
-  String agentIsAsking(Object agent) => '$agent 正在提问';
+  String agentIsAsking(Object agent) {
+    return '$agent 正在提问';
+  }
 
   @override
   String get submitAllAnswers => '提交全部答案';
