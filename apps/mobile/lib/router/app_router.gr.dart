@@ -169,6 +169,7 @@ class CodexSessionRoute extends PageRouteInfo<CodexSessionRouteArgs> {
     bool isPending = false,
     String? initialSandboxMode,
     String? initialPermissionMode,
+    String? initialApprovalPolicy,
     ValueNotifier<SystemMessage?>? pendingSessionCreated,
     List<PageRouteInfo>? children,
   }) : super(
@@ -182,6 +183,7 @@ class CodexSessionRoute extends PageRouteInfo<CodexSessionRouteArgs> {
            isPending: isPending,
            initialSandboxMode: initialSandboxMode,
            initialPermissionMode: initialPermissionMode,
+           initialApprovalPolicy: initialApprovalPolicy,
            pendingSessionCreated: pendingSessionCreated,
          ),
          initialChildren: children,
@@ -202,6 +204,7 @@ class CodexSessionRoute extends PageRouteInfo<CodexSessionRouteArgs> {
         isPending: args.isPending,
         initialSandboxMode: args.initialSandboxMode,
         initialPermissionMode: args.initialPermissionMode,
+        initialApprovalPolicy: args.initialApprovalPolicy,
         pendingSessionCreated: args.pendingSessionCreated,
       );
     },
@@ -218,6 +221,7 @@ class CodexSessionRouteArgs {
     this.isPending = false,
     this.initialSandboxMode,
     this.initialPermissionMode,
+    this.initialApprovalPolicy,
     this.pendingSessionCreated,
   });
 
@@ -237,11 +241,13 @@ class CodexSessionRouteArgs {
 
   final String? initialPermissionMode;
 
+  final String? initialApprovalPolicy;
+
   final ValueNotifier<SystemMessage?>? pendingSessionCreated;
 
   @override
   String toString() {
-    return 'CodexSessionRouteArgs{key: $key, sessionId: $sessionId, projectPath: $projectPath, gitBranch: $gitBranch, worktreePath: $worktreePath, isPending: $isPending, initialSandboxMode: $initialSandboxMode, initialPermissionMode: $initialPermissionMode, pendingSessionCreated: $pendingSessionCreated}';
+    return 'CodexSessionRouteArgs{key: $key, sessionId: $sessionId, projectPath: $projectPath, gitBranch: $gitBranch, worktreePath: $worktreePath, isPending: $isPending, initialSandboxMode: $initialSandboxMode, initialPermissionMode: $initialPermissionMode, initialApprovalPolicy: $initialApprovalPolicy, pendingSessionCreated: $pendingSessionCreated}';
   }
 
   @override
@@ -256,6 +262,7 @@ class CodexSessionRouteArgs {
         isPending == other.isPending &&
         initialSandboxMode == other.initialSandboxMode &&
         initialPermissionMode == other.initialPermissionMode &&
+        initialApprovalPolicy == other.initialApprovalPolicy &&
         pendingSessionCreated == other.pendingSessionCreated;
   }
 
@@ -269,6 +276,7 @@ class CodexSessionRouteArgs {
       isPending.hashCode ^
       initialSandboxMode.hashCode ^
       initialPermissionMode.hashCode ^
+      initialApprovalPolicy.hashCode ^
       pendingSessionCreated.hashCode;
 }
 

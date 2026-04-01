@@ -572,6 +572,9 @@ class _SessionListScreenState extends State<SessionListScreen>
       provider: result.provider,
       permissionMode: result.permissionMode.value,
       sandboxMode: result.sandboxMode?.value,
+      approvalPolicy: result.provider == Provider.codex
+          ? result.codexApprovalPolicy.value
+          : null,
     );
   }
 
@@ -878,6 +881,7 @@ class _SessionListScreenState extends State<SessionListScreen>
     Provider? provider,
     String? permissionMode,
     String? sandboxMode,
+    String? approvalPolicy,
   }) {
     // Mark session as seen when navigating into it.
     _unseenCubit.markSeen(sessionId);
@@ -895,6 +899,7 @@ class _SessionListScreenState extends State<SessionListScreen>
         isPending: isPending,
         initialSandboxMode: sandboxMode,
         initialPermissionMode: permissionMode,
+        initialApprovalPolicy: approvalPolicy,
         pendingSessionCreated: pendingNotifier,
       ),
       _ => ClaudeSessionRoute(

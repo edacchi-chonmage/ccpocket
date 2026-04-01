@@ -15,6 +15,7 @@ class CodexSessionCubit extends ChatSessionCubit {
     required super.streamingCubit,
     super.initialSandboxMode,
     super.initialPermissionMode,
+    super.initialCodexApprovalPolicy,
   }) : super(provider: Provider.codex);
 
   /// Rewind is not supported for Codex sessions.

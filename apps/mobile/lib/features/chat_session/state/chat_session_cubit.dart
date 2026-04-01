@@ -52,6 +52,7 @@ class ChatSessionCubit extends Cubit<ChatSessionState> {
     required StreamingStateCubit streamingCubit,
     PermissionMode? initialPermissionMode,
     SandboxMode? initialSandboxMode,
+    CodexApprovalPolicy? initialCodexApprovalPolicy,
   }) : _bridge = bridge,
        _streamingCubit = streamingCubit,
        super(
@@ -62,12 +63,13 @@ class ChatSessionCubit extends Cubit<ChatSessionState> {
              permissionMode: initialPermissionMode?.value,
            ),
            codexApprovalPolicy: provider == Provider.codex
-               ? codexApprovalPolicyFromLegacyExecutionMode(
-                   deriveExecutionMode(
-                     provider: provider?.value,
-                     permissionMode: initialPermissionMode?.value,
-                   ).value,
-                 )
+               ? (initialCodexApprovalPolicy ??
+                     codexApprovalPolicyFromLegacyExecutionMode(
+                       deriveExecutionMode(
+                         provider: provider?.value,
+                         permissionMode: initialPermissionMode?.value,
+                       ).value,
+                     ))
                : CodexApprovalPolicy.onRequest,
            planMode: initialPermissionMode == PermissionMode.plan,
            sandboxMode:

@@ -143,6 +143,20 @@ void main() {
       },
     );
 
+    test('codex initial approval policy is preserved in state', () {
+      final cubit = ChatSessionCubit(
+        sessionId: 's1',
+        provider: Provider.codex,
+        bridge: mockBridge,
+        streamingCubit: streamingCubit,
+        initialPermissionMode: PermissionMode.acceptEdits,
+        initialCodexApprovalPolicy: CodexApprovalPolicy.onFailure,
+      );
+      addTearDown(cubit.close);
+
+      expect(cubit.state.codexApprovalPolicy, CodexApprovalPolicy.onFailure);
+    });
+
     test(
       'codex sandbox-only system message does not reset execution mode',
       () async {
