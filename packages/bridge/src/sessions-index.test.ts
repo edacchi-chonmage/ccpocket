@@ -441,14 +441,17 @@ describe("scanJsonlDir", () => {
 
 describe("codex sessions integration", () => {
   const oldHome = process.env.HOME;
+  const oldUserProfile = process.env.USERPROFILE;
   const tempHome = mkdtempSync(join(tmpdir(), "ccpocket-test-codex-home-"));
 
   beforeEach(() => {
     process.env.HOME = tempHome;
+    process.env.USERPROFILE = tempHome;
   });
 
   afterEach(() => {
     process.env.HOME = oldHome;
+    process.env.USERPROFILE = oldUserProfile;
     rmSync(tempHome, { recursive: true, force: true });
   });
 

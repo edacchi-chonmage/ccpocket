@@ -26,7 +26,8 @@ const { codexInstances, sdkInstances, fakeDirs, fakeFiles } = vi.hoisted(
 );
 
 vi.mock("node:fs", () => {
-  const normalize = (value: unknown): string => String(value);
+  const normalize = (value: unknown): string =>
+    String(value).replaceAll("\\", "/");
   return {
     existsSync: vi.fn((path: unknown) => {
       const key = normalize(path);

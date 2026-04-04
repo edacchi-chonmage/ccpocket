@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { join, resolve } from "node:path";
 
 const { execFileSyncMock, getStagedDiffMock } = vi.hoisted(() => ({
   execFileSyncMock: vi.fn(),
@@ -61,7 +62,7 @@ describe("generateCommitMessage", () => {
         "Write a single Conventional Commits message in English for the staged changes below. Output only the commit message, with no quotes or explanation.",
       ],
       expect.objectContaining({
-        cwd: "/tmp/project",
+        cwd: resolve("/tmp/project"),
         input: "diff --git a/a.txt b/a.txt",
         encoding: "utf-8",
         maxBuffer: 1024 * 1024,
@@ -86,11 +87,11 @@ describe("generateCommitMessage", () => {
         "-m",
         "gpt-5.4-mini",
         "-o",
-        "/tmp/codex-output-dir/last-message.txt",
+        join("/tmp/codex-output-dir", "last-message.txt"),
         "-",
       ],
       expect.objectContaining({
-        cwd: "/tmp/project",
+        cwd: resolve("/tmp/project"),
         input:
           "Write a single Conventional Commits message in English for the staged changes below. Output only the commit message, with no quotes or explanation.\n\ndiff --git a/a.txt b/a.txt",
         encoding: "utf-8",

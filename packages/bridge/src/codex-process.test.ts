@@ -58,7 +58,7 @@ describe("CodexProcess (app-server)", () => {
   });
 
   it("starts codex app-server and sends initialize + thread/start", async () => {
-    const proc = new CodexProcess();
+    const proc = new CodexProcess("linux");
     const messages: unknown[] = [];
     proc.on("message", (msg) => messages.push(msg));
 
@@ -164,7 +164,7 @@ describe("CodexProcess (app-server)", () => {
   });
 
   it("ignores placeholder codex model names from resume state", async () => {
-    const proc = new CodexProcess();
+    const proc = new CodexProcess("linux");
     const messages: unknown[] = [];
     proc.on("message", (msg) => messages.push(msg));
 
@@ -235,7 +235,7 @@ describe("CodexProcess (app-server)", () => {
   });
 
   it("can initialize app-server without starting a thread", async () => {
-    const proc = new CodexProcess();
+    const proc = new CodexProcess("linux");
 
     const initializePromise = proc.initializeOnly("/tmp/project-init-only");
 
@@ -266,7 +266,7 @@ describe("CodexProcess (app-server)", () => {
   });
 
   it("emits permission_request and responds on approve", async () => {
-    const proc = new CodexProcess();
+    const proc = new CodexProcess("linux");
     const messages: unknown[] = [];
     proc.on("message", (msg) => messages.push(msg));
 
@@ -355,7 +355,7 @@ describe("CodexProcess (app-server)", () => {
   });
 
   it("emits AskUserQuestion and responds on answer", async () => {
-    const proc = new CodexProcess();
+    const proc = new CodexProcess("linux");
     const messages: unknown[] = [];
     proc.on("message", (msg) => messages.push(msg));
 
@@ -458,7 +458,7 @@ describe("CodexProcess (app-server)", () => {
   });
 
   it("responds to permission grants with granted scope and requested permissions", async () => {
-    const proc = new CodexProcess();
+    const proc = new CodexProcess("linux");
     const messages: unknown[] = [];
     proc.on("message", (msg) => messages.push(msg));
 
@@ -529,7 +529,7 @@ describe("CodexProcess (app-server)", () => {
   });
 
   it("maps MCP elicitation form requests to answer flow", async () => {
-    const proc = new CodexProcess();
+    const proc = new CodexProcess("linux");
     const messages: unknown[] = [];
     proc.on("message", (msg) => messages.push(msg));
 
@@ -605,7 +605,7 @@ describe("CodexProcess (app-server)", () => {
   });
 
   it("clears pending requests when serverRequest/resolved arrives", async () => {
-    const proc = new CodexProcess();
+    const proc = new CodexProcess("linux");
     const messages: unknown[] = [];
     proc.on("message", (msg) => messages.push(msg));
 
@@ -664,7 +664,7 @@ describe("CodexProcess (app-server)", () => {
   });
 
   it("uses acceptForSession for command approvals", async () => {
-    const proc = new CodexProcess();
+    const proc = new CodexProcess("linux");
 
     proc.start("/tmp/project-approve-always");
     const child = fakeChildren[0];
@@ -711,7 +711,7 @@ describe("CodexProcess (app-server)", () => {
   });
 
   it("maps dynamic tool calls into tool_use and tool_result messages", async () => {
-    const proc = new CodexProcess();
+    const proc = new CodexProcess("linux");
     const messages: unknown[] = [];
     proc.on("message", (msg) => messages.push(msg));
 
@@ -817,7 +817,7 @@ describe("CodexProcess (app-server)", () => {
   });
 
   it("preserves MCP image outputs as raw content blocks for downstream rendering", async () => {
-    const proc = new CodexProcess();
+    const proc = new CodexProcess("linux");
     const messages: unknown[] = [];
     proc.on("message", (msg) => messages.push(msg));
 
@@ -904,7 +904,7 @@ describe("CodexProcess (app-server)", () => {
   });
 
   it("emits plan notifications as regular stream messages", async () => {
-    const proc = new CodexProcess();
+    const proc = new CodexProcess("linux");
     const messages: unknown[] = [];
     proc.on("message", (msg) => messages.push(msg));
 

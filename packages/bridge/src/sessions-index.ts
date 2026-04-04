@@ -181,7 +181,7 @@ interface ScanJsonlDirOptions {
 
 /** Convert a filesystem path to Claude's project directory slug (e.g. /foo/bar → -foo-bar). */
 export function pathToSlug(p: string): string {
-  return p.replaceAll("/", "-").replaceAll("_", "-");
+  return p.replaceAll("\\", "-").replaceAll("/", "-").replaceAll("_", "-");
 }
 
 /**
@@ -189,7 +189,7 @@ export function pathToSlug(p: string): string {
  * e.g. /path/to/project-worktrees/branch → /path/to/project
  */
 export function normalizeWorktreePath(p: string): string {
-  const match = p.match(/^(.+)-worktrees\/[^/]+$/);
+  const match = p.match(/^(.+)-worktrees[\\/][^\\/]+$/);
   return match?.[1] ?? p;
 }
 
