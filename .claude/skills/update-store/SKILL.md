@@ -144,10 +144,7 @@ dart-mcp `get_app_logs` でVM Service URIを取得し、marionette `connect` で
 #### 4-4. アプリ停止
 
 dart-mcp `stop_app` でアプリを停止。
-
-```bash
-xcrun simctl shutdown "iPhone 17 Pro" 2>/dev/null || true
-```
+**シミュレーターはシャットダウンしない**。次のデバイスの起動に進む。
 
 ### Step 5: iPad スクリーンショット撮影（選択された場合）
 
@@ -172,9 +169,28 @@ xcrun simctl ui booted appearance dark
 
 **重要**: `erase` を実行するとアプリもアンインストールされるため、必ずクリーンインストールが行われる。これにより互換モード問題を防止する。
 
-**ネイティブダイアログの自動dismissl**: `erase` 後は通知・音声認識・マイク等のパーミッションダイアログが再度表示される。アプリ起動後、各シナリオ撮影前に同梱の `sim-tap.swift` で全て閉じる:
+**ネイティブダイアログの自動dismiss**: `erase` 後は通知・音声認識・マイク等のパーミッションダイアログが再度表示される。
+
+**事前権限付与** (erase 直後、アプリ起動前に実行):
 ```bash
-# 「許可」ボタンが見つからなくなるまで繰り返しタップ
+xcrun simctl privacy booted grant notifications com.k9i.ccpocket
+xcrun simctl privacy booted grant speech-recognition com.k9i.ccpocket
+xcrun simctl privacy booted grant microphone com.k9i.ccpocket
+```
+これによりダイアログの表示自体を防止できる。`simctl privacy` が失敗する場合は以下のフォールバックを使う。
+
+**フォールバック: sim-tap.swift の `dismiss-dialogs` コマンド**:
+ダイアログはホーム画面ではなく**セッション画面遷移後**に表示されることがある。
+最初のシナリオ遷移後にdismissし、必要なら撮り直す。
+
+AX API でボタンが見つからない場合（特にiPad）、CGEvent ベースのクリックで自動フォールバックする:
+```bash
+swift .claude/skills/update-store/scripts/sim-tap.swift dismiss-dialogs ipad
+swift .claude/skills/update-store/scripts/sim-tap.swift dismiss-dialogs iphone
+```
+
+従来の個別タップも引き続き使用可能:
+```bash
 while swift .claude/skills/update-store/scripts/sim-tap.swift tap "許可" 2>/dev/null; do sleep 1; done
 ```
 
@@ -197,10 +213,8 @@ echo "Screenshot: ${WIDTH}x${HEIGHT}"
 
 #### 5-3. アプリ停止
 
-アプリ停止後:
-```bash
-xcrun simctl shutdown "iPad Pro 13-inch (M4)" 2>/dev/null || true
-```
+dart-mcp `stop_app` でアプリを停止。
+**シミュレーターはシャットダウンしない**（compose.sh 実行や確認に支障はない）。
 
 ### Step 6: スクリーンショット合成 & 配置
 

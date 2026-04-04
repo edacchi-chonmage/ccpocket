@@ -178,15 +178,136 @@ func wait(name: String, timeout: Int) -> Bool {
     return false
 }
 
+// MARK: - CGEvent-based dialog dismissal (fallback for iPad)
+
+/// Finds the Simulator device window bounds via CGWindowList.
+func findSimulatorWindowBounds() -> CGRect? {
+    guard let windowList = CGWindowListCopyWindowInfo(.optionOnScreenOnly, kCGNullWindowID) as? [[String: Any]] else {
+        return nil
+    }
+    for w in windowList {
+        guard let owner = w["kCGWindowOwnerName"] as? String, owner == "Simulator",
+              let bounds = w["kCGWindowBounds"] as? [String: Any],
+              let width = bounds["Width"] as? CGFloat, width > 100 else { continue }
+        let x = bounds["X"] as? CGFloat ?? 0
+        let y = bounds["Y"] as? CGFloat ?? 0
+        let height = bounds["Height"] as? CGFloat ?? 0
+        return CGRect(x: x, y: y, width: width, height: height)
+    }
+    return nil
+}
+
+/// Clicks a point in the simulator by mapping iPad/iPhone coordinates to screen coordinates.
+func clickInSimulator(simX: CGFloat, simY: CGFloat, deviceWidth: CGFloat, deviceHeight: CGFloat) -> Bool {
+    guard let winBounds = findSimulatorWindowBounds() else {
+        fputs("Error: Could not find Simulator window.\n", stderr)
+        return false
+    }
+    let titleBarH: CGFloat = 22
+    let scaleX = winBounds.width / deviceWidth
+    let scaleY = (winBounds.height - titleBarH) / deviceHeight
+    let clickX = winBounds.origin.x + simX * scaleX
+    let clickY = winBounds.origin.y + titleBarH + simY * scaleY
+
+    let point = CGPoint(x: clickX, y: clickY)
+    guard let mouseDown = CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown, mouseCursorPosition: point, mouseButton: .left),
+          let mouseUp = CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp, mouseCursorPosition: point, mouseButton: .left) else {
+        fputs("Error: Failed to create CGEvents.\n", stderr)
+        return false
+    }
+    mouseDown.post(tap: .cghidEventTap)
+    usleep(100_000)
+    mouseUp.post(tap: .cghidEventTap)
+    return true
+}
+
+/// Dismisses native iOS dialogs by clicking common button positions.
+/// Uses CGEvent clicks as a fallback when AX API cannot see simulator-internal UI.
+/// The `labels` parameter specifies button labels to try via AX first.
+/// The `buttonPositions` parameter provides (x, y) coordinates in device resolution
+/// for CGEvent fallback (e.g., the "許可" / "Allow" button center).
+func dismissDialogs(labels: [String], buttonPositions: [(CGFloat, CGFloat)], deviceWidth: CGFloat, deviceHeight: CGFloat, maxAttempts: Int = 5) -> Int {
+    var dismissed = 0
+    for _ in 0..<maxAttempts {
+        var found = false
+        // Try AX-based tap first
+        for label in labels {
+            if tap(name: label) {
+                dismissed += 1
+                found = true
+                Thread.sleep(forTimeInterval: 1.0)
+                break
+            }
+        }
+        if found { continue }
+
+        // Fallback: CGEvent click at known button positions
+        // Activate Simulator first
+        let apps = NSWorkspace.shared.runningApplications
+        if let sim = apps.first(where: { $0.bundleIdentifier == "com.apple.iphonesimulator" }) {
+            sim.activate()
+            usleep(300_000)
+        }
+
+        var clicked = false
+        for (bx, by) in buttonPositions {
+            if clickInSimulator(simX: bx, simY: by, deviceWidth: deviceWidth, deviceHeight: deviceHeight) {
+                clicked = true
+                break
+            }
+        }
+        if clicked {
+            Thread.sleep(forTimeInterval: 1.0)
+            // Check if something actually changed by trying again
+            // If nothing happened, we're done
+            dismissed += 1
+        } else {
+            break
+        }
+    }
+    return dismissed
+}
+
+/// Dismiss all common iOS permission dialogs on iPad Pro 13-inch (2064x2752).
+func dismissIPadDialogs() -> Int {
+    // Common "許可" / "Allow" button positions for centered iOS alert dialogs
+    // on iPad Pro 13-inch (M4/M5): 2064x2752 resolution.
+    // Right button ("許可") center ≈ (1180, 1510)
+    let positions: [(CGFloat, CGFloat)] = [
+        (1180, 1510),  // Standard centered dialog - right button
+        (1180, 1660),  // Lower dialog variant
+    ]
+    return dismissDialogs(
+        labels: ["許可", "Allow", "OK"],
+        buttonPositions: positions,
+        deviceWidth: 2064,
+        deviceHeight: 2752
+    )
+}
+
+/// Dismiss all common iOS permission dialogs on iPhone 17 Pro (1206x2622).
+func dismissIPhoneDialogs() -> Int {
+    let positions: [(CGFloat, CGFloat)] = [
+        (780, 1580),   // Standard centered dialog - right button
+    ]
+    return dismissDialogs(
+        labels: ["許可", "Allow", "OK"],
+        buttonPositions: positions,
+        deviceWidth: 1206,
+        deviceHeight: 2622
+    )
+}
+
 // MARK: - Main
 
 let args = CommandLine.arguments
 guard args.count >= 2 else {
     fputs("""
     Usage:
-      swift \(args[0]) tap <label>          Tap element by label
-      swift \(args[0]) describe             List all accessible elements
-      swift \(args[0]) wait <label> [sec]   Wait for element then tap (default 10s)
+      swift \(args[0]) tap <label>              Tap element by label
+      swift \(args[0]) describe                 List all accessible elements
+      swift \(args[0]) wait <label> [sec]       Wait for element then tap (default 10s)
+      swift \(args[0]) dismiss-dialogs <device> Dismiss native dialogs (iphone|ipad)
 
     """, stderr)
     exit(2)
@@ -208,6 +329,27 @@ case "wait":
     }
     let timeout = args.count >= 4 ? (Int(args[3]) ?? 10) : 10
     exit(wait(name: args[2], timeout: timeout) ? 0 : 1)
+case "dismiss-dialogs":
+    guard args.count >= 3 else {
+        fputs("Usage: dismiss-dialogs <iphone|ipad>\n", stderr)
+        exit(2)
+    }
+    let device = args[2].lowercased()
+    let count: Int
+    switch device {
+    case "ipad":
+        count = dismissIPadDialogs()
+    case "iphone":
+        count = dismissIPhoneDialogs()
+    default:
+        fputs("Error: Unknown device \"\(device)\". Use 'iphone' or 'ipad'.\n", stderr)
+        exit(2)
+    }
+    if count > 0 {
+        print("Dismissed \(count) dialog(s) on \(device)")
+    } else {
+        print("No dialogs found on \(device)")
+    }
 default:
     fputs("Unknown command: \(args[1])\n", stderr)
     exit(2)
