@@ -2,6 +2,12 @@
 
 All notable changes to `@ccpocket/bridge` will be documented in this file.
 
+## [1.33.2] - 2026-04-05
+
+### Changed
+- Clarify Bridge redistribution terms for unofficial Windows, WSL, proxy, and other hard-to-validate environment-specific distributions
+- Align package license metadata and README guidance with the Bridge redistribution exception
+
 ## [1.33.1] - 2026-04-04
 
 ### Changed
