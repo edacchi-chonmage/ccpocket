@@ -80,6 +80,7 @@ function applyHunks(
   options: {
     diffArgs: string[];
     applyArgs: string[];
+    includeUntracked?: boolean;
   },
 ): void {
   const cwd = resolveProject(projectPath);
@@ -92,7 +93,31 @@ function applyHunks(
   }
 
   for (const [file, indices] of byFile) {
-    const diffText = git([...options.diffArgs, "--", file], cwd);
+    let diffText = "";
+    let addedIntentToAdd = false;
+
+    if (options.includeUntracked) {
+      const tracked = git(["ls-files", "--", file], cwd);
+      if (!tracked) {
+        execFileSync("git", ["add", "--intent-to-add", "--", file], {
+          cwd,
+          encoding: "utf-8",
+        });
+        addedIntentToAdd = true;
+      }
+    }
+
+    try {
+      diffText = git([...options.diffArgs, "--", file], cwd);
+    } finally {
+      if (addedIntentToAdd) {
+        execFileSync("git", ["reset", "--", file], {
+          cwd,
+          encoding: "utf-8",
+        });
+      }
+    }
+
     const patch = buildHunkPatch(diffText, file, indices);
     if (!patch) continue;
 
@@ -121,6 +146,7 @@ export function stageHunks(projectPath: string, hunks: HunkRef[]): void {
   applyHunks(projectPath, hunks, {
     diffArgs: ["diff", "--unified=0"],
     applyArgs: ["apply", "--cached", "--unidiff-zero"],
+    includeUntracked: true,
   });
 }
 
@@ -271,7 +297,26 @@ export function checkoutBranch(projectPath: string, branch: string): void {
 /** Revert (discard) unstaged changes for specific files. */
 export function revertFiles(projectPath: string, files: string[]): void {
   const cwd = resolveProject(projectPath);
-  execFileSync("git", ["checkout", "--", ...files], { cwd, encoding: "utf-8" });
+  if (files.length === 0) return;
+
+  const trackedOutput = git(["ls-files", "--", ...files], cwd);
+  const trackedFiles = trackedOutput ? trackedOutput.split("\n").filter(Boolean) : [];
+  const trackedSet = new Set(trackedFiles);
+  const untrackedFiles = files.filter((file) => !trackedSet.has(file));
+
+  if (trackedFiles.length > 0) {
+    execFileSync("git", ["checkout", "--", ...trackedFiles], {
+      cwd,
+      encoding: "utf-8",
+    });
+  }
+
+  if (untrackedFiles.length > 0) {
+    execFileSync("git", ["clean", "-fd", "--", ...untrackedFiles], {
+      cwd,
+      encoding: "utf-8",
+    });
+  }
 }
 
 /** Revert specific working-tree hunks, leaving the index intact. */
@@ -279,6 +324,7 @@ export function revertHunks(projectPath: string, hunks: HunkRef[]): void {
   applyHunks(projectPath, hunks, {
     diffArgs: ["diff", "--unified=0"],
     applyArgs: ["apply", "-R", "--unidiff-zero"],
+    includeUntracked: true,
   });
 }
 

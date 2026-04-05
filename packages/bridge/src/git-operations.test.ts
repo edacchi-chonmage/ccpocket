@@ -1,6 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { join } from "node:path";
-import { mkdirSync, writeFileSync, rmSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
 import { execFileSync } from "node:child_process";
@@ -14,6 +20,7 @@ import {
   listBranches,
   createBranch,
   checkoutBranch,
+  revertFiles,
   revertHunks,
 } from "./git-operations.js";
 
@@ -151,6 +158,17 @@ describe("stageHunks", () => {
       /out of range/,
     );
   });
+
+  it("stages a hunk from an untracked file", () => {
+    const content = Array.from({ length: 12 }, (_, i) => `line ${i}`).join("\n");
+    writeFileSync(join(repo, "new.txt"), `${content}\n`);
+
+    stageHunks(repo, [{ file: "new.txt", hunkIndex: 0 }]);
+
+    const cachedDiff = gitCmd(["diff", "--cached", "--", "new.txt"], repo);
+    expect(cachedDiff).toContain("new file mode 100644");
+    expect(cachedDiff).toContain("+line 0");
+  });
 });
 
 describe("unstageFiles", () => {
@@ -264,6 +282,59 @@ describe("revertHunks", () => {
     expect(() => revertHunks(repo, [{ file: "a.txt", hunkIndex: 5 }])).toThrow(
       /out of range/,
     );
+  });
+
+  it("reverts a hunk from an untracked file", () => {
+    const lines: string[] = [];
+    for (let i = 0; i < 20; i++) lines.push(`line ${i}`);
+    writeFileSync(join(repo, "new.txt"), lines.join("\n") + "\n");
+
+    revertHunks(repo, [{ file: "new.txt", hunkIndex: 0 }]);
+
+    expect(existsSync(join(repo, "new.txt"))).toBe(false);
+    expect(gitCmd(["status", "--short"], repo)).toBe("");
+  });
+});
+
+describe("revertFiles", () => {
+  let repo: string;
+
+  beforeEach(() => {
+    repo = createTempRepo();
+  });
+  afterEach(() => {
+    rmSync(repo, { recursive: true, force: true });
+  });
+
+  it("reverts tracked file changes", () => {
+    writeFileSync(join(repo, "initial.txt"), "changed\n");
+
+    revertFiles(repo, ["initial.txt"]);
+
+    expect(gitCmd(["diff", "--name-only"], repo)).toBe("");
+    expect(gitCmd(["show", "HEAD:initial.txt"], repo)).toBe(
+      readFileSync(join(repo, "initial.txt"), "utf-8").trim(),
+    );
+  });
+
+  it("removes untracked files", () => {
+    writeFileSync(join(repo, "new.txt"), "new\n");
+
+    revertFiles(repo, ["new.txt"]);
+
+    expect(existsSync(join(repo, "new.txt"))).toBe(false);
+    expect(gitCmd(["status", "--short"], repo)).toBe("");
+  });
+
+  it("handles tracked and untracked files together", () => {
+    writeFileSync(join(repo, "initial.txt"), "changed\n");
+    writeFileSync(join(repo, "new.txt"), "new\n");
+
+    revertFiles(repo, ["initial.txt", "new.txt"]);
+
+    expect(gitCmd(["diff", "--name-only"], repo)).toBe("");
+    expect(existsSync(join(repo, "new.txt"))).toBe(false);
+    expect(gitCmd(["status", "--short"], repo)).toBe("");
   });
 });
 
