@@ -441,6 +441,7 @@ class _CodexChatBody extends HookWidget {
     String? pendingToolUseId;
     PermissionRequestMessage? pendingPermission;
     String? askToolUseId;
+    String? askToolName;
     Map<String, dynamic>? askInput;
 
     switch (approval) {
@@ -448,16 +449,19 @@ class _CodexChatBody extends HookWidget {
         pendingToolUseId = toolUseId;
         pendingPermission = request;
         askToolUseId = null;
+        askToolName = null;
         askInput = null;
-      case ApprovalAskUser(:final toolUseId, :final input):
+      case ApprovalAskUser(:final toolUseId, :final toolName, :final input):
         pendingToolUseId = null;
         pendingPermission = null;
         askToolUseId = toolUseId;
+        askToolName = toolName;
         askInput = input;
       case ApprovalNone():
         pendingToolUseId = null;
         pendingPermission = null;
         askToolUseId = null;
+        askToolName = null;
         askInput = null;
     }
 
@@ -731,7 +735,8 @@ class _CodexChatBody extends HookWidget {
                                 children: [
                                   if (askToolUseId case final askId?
                                       when askInput != null)
-                                    if (isMcpApprovalRequestUserInput(askInput))
+                                    if (askToolName == 'AskUserQuestion' &&
+                                        isMcpApprovalRequestUserInput(askInput))
                                       ApprovalBar(
                                         key: ValueKey('approval_ask_$askId'),
                                         appColors: appColors,

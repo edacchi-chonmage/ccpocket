@@ -1,5 +1,6 @@
 import '../core/logger.dart';
 import '../models/messages.dart';
+import '../utils/request_user_input.dart' show withRequestUserInputToolName;
 import '../widgets/slash_command_sheet.dart'
     show SlashCommand, SlashCommandCategory, buildSlashCommand, knownCommands;
 
@@ -28,6 +29,7 @@ class ChatStateUpdate {
   final String? pendingToolUseId;
   final PermissionRequestMessage? pendingPermission;
   final String? askToolUseId;
+  final String? askToolName;
   final Map<String, dynamic>? askInput;
   final double? costDelta;
   final bool? inPlanMode;
@@ -70,6 +72,7 @@ class ChatStateUpdate {
     this.pendingToolUseId,
     this.pendingPermission,
     this.askToolUseId,
+    this.askToolName,
     this.askInput,
     this.costDelta,
     this.inPlanMode,
@@ -181,7 +184,8 @@ class ChatMessageHandler {
           return ChatStateUpdate(
             entriesToAdd: [ServerChatEntry(msg)],
             askToolUseId: toolUseId,
-            askInput: input,
+            askToolName: toolName,
+            askInput: withRequestUserInputToolName(input, toolName),
           );
         }
         return ChatStateUpdate(
@@ -362,6 +366,7 @@ class ChatMessageHandler {
 
     // Extract tool use info
     String? askToolUseId;
+    String? askToolName;
     Map<String, dynamic>? askInput;
     String? pendingToolUseId;
     bool? inPlanMode;
@@ -369,7 +374,8 @@ class ChatMessageHandler {
       if (content is ToolUseContent) {
         if (content.name == 'AskUserQuestion') {
           askToolUseId = content.id;
-          askInput = content.input;
+          askToolName = content.name;
+          askInput = withRequestUserInputToolName(content.input, content.name);
           effects.add(ChatSideEffect.mediumHaptic);
           if (isBackground) effects.add(ChatSideEffect.notifyAskQuestion);
         } else {
@@ -389,6 +395,7 @@ class ChatMessageHandler {
       resetStreaming: replaceStreaming != null,
       markUserMessagesSent: true,
       askToolUseId: askToolUseId,
+      askToolName: askToolName,
       askInput: askInput,
       pendingToolUseId: pendingToolUseId,
       inPlanMode: inPlanMode,
@@ -456,6 +463,7 @@ class ChatMessageHandler {
     // Key: toolUseId, Value: PermissionRequestMessage
     final pendingPermissions = <String, PermissionRequestMessage>{};
     String? lastAskToolUseId;
+    String? askToolName;
     Map<String, dynamic>? lastAskInput;
     String? claudeSessionId;
 
@@ -521,7 +529,8 @@ class ChatMessageHandler {
               m.toolName == 'McpElicitation') {
             // Codex sends AskUserQuestion as permission_request directly
             lastAskToolUseId = m.toolUseId;
-            lastAskInput = m.input;
+            askToolName = m.toolName;
+            lastAskInput = withRequestUserInputToolName(m.input, m.toolName);
           } else {
             pendingPermissions[m.toolUseId] = m;
           }
@@ -532,7 +541,11 @@ class ChatMessageHandler {
             if (content is ToolUseContent &&
                 content.name == 'AskUserQuestion') {
               lastAskToolUseId = content.id;
-              lastAskInput = content.input;
+              askToolName = content.name;
+              lastAskInput = withRequestUserInputToolName(
+                content.input,
+                content.name,
+              );
             }
           }
         }
@@ -540,6 +553,7 @@ class ChatMessageHandler {
           pendingPermissions.remove(m.toolUseId);
           if (lastAskToolUseId != null && m.toolUseId == lastAskToolUseId) {
             lastAskToolUseId = null;
+            askToolName = null;
             lastAskInput = null;
           }
         }
@@ -548,6 +562,7 @@ class ChatMessageHandler {
           pendingPermissions.remove(m.toolUseId);
           if (lastAskToolUseId != null && m.toolUseId == lastAskToolUseId) {
             lastAskToolUseId = null;
+            askToolName = null;
             lastAskInput = null;
           }
         }
@@ -555,6 +570,7 @@ class ChatMessageHandler {
         if (m is ResultMessage) {
           pendingPermissions.clear();
           lastAskToolUseId = null;
+          askToolName = null;
           lastAskInput = null;
         }
       }
@@ -575,6 +591,7 @@ class ChatMessageHandler {
       pendingToolUseId: isWaiting ? lastPermission?.toolUseId : null,
       pendingPermission: isWaiting ? lastPermission : null,
       askToolUseId: isWaiting ? lastAskToolUseId : null,
+      askToolName: isWaiting ? askToolName : null,
       askInput: isWaiting ? lastAskInput : null,
       claudeSessionId: claudeSessionId,
     );
@@ -617,7 +634,8 @@ class ChatMessageHandler {
           permissionMode: msg.permissionMode,
           approvalPolicy: msg.approvalPolicy,
         );
-        codexApprovalPolicy = codexApprovalPolicyFromRaw(
+        codexApprovalPolicy =
+            codexApprovalPolicyFromRaw(
               resolveCodexApprovalPolicy(
                 approvalPolicy: msg.approvalPolicy,
                 executionMode: msg.executionMode,

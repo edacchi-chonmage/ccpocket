@@ -632,7 +632,7 @@ export class CodexProcess extends EventEmitter<CodexProcessEvents> {
     if (!pendingAsk) return undefined;
     return {
       toolUseId: pendingAsk.toolUseId,
-      toolName: "AskUserQuestion",
+      toolName: pendingAsk.toolName,
       input: { ...pendingAsk.input },
     };
   }

@@ -586,6 +586,10 @@ describe("CodexProcess (app-server)", () => {
         toolName: "McpElicitation",
       }),
     );
+    expect(proc.getPendingPermission("req-elicit-1")).toMatchObject({
+      toolUseId: "req-elicit-1",
+      toolName: "McpElicitation",
+    });
 
     proc.answer("req-elicit-1", "true");
     await tick();

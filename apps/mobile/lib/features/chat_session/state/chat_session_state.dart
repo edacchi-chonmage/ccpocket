@@ -74,6 +74,7 @@ abstract class ApprovalState with _$ApprovalState {
   /// Claude is asking the user a question (AskUserQuestion tool).
   const factory ApprovalState.askUser({
     required String toolUseId,
+    required String toolName,
     required Map<String, dynamic> input,
   }) = ApprovalAskUser;
 }
