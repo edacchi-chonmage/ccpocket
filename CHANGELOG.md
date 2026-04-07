@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.56.0] - 2026-04-07
+
+### Added
+- Token highlighting and Codex skill completion in composer
+- Split slash and dollar completions for Codex
+
+### Changed
+- Tune token highlight colors in composer
+
+### Fixed
+- Preserve MCP elicitation approval type in Codex sessions
+
 ## [1.55.0] - 2026-04-04
 
 ### Changed
