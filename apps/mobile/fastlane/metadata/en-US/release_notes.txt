@@ -1,4 +1,3 @@
-- Explore file browser: browse project files directly in the app
-- Codex approval policy display
-- Improved file peek detection
-- Git diff screen UI improvements
+- Better Codex composer with token highlighting and skill completion
+- Separated slash and dollar completions for cleaner Codex input
+- Minor fixes and stability improvements
