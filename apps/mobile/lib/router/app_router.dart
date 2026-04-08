@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../features/claude_session/claude_session_screen.dart';
 import '../features/debug/debug_screen.dart';
@@ -15,6 +16,7 @@ import '../features/settings/licenses_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../models/messages.dart';
 import '../screens/mock_preview_screen.dart';
+import '../services/bridge_service.dart';
 import '../services/connection_url_parser.dart';
 import '../features/setup_guide/setup_guide_screen.dart';
 import '../screens/qr_scan_screen.dart';

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:auto_route/auto_route.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -20,6 +21,7 @@ import '../../router/app_router.dart';
 import '../../services/app_update_service.dart';
 import '../../services/bridge_service.dart';
 import '../../services/connection_url_parser.dart';
+import '../../services/multi_bridge_manager.dart';
 import '../../services/server_discovery_service.dart';
 import '../../widgets/new_session_sheet.dart';
 import '../../widgets/rename_session_dialog.dart';
@@ -165,8 +167,9 @@ class _SessionListScreenState extends State<SessionListScreen>
   final _pendingSessionCreated = ValueNotifier<SystemMessage?>(null);
 
   // Only subscription that remains: session_created navigation
-  StreamSubscription<ServerMessage>? _messageSub;
-  final Set<String> _archivingSessionIds = <String>{};
+  StreamSubscription<({String hostId, ServerMessage message})>? _messageSub;
+  final Set<String> _archivingSessionKeys = <String>{};
+  String? _selectedHostId;
 
   // macOS app update
   AppUpdateInfo? _appUpdateInfo;
@@ -176,17 +179,66 @@ class _SessionListScreenState extends State<SessionListScreen>
   StreamSubscription<List<SessionInfo>>? _activeSessionsSub;
 
   static const _prefKeyUrl = 'bridge_url';
+  static const _prefKeySelectedHostId = 'session_list_selected_host_id';
   static const _prefKeySessionStartDefaults = 'session_start_defaults_v1';
   static const _prefKeyClaudeSessionSettingsPrefix = 'claude_session_settings_';
+
+  MultiBridgeManager get _bridgeManager => context.read<MultiBridgeManager>();
+
+  BridgeService _bridgeForHost(String? hostId) {
+    if (hostId != null) {
+      final bridge = _bridgeManager.bridgeForHost(hostId);
+      if (bridge != null) return bridge;
+    }
+    return context.read<BridgeService>();
+  }
+
+  String _sessionKey(String? hostId, String sessionId) =>
+      hostId == null || hostId.isEmpty ? sessionId : '$hostId::$sessionId';
+
+  Future<void> _persistSelectedHostId(String? hostId) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (hostId == null || hostId.isEmpty) {
+      await prefs.remove(_prefKeySelectedHostId);
+      return;
+    }
+    await prefs.setString(_prefKeySelectedHostId, hostId);
+  }
+
+  void _setSelectedHostId(String? hostId) {
+    if (_selectedHostId == hostId) {
+      return;
+    }
+    setState(() => _selectedHostId = hostId);
+    unawaited(_persistSelectedHostId(hostId));
+  }
+
+  void _syncSelectedHostId(List<HostBridgeStatus> hostStatuses) {
+    final selectedHostId = _selectedHostId;
+    if (selectedHostId == null) {
+      return;
+    }
+    final exists = hostStatuses.any((status) => status.hostId == selectedHostId);
+    if (!exists) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _selectedHostId != selectedHostId) {
+          return;
+        }
+        _setSelectedHostId(null);
+      });
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     // session_created navigation (the only manual subscription)
-    final bridge = context.read<BridgeService>();
-    _messageSub = bridge.messages.listen((msg) {
+    _messageSub = _bridgeManager.messages.listen((event) {
+      final hostId = event.hostId;
+      final msg = event.message;
       if (msg is SystemMessage && msg.subtype == 'session_created') {
+        final bridge = _bridgeForHost(hostId);
         bridge.requestSessionList();
         // Clear-context recreation and session restarts (permission mode /
         // sandbox mode / rewind) are handled inside the active chat screen.
@@ -197,7 +249,7 @@ class _SessionListScreenState extends State<SessionListScreen>
         if (msg.sessionId != null) {
           // Mark the newly created session as seen so it doesn't
           // appear as unseen when the user returns to the list.
-          _unseenCubit.markSeen(msg.sessionId!);
+          _unseenCubit.markSeen(msg.sessionId!, hostId: hostId);
           if (_pendingNavigation) {
             // Chat screen may not have its listener yet — store for replay.
             _pendingNavigation = false;
@@ -205,6 +257,7 @@ class _SessionListScreenState extends State<SessionListScreen>
           } else {
             _navigateToChat(
               msg.sessionId!,
+              hostId: hostId,
               projectPath: msg.projectPath ?? _pendingResumeProjectPath,
               gitBranch: _pendingResumeGitBranch,
               worktreePath: msg.worktreePath,
@@ -222,8 +275,9 @@ class _SessionListScreenState extends State<SessionListScreen>
       }
 
       if (msg is ArchiveResultMessage) {
-        if (_archivingSessionIds.contains(msg.sessionId) && mounted) {
-          setState(() => _archivingSessionIds.remove(msg.sessionId));
+        final sessionKey = _sessionKey(hostId, msg.sessionId);
+        if (_archivingSessionKeys.contains(sessionKey) && mounted) {
+          setState(() => _archivingSessionKeys.remove(sessionKey));
         }
         if (!mounted) return;
         final l = AppLocalizations.of(context);
@@ -272,31 +326,32 @@ class _SessionListScreenState extends State<SessionListScreen>
   Future<void> _loadPreferencesAndAutoConnect() async {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
+    _selectedHostId = prefs.getString(_prefKeySelectedHostId);
+    final machineCubit = context.read<MachineManagerCubit?>();
+    final hasMachines = (machineCubit?.state.machines.length ?? 0) > 0;
+    if (hasMachines) {
+      setState(() => _isAutoConnecting = true);
+      await _bridgeManager.connectAll();
+      return;
+    }
     final url = prefs.getString(_prefKeyUrl);
     if (url != null && url.isNotEmpty) {
       setState(() => _isAutoConnecting = true);
-      // Try to get API key from SecureStorage via MachineManagerCubit.
-      String? apiKey;
       try {
         final uri = Uri.tryParse(url);
-        if (uri != null) {
-          final cubit = context.read<MachineManagerCubit?>();
-          final machine = cubit?.findByHostPort(
-            uri.host,
-            uri.hasPort ? uri.port : 8765,
-          );
-          if (machine != null) {
-            apiKey = await cubit?.getApiKey(machine.id);
-          }
+        if (uri == null) return;
+        final machine = await machineCubit?.recordConnection(
+          host: uri.host,
+          port: uri.hasPort ? uri.port : 8765,
+          useSsl: uri.scheme == 'wss',
+        );
+        if (machine != null) {
+          _selectedHostId = machine.id;
+          unawaited(_persistSelectedHostId(machine.id));
+          await _bridgeManager.connectHost(machine.id);
         }
       } catch (_) {
-        // Ignore — autoConnect falls back to legacy SharedPreferences.
-      }
-      if (!mounted) return;
-      final attempted = await context.read<BridgeService>().autoConnect(
-        apiKey: apiKey,
-      );
-      if (!attempted) {
+        if (!mounted) return;
         setState(() => _isAutoConnecting = false);
       }
     }
@@ -321,13 +376,14 @@ class _SessionListScreenState extends State<SessionListScreen>
     // Auto-save to Machines on successful health check (or user choosing to connect)
     final trimmedApiKey = apiKey?.trim() ?? '';
     final machineManagerCubit = context.read<MachineManagerCubit?>();
+    Machine? machine;
     if (machineManagerCubit != null) {
       // Parse host and port from URL
       final uri = Uri.tryParse(
         url.replaceFirst('ws://', 'http://').replaceFirst('wss://', 'https://'),
       );
       if (uri != null) {
-        await machineManagerCubit.recordConnection(
+        machine = await machineManagerCubit.recordConnection(
           host: uri.host,
           port: uri.port != 0 ? uri.port : 8765,
           apiKey: trimmedApiKey.isNotEmpty ? trimmedApiKey : null,
@@ -336,15 +392,17 @@ class _SessionListScreenState extends State<SessionListScreen>
       }
     }
 
-    if (!mounted) return;
-    var connectUrl = url;
-    if (trimmedApiKey.isNotEmpty) {
-      final sep = connectUrl.contains('?') ? '&' : '?';
-      connectUrl = '$connectUrl${sep}token=$trimmedApiKey';
+    if (!mounted || machine == null) return;
+    setState(() {
+      _selectedHostId = machine!.id;
+      _isAutoConnecting = true;
+    });
+    unawaited(_persistSelectedHostId(machine.id));
+    await _bridgeManager.connectHost(machine.id);
+    if (mounted) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_prefKeyUrl, url);
     }
-    final bridge = context.read<BridgeService>();
-    bridge.connect(connectUrl);
-    bridge.savePreferences(url);
   }
 
   /// Show setup guide when health check fails. Returns true if user wants
@@ -444,12 +502,8 @@ class _SessionListScreenState extends State<SessionListScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
-      final bridge = context.read<BridgeService>();
-      bridge.ensureConnected();
-      if (bridge.isConnected) {
-        bridge.requestSessionList();
-        bridge.requestRecentSessions(projectPath: bridge.currentProjectFilter);
-      }
+      _bridgeManager.ensureConnectedAll();
+      _bridgeManager.requestRefreshAll();
     }
   }
 
@@ -477,34 +531,65 @@ class _SessionListScreenState extends State<SessionListScreen>
     }
   }
 
-  void _disconnect() {
-    context.read<BridgeService>().disconnect();
-    context.read<SessionListCubit>().resetFilters();
-  }
-
   void _refresh() {
     context.read<SessionListCubit>().refresh();
   }
 
+  Future<HostBridgeStatus?> _chooseHostForNewSession() async {
+    final hosts = context.read<HostConnectionsCubit>().state;
+    if (hosts.isEmpty) return null;
+    return showModalBottomSheet<HostBridgeStatus>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final host in hosts)
+              ListTile(
+                leading: Icon(
+                  switch (host.connectionState) {
+                    BridgeConnectionState.connected => Icons.cloud_done_outlined,
+                    BridgeConnectionState.connecting => Icons.cloud_sync_outlined,
+                    BridgeConnectionState.reconnecting =>
+                      Icons.sync_problem_outlined,
+                    BridgeConnectionState.disconnected =>
+                      Icons.cloud_off_outlined,
+                  },
+                ),
+                title: Text(host.hostLabel),
+                subtitle: Text(host.machine.wsUrl),
+                onTap: () => Navigator.pop(ctx, host),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showNewSessionDialog() async {
+    final host = await _chooseHostForNewSession();
+    if (host == null || !mounted) return;
     final defaults = await _loadSessionStartDefaults();
     if (!mounted) return;
-    final result = await _openNewSessionSheet(initialParams: defaults);
+    final result = await _openNewSessionSheet(
+      bridge: host.bridge,
+      initialParams: defaults,
+    );
     if (result == null || !mounted) return;
     await _saveSessionStartDefaults(result);
     if (!mounted) return;
-    _startNewSession(result);
+    _startNewSession(result, hostId: host.hostId);
   }
 
   Future<NewSessionParams?> _openNewSessionSheet({
+    required BridgeService bridge,
     NewSessionParams? initialParams,
     bool lockProvider = false,
   }) async {
     final sessions =
-        widget.debugRecentSessions ??
-        context.read<SessionListCubit>().state.sessions;
+        widget.debugRecentSessions ?? context.read<RecentSessionsCubit>().state;
     final history = context.read<ProjectHistoryCubit>().state;
-    final bridge = context.read<BridgeService>();
     final visibleTabs = context.read<SettingsCubit>().state.newSessionTabs;
     return showNewSessionSheet(
       context: context,
@@ -517,8 +602,8 @@ class _SessionListScreenState extends State<SessionListScreen>
     );
   }
 
-  void _startNewSession(NewSessionParams result) {
-    final bridge = context.read<BridgeService>();
+  void _startNewSession(NewSessionParams result, {required String hostId}) {
+    final bridge = _bridgeForHost(hostId);
     _pendingResumeProjectPath = result.projectPath;
     _pendingResumeGitBranch = result.worktreeBranch;
     bridge.send(
@@ -565,6 +650,7 @@ class _SessionListScreenState extends State<SessionListScreen>
     _pendingNavigation = true;
     _navigateToChat(
       pendingId,
+      hostId: hostId,
       projectPath: result.projectPath,
       gitBranch: result.worktreeBranch,
       worktreePath: result.existingWorktreePath,
@@ -657,7 +743,7 @@ class _SessionListScreenState extends State<SessionListScreen>
     final provider = session.provider == Provider.codex.value
         ? Provider.codex
         : Provider.claude;
-    final codexModels = context.read<BridgeService>().codexModels;
+    final codexModels = _bridgeForHost(session.hostId).codexModels;
     final existingWorktreePath = session.resumeCwd;
     final hasExistingWorktree =
         existingWorktreePath != null && existingWorktreePath.isNotEmpty;
@@ -746,7 +832,7 @@ class _SessionListScreenState extends State<SessionListScreen>
         currentName: session.name,
       );
       if (newName == null || !mounted) return;
-      context.read<BridgeService>().renameSession(
+      _bridgeForHost(session.hostId).renameSession(
         sessionId: session.id,
         name: newName.isEmpty ? null : newName,
       );
@@ -755,7 +841,7 @@ class _SessionListScreenState extends State<SessionListScreen>
     }
 
     if (action == 'stop') {
-      context.read<BridgeService>().stopSession(session.id);
+      _bridgeForHost(session.hostId).stopSession(session.id);
     }
   }
 
@@ -815,11 +901,7 @@ class _SessionListScreenState extends State<SessionListScreen>
       if (newName == null || !mounted) return;
       final effectiveName = newName.isEmpty ? null : newName;
       // Optimistically update the local state for instant UI feedback
-      context.read<SessionListCubit>().updateSessionName(
-        session.sessionId,
-        effectiveName,
-      );
-      context.read<BridgeService>().renameSession(
+      _bridgeForHost(session.hostId).renameSession(
         sessionId: session.sessionId,
         name: effectiveName,
         provider: session.provider,
@@ -827,7 +909,7 @@ class _SessionListScreenState extends State<SessionListScreen>
         projectPath: session.projectPath,
       );
       // Also refresh from server to confirm persistence
-      context.read<BridgeService>().requestRecentSessions();
+      _bridgeForHost(session.hostId).requestRecentSessions();
       return;
     }
 
@@ -836,7 +918,10 @@ class _SessionListScreenState extends State<SessionListScreen>
       if (!mounted) return;
       // Don't save as defaults — these are session-specific settings from a
       // recent session, not user-chosen defaults for future sessions.
-      _startNewSession(params);
+      _startNewSession(
+        params,
+        hostId: session.hostId ?? _selectedHostId ?? '',
+      );
       return;
     }
 
@@ -853,6 +938,7 @@ class _SessionListScreenState extends State<SessionListScreen>
       final initialParams = await _newSessionFromRecentSession(session);
       if (!mounted) return;
       final edited = await _openNewSessionSheet(
+        bridge: _bridgeForHost(session.hostId),
         initialParams: initialParams,
         lockProvider: true,
       );
@@ -869,9 +955,10 @@ class _SessionListScreenState extends State<SessionListScreen>
   }
 
   void _archiveSession(RecentSession session) {
-    if (_archivingSessionIds.contains(session.sessionId)) return;
-    setState(() => _archivingSessionIds.add(session.sessionId));
-    context.read<BridgeService>().archiveSession(
+    final sessionKey = _sessionKey(session.hostId, session.sessionId);
+    if (_archivingSessionKeys.contains(sessionKey)) return;
+    setState(() => _archivingSessionKeys.add(sessionKey));
+    _bridgeForHost(session.hostId).archiveSession(
       sessionId: session.sessionId,
       provider: session.provider ?? 'claude',
       projectPath: session.projectPath,
@@ -880,6 +967,7 @@ class _SessionListScreenState extends State<SessionListScreen>
 
   void _navigateToChat(
     String sessionId, {
+    required String? hostId,
     String? projectPath,
     String? gitBranch,
     String? worktreePath,
@@ -890,14 +978,17 @@ class _SessionListScreenState extends State<SessionListScreen>
     String? approvalPolicy,
   }) {
     // Mark session as seen when navigating into it.
-    _unseenCubit.markSeen(sessionId);
+    _unseenCubit.markSeen(sessionId, hostId: hostId);
     // Reset the notifier for this navigation.
     if (isPending) {
       _pendingSessionCreated.value = null;
     }
     final pendingNotifier = isPending ? _pendingSessionCreated : null;
+    final bridge = _bridgeForHost(hostId);
     final PageRouteInfo route = switch (provider) {
       Provider.codex => CodexSessionRoute(
+        bridge: bridge,
+        hostId: hostId,
         sessionId: sessionId,
         projectPath: projectPath,
         gitBranch: gitBranch,
@@ -909,6 +1000,8 @@ class _SessionListScreenState extends State<SessionListScreen>
         pendingSessionCreated: pendingNotifier,
       ),
       _ => ClaudeSessionRoute(
+        bridge: bridge,
+        hostId: hostId,
         sessionId: sessionId,
         projectPath: projectPath,
         gitBranch: gitBranch,
@@ -921,12 +1014,8 @@ class _SessionListScreenState extends State<SessionListScreen>
     };
     context.router.push(route).then((_) {
       if (!mounted) return;
-      final isConnected =
-          context.read<ConnectionCubit>().state ==
-          BridgeConnectionState.connected;
-      if (isConnected) {
-        _refresh();
-      }
+      bridge.requestSessionList();
+      bridge.requestRecentSessions();
     });
   }
 
@@ -974,11 +1063,11 @@ class _SessionListScreenState extends State<SessionListScreen>
     final codexModel =
         normalizeCodexModelForAvailableList(
           session.codexModel,
-          context.read<BridgeService>().codexModels,
+          _bridgeForHost(session.hostId).codexModels,
         ) ??
         sanitizeCodexModelName(session.codexModel);
 
-    context.read<BridgeService>().resumeSession(
+    _bridgeForHost(session.hostId).resumeSession(
       session.sessionId,
       resumeProjectPath,
       permissionMode: isCodex
@@ -1057,7 +1146,7 @@ class _SessionListScreenState extends State<SessionListScreen>
     _pendingResumeGitBranch = session.gitBranch;
 
     final isCodex = edited.provider == Provider.codex;
-    context.read<BridgeService>().resumeSession(
+    _bridgeForHost(session.hostId).resumeSession(
       session.sessionId,
       resumeProjectPath,
       permissionMode: edited.permissionMode.value,
@@ -1073,9 +1162,9 @@ class _SessionListScreenState extends State<SessionListScreen>
       provider: session.provider,
       sandboxMode: edited.sandboxMode?.value,
       model: isCodex
-          ? (normalizeCodexModelForAvailableList(
+              ? (normalizeCodexModelForAvailableList(
                   edited.model,
-                  context.read<BridgeService>().codexModels,
+                  _bridgeForHost(session.hostId).codexModels,
                 ) ??
                 edited.model)
           : edited.claudeModel,
@@ -1095,8 +1184,8 @@ class _SessionListScreenState extends State<SessionListScreen>
     }
   }
 
-  void _stopSession(String sessionId) {
-    context.read<BridgeService>().stopSession(sessionId);
+  void _stopSession(String sessionId, {String? hostId}) {
+    _bridgeForHost(hostId).stopSession(sessionId);
   }
 
   @override
@@ -1107,12 +1196,20 @@ class _SessionListScreenState extends State<SessionListScreen>
         ? BridgeConnectionState.connected
         : context.watch<ConnectionCubit>().state;
     final sessions = context.watch<ActiveSessionsCubit>().state;
-    final recentSessionsList = widget.debugRecentSessions ?? slState.sessions;
+    final recentSessionsList = widget.debugRecentSessions ??
+        context.watch<RecentSessionsCubit>().state;
+    final projectHistory = context.watch<ProjectHistoryCubit>().state;
+    final hostStatuses = context.watch<HostConnectionsCubit>().state;
     final discoveredServers = context.watch<ServerDiscoveryCubit>().state;
+    _syncSelectedHostId(hostStatuses);
 
     final isConnected = connectionState == BridgeConnectionState.connected;
+    final hasKnownHosts =
+        hostStatuses.isNotEmpty || ((context.watch<MachineManagerCubit?>()?.state.machines.length ?? 0) > 0);
     final showConnectedUI =
-        isConnected || connectionState == BridgeConnectionState.reconnecting;
+        hasKnownHosts ||
+        isConnected ||
+        connectionState == BridgeConnectionState.reconnecting;
 
     final l = AppLocalizations.of(context);
 
@@ -1185,7 +1282,6 @@ class _SessionListScreenState extends State<SessionListScreen>
                                 (context, innerBoxIsScrolled) => [
                                   SessionListSliverAppBar(
                                     onTitleTap: _onTitleTap,
-                                    onDisconnect: _disconnect,
                                     forceElevated: innerBoxIsScrolled,
                                   ),
                                 ],
@@ -1194,9 +1290,18 @@ class _SessionListScreenState extends State<SessionListScreen>
                               child: HomeContent(
                                 key: _homeContentKey,
                                 connectionState: connectionState,
-                                bridgeVersion: context
-                                    .read<BridgeService>()
-                                    .bridgeVersion,
+                                bridgeVersion: _selectedHostId == null
+                                    ? hostStatuses
+                                        .map((status) => status.bridgeVersion)
+                                        .whereType<String>()
+                                        .firstOrNull
+                                    : hostStatuses
+                                        .where(
+                                          (status) =>
+                                              status.hostId == _selectedHostId,
+                                        )
+                                        .firstOrNull
+                                        ?.bridgeVersion,
                                 sessions: sessions,
                                 recentSessions: recentSessionsList,
                                 accumulatedProjectPaths:
@@ -1205,15 +1310,20 @@ class _SessionListScreenState extends State<SessionListScreen>
                                 isLoadingMore: slState.isLoadingMore,
                                 isInitialLoading: slState.isInitialLoading,
                                 hasMoreSessions: slState.hasMore,
-                                archivingSessionIds: _archivingSessionIds,
+                                archivingSessionIds: _archivingSessionKeys,
                                 unseenSessionIds: unseenSessionIds,
-                                currentProjectFilter: context
-                                    .read<BridgeService>()
-                                    .currentProjectFilter,
+                                hostStatuses: hostStatuses,
+                                selectedHostId: _selectedHostId,
+                                onSelectHost: _setSelectedHostId,
+                                onAddHost: _addMachine,
+                                currentProjectFilter:
+                                    slState.currentProjectFilter,
+                                projectPaths: projectHistory,
                                 onNewSession: _showNewSessionDialog,
                                 onTapRunning:
                                     (
                                       sessionId, {
+                                      String? hostId,
                                       String? projectPath,
                                       String? gitBranch,
                                       String? worktreePath,
@@ -1222,6 +1332,7 @@ class _SessionListScreenState extends State<SessionListScreen>
                                       String? sandboxMode,
                                     }) => _navigateToChat(
                                       sessionId,
+                                      hostId: hostId,
                                       projectPath: projectPath,
                                       gitBranch: gitBranch,
                                       worktreePath: worktreePath,
@@ -1236,11 +1347,11 @@ class _SessionListScreenState extends State<SessionListScreen>
                                     (
                                       sessionId,
                                       toolUseId, {
+                                      String? hostId,
                                       Map<String, dynamic>? updatedInput,
                                       bool clearContext = false,
                                     }) {
-                                      final bridge = context
-                                          .read<BridgeService>();
+                                      final bridge = _bridgeForHost(hostId);
                                       bridge.send(
                                         ClientMessage.approve(
                                           toolUseId,
@@ -1251,8 +1362,9 @@ class _SessionListScreenState extends State<SessionListScreen>
                                       );
                                       bridge.clearSessionPermission(sessionId);
                                     },
-                                onApproveAlways: (sessionId, toolUseId) {
-                                  final bridge = context.read<BridgeService>();
+                                onApproveAlways:
+                                    (sessionId, toolUseId, {hostId}) {
+                                  final bridge = _bridgeForHost(hostId);
                                   bridge.send(
                                     ClientMessage.approveAlways(
                                       toolUseId,
@@ -1262,9 +1374,13 @@ class _SessionListScreenState extends State<SessionListScreen>
                                   bridge.clearSessionPermission(sessionId);
                                 },
                                 onRejectPermission:
-                                    (sessionId, toolUseId, {message}) {
-                                      final bridge = context
-                                          .read<BridgeService>();
+                                    (
+                                      sessionId,
+                                      toolUseId, {
+                                      String? hostId,
+                                      message,
+                                    }) {
+                                      final bridge = _bridgeForHost(hostId);
                                       bridge.send(
                                         ClientMessage.reject(
                                           toolUseId,
@@ -1275,9 +1391,8 @@ class _SessionListScreenState extends State<SessionListScreen>
                                       bridge.clearSessionPermission(sessionId);
                                     },
                                 onAnswerQuestion:
-                                    (sessionId, toolUseId, result) {
-                                      final bridge = context
-                                          .read<BridgeService>();
+                                    (sessionId, toolUseId, result, {hostId}) {
+                                      final bridge = _bridgeForHost(hostId);
                                       bridge.send(
                                         ClientMessage.answer(
                                           toolUseId,
@@ -1419,11 +1534,10 @@ class _SessionListScreenState extends State<SessionListScreen>
 
   void _connectToMachine(MachineWithStatus m) async {
     final cubit = context.read<MachineManagerCubit>();
-    final wsUrl = await cubit.buildWsUrl(m.machine.id);
     final apiKey = await cubit.getApiKey(m.machine.id);
 
     // Record connection to update lastConnected
-    await cubit.recordConnection(
+    final machine = await cubit.recordConnection(
       host: m.machine.host,
       port: m.machine.port,
       apiKey: apiKey,
@@ -1431,9 +1545,12 @@ class _SessionListScreenState extends State<SessionListScreen>
     );
 
     if (!mounted) return;
-    final bridge = context.read<BridgeService>();
-    bridge.connect(wsUrl);
-    bridge.savePreferences(m.machine.wsUrl);
+    setState(() {
+      _selectedHostId = machine.id;
+      _isAutoConnecting = true;
+    });
+    unawaited(_persistSelectedHostId(machine.id));
+    await _bridgeManager.connectHost(m.machine.id);
   }
 
   void _toggleFavorite(MachineWithStatus m) {

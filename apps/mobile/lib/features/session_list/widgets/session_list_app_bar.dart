@@ -11,13 +11,11 @@ import '../../../services/app_update_service.dart';
 /// enterAlways behaviour).
 class SessionListSliverAppBar extends StatelessWidget {
   final VoidCallback onTitleTap;
-  final VoidCallback onDisconnect;
   final bool forceElevated;
 
   const SessionListSliverAppBar({
     super.key,
     required this.onTitleTap,
-    required this.onDisconnect,
     this.forceElevated = false,
   });
 
@@ -46,12 +44,6 @@ class SessionListSliverAppBar extends StatelessWidget {
           icon: const Icon(Icons.collections),
           onPressed: () => context.router.push(GalleryRoute()),
           tooltip: l.gallery,
-        ),
-        IconButton(
-          key: const ValueKey('disconnect_button'),
-          icon: const Icon(Icons.link_off),
-          onPressed: onDisconnect,
-          tooltip: l.disconnect,
         ),
       ],
     );

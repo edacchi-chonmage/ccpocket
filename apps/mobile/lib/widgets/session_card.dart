@@ -144,19 +144,12 @@ class _RunningSessionCardState extends State<RunningSessionCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Status bar with gradient
+            // Status bar
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    statusColor.withValues(alpha: 0.15),
-                    statusColor.withValues(alpha: 0.04),
-                  ],
-                ),
+                color: statusColor.withValues(alpha: 0.10),
               ),
               child: Row(
                 children: [
@@ -428,6 +421,10 @@ class _RunningSessionCardState extends State<RunningSessionCard> {
                                 ),
                               ),
                             ),
+                            if (session.hostLabel?.isNotEmpty ?? false) ...[
+                              const SizedBox(width: 8),
+                              _HostBadge(label: session.hostLabel!),
+                            ],
                           ],
                         ),
                       ),
@@ -2461,6 +2458,10 @@ class RecentSessionCard extends StatelessWidget {
                                   ),
                                 ),
                               ),
+                              if (session.hostLabel?.isNotEmpty ?? false) ...[
+                                const SizedBox(width: 8),
+                                _HostBadge(label: session.hostLabel!),
+                              ],
                             ],
                           ],
                         ),
@@ -2664,6 +2665,40 @@ class RecentSessionCard extends StatelessWidget {
     } catch (_) {
       return '';
     }
+  }
+}
+
+class _HostBadge extends StatelessWidget {
+  const _HostBadge({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Flexible(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: colorScheme.secondaryContainer.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: colorScheme.secondary.withValues(alpha: 0.22),
+            width: 0.5,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: colorScheme.onSecondaryContainer,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    );
   }
 }
 

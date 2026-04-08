@@ -136,7 +136,8 @@ void main() {
 
       await tester.pumpWidget(
         await _wrap(
-          const CodexSessionScreen(
+          CodexSessionScreen(
+            bridge: bridge,
             sessionId: 'codex-session',
             projectPath: '/tmp/project',
           ),
@@ -168,7 +169,11 @@ void main() {
 
       await tester.pumpWidget(
         await _wrap(
-          const ClaudeSessionScreen(sessionId: 'pending', isPending: true),
+          ClaudeSessionScreen(
+            bridge: bridge,
+            sessionId: 'pending',
+            isPending: true,
+          ),
           bridge,
         ),
       );

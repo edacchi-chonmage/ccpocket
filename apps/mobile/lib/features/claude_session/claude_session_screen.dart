@@ -64,6 +64,8 @@ const _fileListRefreshToolNames = {
 /// is received from the bridge, then swaps to the real session.
 @RoutePage()
 class ClaudeSessionScreen extends StatefulWidget {
+  final BridgeService bridge;
+  final String? hostId;
   final String sessionId;
   final String? projectPath;
   final String? gitBranch;
@@ -78,6 +80,8 @@ class ClaudeSessionScreen extends StatefulWidget {
 
   const ClaudeSessionScreen({
     super.key,
+    required this.bridge,
+    this.hostId,
     required this.sessionId,
     this.projectPath,
     this.gitBranch,

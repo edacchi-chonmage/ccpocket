@@ -141,6 +141,7 @@ Future<Widget> buildTestClaudeSessionScreen({
           BlocProvider<SettingsCubit>(create: (_) => SettingsCubit(prefs)),
         ],
         child: ClaudeSessionScreen(
+          bridge: bridge,
           sessionId: sessionId,
           projectPath: projectPath,
         ),

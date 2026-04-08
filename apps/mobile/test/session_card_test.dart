@@ -723,6 +723,28 @@ void main() {
   });
 
   group('RecentSessionCard', () {
+    testWidgets('shows host badge when host label is present', (tester) async {
+      final session = RecentSession(
+        sessionId: 'recent-host',
+        provider: 'codex',
+        summary: 'summary',
+        firstPrompt: 'prompt',
+        created: DateTime.now().toIso8601String(),
+        modified: DateTime.now().toIso8601String(),
+        gitBranch: 'main',
+        projectPath: '/home/user/my-app',
+        isSidechain: false,
+        hostId: 'host-a',
+        hostLabel: 'Mac Mini',
+      );
+
+      await tester.pumpWidget(
+        _wrap(RecentSessionCard(session: session, onTap: () {})),
+      );
+
+      expect(find.text('Mac Mini'), findsOneWidget);
+    });
+
     testWidgets('shows codex settings summary for codex provider', (
       tester,
     ) async {

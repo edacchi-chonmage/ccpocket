@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -9,6 +10,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../models/messages.dart';
 import '../../../services/app_update_service.dart';
 import '../../../services/draft_service.dart';
+import '../../../services/multi_bridge_manager.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/session_card.dart';
 import '../state/session_list_cubit.dart';
@@ -32,10 +34,16 @@ class HomeContent extends StatefulWidget {
   final bool hasMoreSessions;
   final Set<String> archivingSessionIds;
   final Set<String> unseenSessionIds;
+  final List<HostBridgeStatus> hostStatuses;
+  final String? selectedHostId;
+  final ValueChanged<String?>? onSelectHost;
+  final VoidCallback? onAddHost;
   final String? currentProjectFilter;
+  final List<String> projectPaths;
   final VoidCallback onNewSession;
   final void Function(
     String sessionId, {
+    String? hostId,
     String? projectPath,
     String? gitBranch,
     String? worktreePath,
@@ -44,18 +52,30 @@ class HomeContent extends StatefulWidget {
     String? sandboxMode,
   })
   onTapRunning;
-  final ValueChanged<String> onStopSession;
+  final void Function(String sessionId, {String? hostId}) onStopSession;
   final void Function(
     String sessionId,
     String toolUseId, {
+    String? hostId,
     Map<String, dynamic>? updatedInput,
     bool clearContext,
   })?
   onApprovePermission;
-  final void Function(String sessionId, String toolUseId)? onApproveAlways;
-  final void Function(String sessionId, String toolUseId, {String? message})?
+  final void Function(String sessionId, String toolUseId, {String? hostId})?
+  onApproveAlways;
+  final void Function(
+    String sessionId,
+    String toolUseId, {
+    String? hostId,
+    String? message,
+  })?
   onRejectPermission;
-  final void Function(String sessionId, String toolUseId, String result)?
+  final void Function(
+    String sessionId,
+    String toolUseId,
+    String result, {
+    String? hostId,
+  })?
   onAnswerQuestion;
   final ValueChanged<RecentSession> onResumeSession;
   final ValueChanged<RecentSession> onLongPressRecentSession;
@@ -83,7 +103,12 @@ class HomeContent extends StatefulWidget {
     required this.hasMoreSessions,
     this.archivingSessionIds = const {},
     this.unseenSessionIds = const {},
+    this.hostStatuses = const [],
+    this.selectedHostId,
+    this.onSelectHost,
+    this.onAddHost,
     required this.currentProjectFilter,
+    this.projectPaths = const [],
     required this.onNewSession,
     required this.onTapRunning,
     required this.onStopSession,
@@ -209,8 +234,6 @@ class HomeContentState extends State<HomeContent> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final appColors = Theme.of(context).extension<AppColors>()!;
-    final hasRunningSessions = widget.sessions.isNotEmpty;
-    final hasRecentSessions = widget.recentSessions.isNotEmpty;
     final isReconnecting =
         widget.connectionState == BridgeConnectionState.reconnecting;
     final updateBanner = _buildUpdateBanner();
@@ -218,32 +241,107 @@ class HomeContentState extends State<HomeContent> {
 
     // Compute derived state
     // Exclude running sessions from recent list to avoid duplicates
+    final selectedHostId = widget.selectedHostId;
+    final selectedHost = selectedHostId == null
+        ? null
+        : widget.hostStatuses
+              .where((status) => status.hostId == selectedHostId)
+              .firstOrNull;
+    bool matchesSelectedHost({String? hostId, String? hostLabel}) {
+      if (selectedHostId == null) {
+        return true;
+      }
+      if (hostId == selectedHostId) {
+        return true;
+      }
+      return selectedHost != null &&
+          hostLabel != null &&
+          hostLabel.isNotEmpty &&
+          hostLabel == selectedHost.hostLabel;
+    }
+
+    final visibleRunningSessions = selectedHostId == null
+        ? widget.sessions
+        : widget.sessions
+              .where(
+                (session) => matchesSelectedHost(
+                  hostId: session.hostId,
+                  hostLabel: session.hostLabel,
+                ),
+              )
+              .toList();
+    final visibleRecentSessions = selectedHostId == null
+        ? widget.recentSessions
+        : widget.recentSessions
+              .where(
+                (session) => matchesSelectedHost(
+                  hostId: session.hostId,
+                  hostLabel: session.hostLabel,
+                ),
+              )
+              .toList();
+    final hasRunningSessions = visibleRunningSessions.isNotEmpty;
+    final hasRecentSessions = visibleRecentSessions.isNotEmpty;
     final runningSessionIds = widget.sessions
         .expand(
-          (s) => [s.id, if (s.claudeSessionId != null) s.claudeSessionId!],
+          (s) => [
+            _sessionKey(s.hostId, s.id),
+            if (s.claudeSessionId != null)
+              _sessionKey(s.hostId, s.claudeSessionId!),
+          ],
         )
         .toSet();
 
     // Fallback for Codex sessions which use a short proxy ID instead of UUID
     bool isDuplicate(RecentSession rs) {
-      if (runningSessionIds.contains(rs.sessionId)) return true;
-      for (final s in widget.sessions) {
+      if (runningSessionIds.contains(_sessionKey(rs.hostId, rs.sessionId))) {
+        return true;
+      }
+      for (final s in visibleRunningSessions) {
         if (s.provider == rs.provider &&
             s.projectPath == rs.projectPath &&
-            s.createdAt == rs.created) {
+            s.createdAt == rs.created &&
+            s.hostId == rs.hostId) {
           return true;
         }
       }
       return false;
     }
 
-    // All filtering (project, provider, namedOnly, searchQuery) is applied
-    // server-side. Only deduplicate running sessions here.
-    final filteredSessions = widget.recentSessions
+    final filteredSessions = visibleRecentSessions
         .where((s) => !isDuplicate(s))
+        .where(
+          (s) =>
+              widget.currentProjectFilter == null ||
+              s.projectPath == widget.currentProjectFilter,
+        )
+        .where((s) {
+          return switch (widget.providerFilter) {
+            ProviderFilter.all => true,
+            ProviderFilter.claude => s.provider != Provider.codex.value,
+            ProviderFilter.codex => s.provider == Provider.codex.value,
+          };
+        })
+        .where((s) => !widget.namedOnly || (s.name?.trim().isNotEmpty ?? false))
+        .where((s) {
+          if (widget.searchQuery.isEmpty) return true;
+          final q = widget.searchQuery.toLowerCase();
+          return (s.name?.toLowerCase().contains(q) ?? false) ||
+              s.firstPrompt.toLowerCase().contains(q) ||
+              (s.lastPrompt?.toLowerCase().contains(q) ?? false) ||
+              (s.summary?.toLowerCase().contains(q) ?? false) ||
+              (s.hostLabel?.toLowerCase().contains(q) ?? false);
+        })
         .toList();
+    final visibleProjects = {
+      ...widget.projectPaths,
+      ...widget.recentSessions.map((s) => s.projectPath),
+      ...widget.sessions.map((s) => s.projectPath),
+    }.toList()
+      ..sort();
 
     final hasActiveFilter =
+        selectedHostId != null ||
         widget.currentProjectFilter != null ||
         widget.providerFilter != ProviderFilter.all ||
         widget.namedOnly ||
@@ -291,22 +389,41 @@ class HomeContentState extends State<HomeContent> {
       children: [
         if (isReconnecting) const SessionReconnectBanner(),
         ?updateBanner,
-        if (hasRunningSessions) ...[
+        if (widget.hostStatuses.isNotEmpty) ...[
+          _HostTabs(
+            hostStatuses: widget.hostStatuses,
+            selectedHostId: selectedHostId,
+            onSelectHost: widget.onSelectHost ?? (_) {},
+            onAddHost: widget.onAddHost,
+          ),
+          const SizedBox(height: 12),
+        ],
+        if (selectedHost != null &&
+            selectedHost.connectionState != BridgeConnectionState.connected) ...[
+          _SelectedHostBanner(status: selectedHost),
+          const SizedBox(height: 12),
+        ],
+        if (visibleRunningSessions.isNotEmpty) ...[
           SectionHeader(
             icon: Icons.play_circle_filled,
             label: 'Running',
             color: appColors.statusOnline,
           ),
           const SizedBox(height: 4),
-          for (final session in widget.sessions)
+          for (final session in visibleRunningSessions)
             Slidable(
-              key: ValueKey('running_session_${session.id}'),
+              key: ValueKey(
+                'running_session_${_sessionKey(session.hostId, session.id)}',
+              ),
               endActionPane: ActionPane(
                 motion: const BehindMotion(),
                 extentRatio: 0.18,
                 children: [
                   CustomSlidableAction(
-                    onPressed: (_) => widget.onStopSession(session.id),
+                    onPressed: (_) => widget.onStopSession(
+                      session.id,
+                      hostId: session.hostId,
+                    ),
                     backgroundColor: Colors.transparent,
                     padding: EdgeInsets.zero,
                     child: Container(
@@ -327,10 +444,13 @@ class HomeContentState extends State<HomeContent> {
               ),
               child: RunningSessionCard(
                 session: session,
-                isUnseen: widget.unseenSessionIds.contains(session.id),
+                isUnseen: widget.unseenSessionIds.contains(
+                  _sessionKey(session.hostId, session.id),
+                ),
                 onLongPress: () => widget.onLongPressRunningSession(session),
                 onTap: () => widget.onTapRunning(
                   session.id,
+                  hostId: session.hostId,
                   projectPath: session.projectPath,
                   gitBranch: session.worktreePath != null
                       ? session.worktreeBranch
@@ -348,18 +468,29 @@ class HomeContentState extends State<HomeContent> {
                     }) => widget.onApprovePermission?.call(
                       session.id,
                       toolUseId,
+                      hostId: session.hostId,
                       updatedInput: updatedInput,
                       clearContext: clearContext,
                     ),
                 onApproveAlways: (toolUseId) =>
-                    widget.onApproveAlways?.call(session.id, toolUseId),
+                    widget.onApproveAlways?.call(
+                      session.id,
+                      toolUseId,
+                      hostId: session.hostId,
+                    ),
                 onReject: (toolUseId, {String? message}) => widget
                     .onRejectPermission
-                    ?.call(session.id, toolUseId, message: message),
+                    ?.call(
+                      session.id,
+                      toolUseId,
+                      hostId: session.hostId,
+                      message: message,
+                    ),
                 onAnswer: (toolUseId, result) => widget.onAnswerQuestion?.call(
                   session.id,
                   toolUseId,
                   result,
+                  hostId: session.hostId,
                 ),
               ),
             ),
@@ -429,7 +560,7 @@ class HomeContentState extends State<HomeContent> {
             onToggleDisplayMode: _toggleDisplayMode,
             providerFilter: widget.providerFilter,
             onToggleProviderFilter: widget.onToggleProvider,
-            projects: widget.accumulatedProjectPaths.map((path) {
+            projects: visibleProjects.map((path) {
               return (path: path, name: path.split('/').last);
             }).toList(),
             currentProjectFilter: widget.currentProjectFilter,
@@ -451,7 +582,9 @@ class HomeContentState extends State<HomeContent> {
             else
               for (final session in filteredSessions)
                 Slidable(
-                  key: ValueKey('recent_session_${session.sessionId}'),
+                  key: ValueKey(
+                    'recent_session_${_sessionKey(session.hostId, session.sessionId)}',
+                  ),
                   endActionPane: ActionPane(
                     motion: const BehindMotion(),
                     extentRatio: 0.18,
@@ -480,10 +613,10 @@ class HomeContentState extends State<HomeContent> {
                     session: session,
                     displayMode: _displayMode,
                     draftText: context.read<DraftService>().getDraft(
-                      session.sessionId,
+                      _sessionKey(session.hostId, session.sessionId),
                     ),
                     isProcessing: widget.archivingSessionIds.contains(
-                      session.sessionId,
+                      _sessionKey(session.hostId, session.sessionId),
                     ),
                     onTap: () => widget.onResumeSession(session),
                     onLongPress: () => widget.onLongPressRecentSession(session),
@@ -513,6 +646,173 @@ class HomeContentState extends State<HomeContent> {
           ],
         ],
       ],
+    );
+  }
+}
+
+String _sessionKey(String? hostId, String sessionId) =>
+    hostId == null || hostId.isEmpty ? sessionId : '$hostId::$sessionId';
+
+class _HostTabs extends StatelessWidget {
+  const _HostTabs({
+    required this.hostStatuses,
+    required this.selectedHostId,
+    required this.onSelectHost,
+    this.onAddHost,
+  });
+
+  final List<HostBridgeStatus> hostStatuses;
+  final String? selectedHostId;
+  final ValueChanged<String?> onSelectHost;
+  final VoidCallback? onAddHost;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return SizedBox(
+      height: 38,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: const Text('統合'),
+              showCheckmark: false,
+              selectedColor: colorScheme.primary,
+              backgroundColor: colorScheme.surfaceContainerHigh,
+              labelStyle: TextStyle(
+                color: selectedHostId == null
+                    ? colorScheme.onPrimary
+                    : colorScheme.onSurface,
+                fontWeight: FontWeight.w700,
+              ),
+              side: BorderSide(
+                color: selectedHostId == null
+                    ? colorScheme.primary
+                    : colorScheme.outlineVariant,
+              ),
+              selected: selectedHostId == null,
+              onSelected: (_) => onSelectHost(null),
+            ),
+          ),
+          for (final status in hostStatuses)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ChoiceChip(
+                label: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _HostStateDot(state: status.connectionState),
+                    const SizedBox(width: 6),
+                    Text(status.hostLabel),
+                  ],
+                ),
+                showCheckmark: false,
+                selectedColor: colorScheme.primary,
+                backgroundColor: colorScheme.surfaceContainerHigh,
+                labelStyle: TextStyle(
+                  color: selectedHostId == status.hostId
+                      ? colorScheme.onPrimary
+                      : colorScheme.onSurface,
+                  fontWeight: FontWeight.w700,
+                ),
+                side: BorderSide(
+                  color: selectedHostId == status.hostId
+                      ? colorScheme.primary
+                      : colorScheme.outlineVariant,
+                ),
+                selected: selectedHostId == status.hostId,
+                onSelected: (_) => onSelectHost(status.hostId),
+              ),
+            ),
+          if (onAddHost != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ActionChip(
+                avatar: Icon(
+                  Icons.add,
+                  size: 18,
+                  color: colorScheme.onSurface,
+                ),
+                label: const Text('追加'),
+                backgroundColor: colorScheme.surfaceContainerHigh,
+                labelStyle: TextStyle(
+                  color: colorScheme.onSurface,
+                  fontWeight: FontWeight.w700,
+                ),
+                side: BorderSide(color: colorScheme.outlineVariant),
+                onPressed: onAddHost,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SelectedHostBanner extends StatelessWidget {
+  const _SelectedHostBanner({required this.status});
+
+  final HostBridgeStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final appColors = Theme.of(context).extension<AppColors>()!;
+    final text = switch (status.connectionState) {
+      BridgeConnectionState.connecting => 'Connecting to ${status.hostLabel}…',
+      BridgeConnectionState.reconnecting =>
+        'Reconnecting to ${status.hostLabel}…',
+      BridgeConnectionState.disconnected => '${status.hostLabel} is offline',
+      BridgeConnectionState.connected => null,
+    };
+    if (text == null) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: appColors.subtleText.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Row(
+        children: [
+          _HostStateDot(state: status.connectionState),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 13,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HostStateDot extends StatelessWidget {
+  const _HostStateDot({required this.state});
+
+  final BridgeConnectionState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final appColors = Theme.of(context).extension<AppColors>()!;
+    final color = switch (state) {
+      BridgeConnectionState.connected => appColors.statusOnline,
+      BridgeConnectionState.connecting => appColors.statusApproval,
+      BridgeConnectionState.reconnecting => appColors.statusRunning,
+      BridgeConnectionState.disconnected => appColors.subtleText,
+    };
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }

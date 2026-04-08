@@ -581,10 +581,12 @@ class _MockChatWrapperState extends State<_MockChatWrapper> {
         ],
         child: switch (widget.scenario.provider) {
           MockScenarioProvider.codex => CodexSessionScreen(
+            bridge: mockService,
             sessionId: sessionId,
             projectPath: '/mock/preview',
           ),
           MockScenarioProvider.claude => ClaudeSessionScreen(
+            bridge: mockService,
             sessionId: sessionId,
             projectPath: '/mock/preview',
           ),
@@ -647,6 +649,7 @@ class _ReplayChatWrapperState extends State<_ReplayChatWrapper> {
           ),
         ],
         child: ClaudeSessionScreen(
+          bridge: replayService,
           sessionId: sessionId,
           projectPath: '/replay/${widget.recordingName}',
         ),
@@ -958,11 +961,16 @@ class _StoreSessionListWrapperState extends State<_StoreSessionListWrapper> {
             isLoadingMore: false,
             isInitialLoading: false,
             hasMoreSessions: false,
+            hostStatuses: const [],
+            selectedHostId: null,
+            onSelectHost: (_) {},
             currentProjectFilter: null,
+            projectPaths: projectPaths.toList(),
             onNewSession: () {},
             onTapRunning:
                 (
                   _, {
+                  hostId,
                   projectPath,
                   gitBranch,
                   worktreePath,
@@ -970,7 +978,7 @@ class _StoreSessionListWrapperState extends State<_StoreSessionListWrapper> {
                   permissionMode,
                   sandboxMode,
                 }) {},
-            onStopSession: (_) {},
+            onStopSession: (_, {hostId}) {},
             onResumeSession: (_) {},
             onLongPressRecentSession: (_) {},
             onArchiveSession: (_) {},
@@ -1053,6 +1061,7 @@ class _StoreChatWrapperState extends State<_StoreChatWrapper> {
           ),
         ],
         child: ClaudeSessionScreen(
+          bridge: mockService,
           sessionId: sessionId,
           projectPath: '/store/preview',
         ),
@@ -1118,7 +1127,8 @@ class _StoreMarkdownInputWrapperState
             create: (_) => FileListCubit(const [], mockService.fileList),
           ),
         ],
-        child: const ClaudeSessionScreen(
+        child: ClaudeSessionScreen(
+          bridge: mockService,
           sessionId: _sessionId,
           projectPath: '/store/preview',
         ),
@@ -1287,7 +1297,8 @@ class _StoreImageAttachWrapperState extends State<_StoreImageAttachWrapper> {
             create: (_) => FileListCubit(const [], mockService.fileList),
           ),
         ],
-        child: const ClaudeSessionScreen(
+        child: ClaudeSessionScreen(
+          bridge: mockService,
           sessionId: _sessionId,
           projectPath: '/store/preview',
         ),
@@ -1454,11 +1465,16 @@ class _StoreNewSessionWrapperState extends State<_StoreNewSessionWrapper> {
             isLoadingMore: false,
             isInitialLoading: false,
             hasMoreSessions: false,
+            hostStatuses: const [],
+            selectedHostId: null,
+            onSelectHost: (_) {},
             currentProjectFilter: null,
+            projectPaths: projectPaths.toList(),
             onNewSession: () {},
             onTapRunning:
                 (
                   _, {
+                  hostId,
                   projectPath,
                   gitBranch,
                   worktreePath,
@@ -1466,7 +1482,7 @@ class _StoreNewSessionWrapperState extends State<_StoreNewSessionWrapper> {
                   permissionMode,
                   sandboxMode,
                 }) {},
-            onStopSession: (_) {},
+            onStopSession: (_, {hostId}) {},
             onResumeSession: (_) {},
             onLongPressRecentSession: (_) {},
             onArchiveSession: (_) {},

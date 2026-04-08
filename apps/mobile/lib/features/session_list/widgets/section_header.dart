@@ -40,11 +40,7 @@ class SectionHeader extends StatelessWidget {
           const SizedBox(height: 4),
           Container(
             height: 1,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [color.withValues(alpha: 0.4), Colors.transparent],
-              ),
-            ),
+            color: color.withValues(alpha: 0.22),
           ),
         ],
       ),

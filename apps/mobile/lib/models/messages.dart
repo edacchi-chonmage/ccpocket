@@ -2214,6 +2214,8 @@ enum SessionDisplayMode {
 class RecentSession {
   final String sessionId;
   final String? provider;
+  final String? hostId;
+  final String? hostLabel;
 
   /// User-assigned session name (customTitle for Claude, thread_name for Codex).
   final String? name;
@@ -2240,6 +2242,8 @@ class RecentSession {
   const RecentSession({
     required this.sessionId,
     this.provider,
+    this.hostId,
+    this.hostLabel,
     this.name,
     this.agentNickname,
     this.agentRole,
@@ -2281,6 +2285,8 @@ class RecentSession {
     return RecentSession(
       sessionId: json['sessionId'] as String,
       provider: json['provider'] as String?,
+      hostId: json['hostId'] as String?,
+      hostLabel: json['hostLabel'] as String?,
       name: json['name'] as String?,
       agentNickname: json['agentNickname'] as String?,
       agentRole: json['agentRole'] as String?,
@@ -2336,7 +2342,38 @@ class RecentSession {
     return RecentSession(
       sessionId: sessionId,
       provider: provider,
+      hostId: hostId,
+      hostLabel: hostLabel,
       name: clearName ? null : (name ?? this.name),
+      agentNickname: agentNickname,
+      agentRole: agentRole,
+      summary: summary,
+      firstPrompt: firstPrompt,
+      lastPrompt: lastPrompt,
+      created: created,
+      modified: modified,
+      gitBranch: gitBranch,
+      projectPath: projectPath,
+      resumeCwd: resumeCwd,
+      isSidechain: isSidechain,
+      codexApprovalPolicy: codexApprovalPolicy,
+      executionMode: executionMode,
+      planMode: planMode,
+      codexSandboxMode: codexSandboxMode,
+      codexModel: codexModel,
+      codexModelReasoningEffort: codexModelReasoningEffort,
+      codexNetworkAccessEnabled: codexNetworkAccessEnabled,
+      codexWebSearchMode: codexWebSearchMode,
+    );
+  }
+
+  RecentSession copyWithHost({String? hostId, String? hostLabel}) {
+    return RecentSession(
+      sessionId: sessionId,
+      provider: provider,
+      hostId: hostId ?? this.hostId,
+      hostLabel: hostLabel ?? this.hostLabel,
+      name: name,
       agentNickname: agentNickname,
       agentRole: agentRole,
       summary: summary,
@@ -2365,6 +2402,8 @@ class RecentSession {
 class SessionInfo {
   final String id;
   final String? provider;
+  final String? hostId;
+  final String? hostLabel;
   final String projectPath;
   final String? claudeSessionId;
 
@@ -2394,6 +2433,8 @@ class SessionInfo {
   const SessionInfo({
     required this.id,
     this.provider,
+    this.hostId,
+    this.hostLabel,
     required this.projectPath,
     this.claudeSessionId,
     this.name,
@@ -2458,6 +2499,8 @@ class SessionInfo {
     return SessionInfo(
       id: id,
       provider: provider,
+      hostId: hostId,
+      hostLabel: hostLabel,
       projectPath: projectPath,
       claudeSessionId: claudeSessionId,
       name: clearName ? null : (name ?? this.name),
@@ -2494,6 +2537,8 @@ class SessionInfo {
     return SessionInfo(
       id: json['id'] as String,
       provider: json['provider'] as String?,
+      hostId: json['hostId'] as String?,
+      hostLabel: json['hostLabel'] as String?,
       projectPath: json['projectPath'] as String,
       claudeSessionId: json['claudeSessionId'] as String?,
       name: json['name'] as String?,
@@ -2537,6 +2582,38 @@ class SessionInfo {
               input: Map<String, dynamic>.from(permJson['input'] as Map),
             )
           : null,
+    );
+  }
+
+  SessionInfo copyWithHost({String? hostId, String? hostLabel}) {
+    return SessionInfo(
+      id: id,
+      provider: provider,
+      hostId: hostId ?? this.hostId,
+      hostLabel: hostLabel ?? this.hostLabel,
+      projectPath: projectPath,
+      claudeSessionId: claudeSessionId,
+      name: name,
+      agentNickname: agentNickname,
+      agentRole: agentRole,
+      status: status,
+      createdAt: createdAt,
+      lastActivityAt: lastActivityAt,
+      gitBranch: gitBranch,
+      lastMessage: lastMessage,
+      worktreePath: worktreePath,
+      worktreeBranch: worktreeBranch,
+      permissionMode: permissionMode,
+      executionMode: executionMode,
+      planMode: planMode,
+      model: model,
+      codexApprovalPolicy: codexApprovalPolicy,
+      codexSandboxMode: codexSandboxMode,
+      codexModel: codexModel,
+      codexModelReasoningEffort: codexModelReasoningEffort,
+      codexNetworkAccessEnabled: codexNetworkAccessEnabled,
+      codexWebSearchMode: codexWebSearchMode,
+      pendingPermission: pendingPermission,
     );
   }
 }

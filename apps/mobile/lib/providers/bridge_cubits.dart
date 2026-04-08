@@ -1,4 +1,5 @@
 import '../models/messages.dart';
+import '../services/multi_bridge_manager.dart';
 import 'stream_cubit.dart';
 
 /// Connection state stream as a Cubit.
@@ -25,4 +26,9 @@ class FileListCubit extends StreamCubit<List<String>> {
 /// in BlocProvider type resolution.
 class ProjectHistoryCubit extends StreamCubit<List<String>> {
   ProjectHistoryCubit(super.initial, super.stream);
+}
+
+/// Per-host bridge statuses for multi-host session list UI.
+class HostConnectionsCubit extends StreamCubit<List<HostBridgeStatus>> {
+  HostConnectionsCubit(super.initial, super.stream);
 }

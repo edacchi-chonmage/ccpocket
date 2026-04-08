@@ -44,6 +44,7 @@ import 'services/database_service.dart';
 import 'services/draft_service.dart';
 import 'services/in_app_review_service.dart';
 import 'services/machine_manager_service.dart';
+import 'services/multi_bridge_manager.dart';
 import 'services/notification_service.dart';
 import 'services/prompt_history_service.dart';
 import 'services/ssh_startup_service.dart';
@@ -159,6 +160,9 @@ void main() async {
   }
 
   final bridge = BridgeService();
+  final multiBridgeManager = MultiBridgeManager(
+    machineSource: MachineManagerBridgeSource(machineManagerService),
+  );
   final draftService = DraftService(prefs);
   final inAppReviewService = InAppReviewService(prefs: prefs);
   StoreScreenshotState.draftService = draftService;
@@ -169,6 +173,7 @@ void main() async {
       providers: [
         RepositoryProvider.value(value: logger),
         RepositoryProvider<BridgeService>.value(value: bridge),
+        RepositoryProvider<MultiBridgeManager>.value(value: multiBridgeManager),
         RepositoryProvider<DatabaseService>.value(value: dbService),
         RepositoryProvider<DraftService>.value(value: draftService),
         RepositoryProvider<InAppReviewService>.value(value: inAppReviewService),
@@ -186,15 +191,25 @@ void main() async {
           BlocProvider(
             create: (_) => ConnectionCubit(
               BridgeConnectionState.disconnected,
-              bridge.connectionStatus,
+              multiBridgeManager.connectionStatus,
             ),
           ),
           BlocProvider(
-            create: (_) => ActiveSessionsCubit(const [], bridge.sessionList),
+            create: (_) =>
+                ActiveSessionsCubit(const [], multiBridgeManager.sessionList),
           ),
           BlocProvider(
             create: (_) =>
-                RecentSessionsCubit(const [], bridge.recentSessionsStream),
+                RecentSessionsCubit(
+                  const [],
+                  multiBridgeManager.recentSessionsStream,
+                ),
+          ),
+          BlocProvider(
+            create: (_) => HostConnectionsCubit(
+              const [],
+              multiBridgeManager.hostStatuses,
+            ),
           ),
           BlocProvider(
             create: (_) => GalleryCubit(const [], bridge.galleryStream),
@@ -202,12 +217,17 @@ void main() async {
           BlocProvider(create: (_) => FileListCubit(const [], bridge.fileList)),
           BlocProvider(
             create: (_) =>
-                ProjectHistoryCubit(const [], bridge.projectHistoryStream),
+                ProjectHistoryCubit(
+                  const [],
+                  multiBridgeManager.projectHistoryStream,
+                ),
           ),
           BlocProvider(create: (_) => ServerDiscoveryCubit()),
           BlocProvider(
             create: (ctx) =>
-                SessionListCubit(bridge: ctx.read<BridgeService>()),
+                SessionListCubit(
+                  bridgeManager: ctx.read<MultiBridgeManager>(),
+                ),
           ),
           BlocProvider(
             create: (_) =>
@@ -364,10 +384,20 @@ class _CcpocketAppState extends State<CcpocketApp> {
     if (sessionId == null || sessionId.isEmpty) return;
     final provider = _normalizeProvider(data['provider']?.toString());
     if (provider == 'codex') {
-      _appRouter.navigate(CodexSessionRoute(sessionId: sessionId));
+      _appRouter.navigate(
+        CodexSessionRoute(
+          bridge: context.read<BridgeService>(),
+          sessionId: sessionId,
+        ),
+      );
       return;
     }
-    _appRouter.navigate(ClaudeSessionRoute(sessionId: sessionId));
+    _appRouter.navigate(
+      ClaudeSessionRoute(
+        bridge: context.read<BridgeService>(),
+        sessionId: sessionId,
+      ),
+    );
   }
 
   String _normalizeProvider(String? provider) {
@@ -416,7 +446,12 @@ class _CcpocketAppState extends State<CcpocketApp> {
       case ConnectionParams():
         _deepLinkNotifier.value = params;
       case SessionLinkParams(:final sessionId):
-        _appRouter.push(ClaudeSessionRoute(sessionId: sessionId));
+        _appRouter.push(
+          ClaudeSessionRoute(
+            bridge: context.read<BridgeService>(),
+            sessionId: sessionId,
+          ),
+        );
     }
   }
 

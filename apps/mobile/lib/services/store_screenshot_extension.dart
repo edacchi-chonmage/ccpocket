@@ -327,11 +327,16 @@ class _StoreSessionListRouteState extends State<_StoreSessionListRoute> {
         isLoadingMore: false,
         isInitialLoading: false,
         hasMoreSessions: false,
+        hostStatuses: const [],
+        selectedHostId: null,
+        onSelectHost: (_) {},
         currentProjectFilter: null,
+        projectPaths: projectPaths.toList(),
         onNewSession: () {},
         onTapRunning:
             (
               _, {
+              hostId,
               projectPath,
               gitBranch,
               worktreePath,
@@ -339,7 +344,7 @@ class _StoreSessionListRouteState extends State<_StoreSessionListRoute> {
               permissionMode,
               sandboxMode,
             }) {},
-        onStopSession: (_) {},
+        onStopSession: (_, {hostId}) {},
         onResumeSession: (_) {},
         onLongPressRecentSession: (_) {},
         onArchiveSession: (_) {},
@@ -428,6 +433,7 @@ class _StoreChatRouteState extends State<_StoreChatRoute> {
           ),
         ],
         child: ClaudeSessionScreen(
+          bridge: _mockService,
           sessionId: sessionId,
           projectPath: '/store/preview',
         ),
@@ -491,7 +497,8 @@ class _StoreMarkdownInputRouteState extends State<_StoreMarkdownInputRoute> {
             ),
           ),
         ],
-        child: const ClaudeSessionScreen(
+        child: ClaudeSessionScreen(
+          bridge: _mockService,
           sessionId: _sessionId,
           projectPath: '/store/preview',
         ),
@@ -633,7 +640,8 @@ class _StoreImageAttachRouteState extends State<_StoreImageAttachRoute> {
             create: (_) => FileListCubit(const [], _mockService.fileList),
           ),
         ],
-        child: const ClaudeSessionScreen(
+        child: ClaudeSessionScreen(
+          bridge: _mockService,
           sessionId: _sessionId,
           projectPath: '/store/preview',
         ),
@@ -748,11 +756,16 @@ class _StoreNewSessionRouteState extends State<_StoreNewSessionRoute> {
         isLoadingMore: false,
         isInitialLoading: false,
         hasMoreSessions: false,
+        hostStatuses: const [],
+        selectedHostId: null,
+        onSelectHost: (_) {},
         currentProjectFilter: null,
+        projectPaths: projectPaths.toList(),
         onNewSession: () {},
         onTapRunning:
             (
               _, {
+              hostId,
               projectPath,
               gitBranch,
               worktreePath,
@@ -760,7 +773,7 @@ class _StoreNewSessionRouteState extends State<_StoreNewSessionRoute> {
               permissionMode,
               sandboxMode,
             }) {},
-        onStopSession: (_) {},
+        onStopSession: (_, {hostId}) {},
         onResumeSession: (_) {},
         onLongPressRecentSession: (_) {},
         onArchiveSession: (_) {},
@@ -853,10 +866,12 @@ class _MockScenarioChatRouteState extends State<_MockScenarioChatRoute> {
         ],
         child: switch (widget.scenario.provider) {
           MockScenarioProvider.codex => CodexSessionScreen(
+            bridge: _mockService,
             sessionId: sessionId,
             projectPath: '/mock/preview',
           ),
           MockScenarioProvider.claude => ClaudeSessionScreen(
+            bridge: _mockService,
             sessionId: sessionId,
             projectPath: '/mock/preview',
           ),

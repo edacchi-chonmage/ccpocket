@@ -46,6 +46,9 @@ class UnseenSessionsCubit extends Cubit<Set<String>> {
   // Public API
   // ------------------------------------------------------------------
 
+  String _sessionKey(String sessionId, {String? hostId}) =>
+      hostId == null || hostId.isEmpty ? sessionId : '$hostId::$sessionId';
+
   /// Called whenever the active session list updates.
   /// Compares each session's [lastActivityAt] with the stored seen-at
   /// timestamp to determine unseen state.
@@ -53,8 +56,9 @@ class UnseenSessionsCubit extends Cubit<Set<String>> {
     final unseen = <String>{};
 
     for (final session in sessions) {
+      final sessionKey = _sessionKey(session.id, hostId: session.hostId);
       if (session.lastActivityAt.isNotEmpty) {
-        _lastActivityAt[session.id] = session.lastActivityAt;
+        _lastActivityAt[sessionKey] = session.lastActivityAt;
       }
 
       // Only Ready (idle) sessions can be "unseen".
@@ -64,18 +68,20 @@ class UnseenSessionsCubit extends Cubit<Set<String>> {
       final lastActivity = session.lastActivityAt;
       if (lastActivity.isEmpty) continue;
 
-      if (_pendingInitialSeen.remove(session.id)) {
-        _seenAt[session.id] = _bufferedTimestamp(lastActivity);
+      if (_pendingInitialSeen.remove(sessionKey)) {
+        _seenAt[sessionKey] = _bufferedTimestamp(lastActivity);
       }
 
-      final seenAt = _seenAt[session.id];
+      final seenAt = _seenAt[sessionKey];
       if (seenAt == null || lastActivity.compareTo(seenAt) > 0) {
-        unseen.add(session.id);
+        unseen.add(sessionKey);
       }
     }
 
     // Clean up stale entries: remove IDs not in the current running list.
-    final currentIds = sessions.map((s) => s.id).toSet();
+    final currentIds = sessions
+        .map((s) => _sessionKey(s.id, hostId: s.hostId))
+        .toSet();
     _seenAt.removeWhere((id, _) => !currentIds.contains(id));
     _lastActivityAt.removeWhere((id, _) => !currentIds.contains(id));
     _pendingInitialSeen.removeWhere((id) => !currentIds.contains(id));
@@ -88,25 +94,27 @@ class UnseenSessionsCubit extends Cubit<Set<String>> {
   /// Uses a timestamp far in the future (+1 day) so that activity generated
   /// immediately after the user sends a message (before the session transitions
   /// to "working") does not re-trigger the unseen indicator.
-  void markSeen(String sessionId) {
-    final lastActivityAt = _lastActivityAt[sessionId];
+  void markSeen(String sessionId, {String? hostId}) {
+    final sessionKey = _sessionKey(sessionId, hostId: hostId);
+    final lastActivityAt = _lastActivityAt[sessionKey];
     if (lastActivityAt != null && lastActivityAt.isNotEmpty) {
-      _seenAt[sessionId] = _bufferedTimestamp(lastActivityAt);
-      _pendingInitialSeen.remove(sessionId);
+      _seenAt[sessionKey] = _bufferedTimestamp(lastActivityAt);
+      _pendingInitialSeen.remove(sessionKey);
     } else {
       // A newly created session can be marked seen before it first appears
       // in the list. Suppress unseen exactly once when that first activity
       // timestamp arrives.
-      _pendingInitialSeen.add(sessionId);
+      _pendingInitialSeen.add(sessionKey);
     }
     _saveSeenAt();
 
-    final next = Set<String>.from(state)..remove(sessionId);
+    final next = Set<String>.from(state)..remove(sessionKey);
     emit(next);
   }
 
   /// Whether [sessionId] has unseen activity.
-  bool isUnseen(String sessionId) => state.contains(sessionId);
+  bool isUnseen(String sessionId, {String? hostId}) =>
+      state.contains(_sessionKey(sessionId, hostId: hostId));
 
   String _bufferedTimestamp(String timestamp) {
     final parsed = DateTime.tryParse(timestamp);

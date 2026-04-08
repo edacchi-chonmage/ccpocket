@@ -62,6 +62,8 @@ const _fileListRefreshToolNames = {
 /// via [CodexSessionCubit] which extends [ChatSessionCubit].
 @RoutePage()
 class CodexSessionScreen extends StatefulWidget {
+  final BridgeService bridge;
+  final String? hostId;
   final String sessionId;
   final String? projectPath;
   final String? gitBranch;
@@ -77,6 +79,8 @@ class CodexSessionScreen extends StatefulWidget {
 
   const CodexSessionScreen({
     super.key,
+    required this.bridge,
+    this.hostId,
     required this.sessionId,
     this.projectPath,
     this.gitBranch,

@@ -36,5 +36,8 @@ abstract class SessionListState with _$SessionListState {
 
     /// Named-only filter toggle. Applied server-side.
     @Default(false) bool namedOnly,
+
+    /// Selected project filter. Applied client-side across merged hosts.
+    String? currentProjectFilter,
   }) = _SessionListState;
 }

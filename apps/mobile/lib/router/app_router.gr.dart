@@ -47,6 +47,8 @@ class ChangelogRoute extends PageRouteInfo<void> {
 class ClaudeSessionRoute extends PageRouteInfo<ClaudeSessionRouteArgs> {
   ClaudeSessionRoute({
     Key? key,
+    required BridgeService bridge,
+    String? hostId,
     required String sessionId,
     String? projectPath,
     String? gitBranch,
@@ -60,6 +62,8 @@ class ClaudeSessionRoute extends PageRouteInfo<ClaudeSessionRouteArgs> {
          ClaudeSessionRoute.name,
          args: ClaudeSessionRouteArgs(
            key: key,
+           bridge: bridge,
+           hostId: hostId,
            sessionId: sessionId,
            projectPath: projectPath,
            gitBranch: gitBranch,
@@ -78,16 +82,21 @@ class ClaudeSessionRoute extends PageRouteInfo<ClaudeSessionRouteArgs> {
     name,
     builder: (data) {
       final args = data.argsAs<ClaudeSessionRouteArgs>();
-      return ClaudeSessionScreen(
-        key: args.key,
-        sessionId: args.sessionId,
-        projectPath: args.projectPath,
-        gitBranch: args.gitBranch,
-        worktreePath: args.worktreePath,
-        isPending: args.isPending,
-        initialPermissionMode: args.initialPermissionMode,
-        initialSandboxMode: args.initialSandboxMode,
-        pendingSessionCreated: args.pendingSessionCreated,
+      return RepositoryProvider<BridgeService>.value(
+        value: args.bridge,
+        child: ClaudeSessionScreen(
+          key: args.key,
+          bridge: args.bridge,
+          hostId: args.hostId,
+          sessionId: args.sessionId,
+          projectPath: args.projectPath,
+          gitBranch: args.gitBranch,
+          worktreePath: args.worktreePath,
+          isPending: args.isPending,
+          initialPermissionMode: args.initialPermissionMode,
+          initialSandboxMode: args.initialSandboxMode,
+          pendingSessionCreated: args.pendingSessionCreated,
+        ),
       );
     },
   );
@@ -96,6 +105,8 @@ class ClaudeSessionRoute extends PageRouteInfo<ClaudeSessionRouteArgs> {
 class ClaudeSessionRouteArgs {
   const ClaudeSessionRouteArgs({
     this.key,
+    required this.bridge,
+    this.hostId,
     required this.sessionId,
     this.projectPath,
     this.gitBranch,
@@ -107,6 +118,10 @@ class ClaudeSessionRouteArgs {
   });
 
   final Key? key;
+
+  final BridgeService bridge;
+
+  final String? hostId;
 
   final String sessionId;
 
@@ -126,7 +141,7 @@ class ClaudeSessionRouteArgs {
 
   @override
   String toString() {
-    return 'ClaudeSessionRouteArgs{key: $key, sessionId: $sessionId, projectPath: $projectPath, gitBranch: $gitBranch, worktreePath: $worktreePath, isPending: $isPending, initialPermissionMode: $initialPermissionMode, initialSandboxMode: $initialSandboxMode, pendingSessionCreated: $pendingSessionCreated}';
+    return 'ClaudeSessionRouteArgs{key: $key, bridge: $bridge, hostId: $hostId, sessionId: $sessionId, projectPath: $projectPath, gitBranch: $gitBranch, worktreePath: $worktreePath, isPending: $isPending, initialPermissionMode: $initialPermissionMode, initialSandboxMode: $initialSandboxMode, pendingSessionCreated: $pendingSessionCreated}';
   }
 
   @override
@@ -134,6 +149,8 @@ class ClaudeSessionRouteArgs {
     if (identical(this, other)) return true;
     if (other is! ClaudeSessionRouteArgs) return false;
     return key == other.key &&
+        bridge == other.bridge &&
+        hostId == other.hostId &&
         sessionId == other.sessionId &&
         projectPath == other.projectPath &&
         gitBranch == other.gitBranch &&
@@ -147,6 +164,8 @@ class ClaudeSessionRouteArgs {
   @override
   int get hashCode =>
       key.hashCode ^
+      bridge.hashCode ^
+      hostId.hashCode ^
       sessionId.hashCode ^
       projectPath.hashCode ^
       gitBranch.hashCode ^
@@ -162,6 +181,8 @@ class ClaudeSessionRouteArgs {
 class CodexSessionRoute extends PageRouteInfo<CodexSessionRouteArgs> {
   CodexSessionRoute({
     Key? key,
+    required BridgeService bridge,
+    String? hostId,
     required String sessionId,
     String? projectPath,
     String? gitBranch,
@@ -176,6 +197,8 @@ class CodexSessionRoute extends PageRouteInfo<CodexSessionRouteArgs> {
          CodexSessionRoute.name,
          args: CodexSessionRouteArgs(
            key: key,
+           bridge: bridge,
+           hostId: hostId,
            sessionId: sessionId,
            projectPath: projectPath,
            gitBranch: gitBranch,
@@ -195,17 +218,22 @@ class CodexSessionRoute extends PageRouteInfo<CodexSessionRouteArgs> {
     name,
     builder: (data) {
       final args = data.argsAs<CodexSessionRouteArgs>();
-      return CodexSessionScreen(
-        key: args.key,
-        sessionId: args.sessionId,
-        projectPath: args.projectPath,
-        gitBranch: args.gitBranch,
-        worktreePath: args.worktreePath,
-        isPending: args.isPending,
-        initialSandboxMode: args.initialSandboxMode,
-        initialPermissionMode: args.initialPermissionMode,
-        initialApprovalPolicy: args.initialApprovalPolicy,
-        pendingSessionCreated: args.pendingSessionCreated,
+      return RepositoryProvider<BridgeService>.value(
+        value: args.bridge,
+        child: CodexSessionScreen(
+          key: args.key,
+          bridge: args.bridge,
+          hostId: args.hostId,
+          sessionId: args.sessionId,
+          projectPath: args.projectPath,
+          gitBranch: args.gitBranch,
+          worktreePath: args.worktreePath,
+          isPending: args.isPending,
+          initialSandboxMode: args.initialSandboxMode,
+          initialPermissionMode: args.initialPermissionMode,
+          initialApprovalPolicy: args.initialApprovalPolicy,
+          pendingSessionCreated: args.pendingSessionCreated,
+        ),
       );
     },
   );
@@ -214,6 +242,8 @@ class CodexSessionRoute extends PageRouteInfo<CodexSessionRouteArgs> {
 class CodexSessionRouteArgs {
   const CodexSessionRouteArgs({
     this.key,
+    required this.bridge,
+    this.hostId,
     required this.sessionId,
     this.projectPath,
     this.gitBranch,
@@ -226,6 +256,10 @@ class CodexSessionRouteArgs {
   });
 
   final Key? key;
+
+  final BridgeService bridge;
+
+  final String? hostId;
 
   final String sessionId;
 
@@ -247,7 +281,7 @@ class CodexSessionRouteArgs {
 
   @override
   String toString() {
-    return 'CodexSessionRouteArgs{key: $key, sessionId: $sessionId, projectPath: $projectPath, gitBranch: $gitBranch, worktreePath: $worktreePath, isPending: $isPending, initialSandboxMode: $initialSandboxMode, initialPermissionMode: $initialPermissionMode, initialApprovalPolicy: $initialApprovalPolicy, pendingSessionCreated: $pendingSessionCreated}';
+    return 'CodexSessionRouteArgs{key: $key, bridge: $bridge, hostId: $hostId, sessionId: $sessionId, projectPath: $projectPath, gitBranch: $gitBranch, worktreePath: $worktreePath, isPending: $isPending, initialSandboxMode: $initialSandboxMode, initialPermissionMode: $initialPermissionMode, initialApprovalPolicy: $initialApprovalPolicy, pendingSessionCreated: $pendingSessionCreated}';
   }
 
   @override
@@ -255,6 +289,8 @@ class CodexSessionRouteArgs {
     if (identical(this, other)) return true;
     if (other is! CodexSessionRouteArgs) return false;
     return key == other.key &&
+        bridge == other.bridge &&
+        hostId == other.hostId &&
         sessionId == other.sessionId &&
         projectPath == other.projectPath &&
         gitBranch == other.gitBranch &&
@@ -269,6 +305,8 @@ class CodexSessionRouteArgs {
   @override
   int get hashCode =>
       key.hashCode ^
+      bridge.hashCode ^
+      hostId.hashCode ^
       sessionId.hashCode ^
       projectPath.hashCode ^
       gitBranch.hashCode ^

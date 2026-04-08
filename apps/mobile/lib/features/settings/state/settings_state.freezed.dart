@@ -84,8 +84,7 @@ class _$SettingsStateCopyWithImpl<$Res>
 themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
 as ThemeMode,appLocaleId: null == appLocaleId ? _self.appLocaleId : appLocaleId // ignore: cast_nullable_to_non_nullable
 as String,textScalePreset: null == textScalePreset ? _self.textScalePreset : textScalePreset // ignore: cast_nullable_to_non_nullable
-as AppTextScalePreset,
-speechLocaleId: null == speechLocaleId ? _self.speechLocaleId : speechLocaleId // ignore: cast_nullable_to_non_nullable
+as AppTextScalePreset,speechLocaleId: null == speechLocaleId ? _self.speechLocaleId : speechLocaleId // ignore: cast_nullable_to_non_nullable
 as String,fcmEnabledMachines: null == fcmEnabledMachines ? _self.fcmEnabledMachines : fcmEnabledMachines // ignore: cast_nullable_to_non_nullable
 as Set<String>,fcmPrivacyMachines: null == fcmPrivacyMachines ? _self.fcmPrivacyMachines : fcmPrivacyMachines // ignore: cast_nullable_to_non_nullable
 as Set<String>,activeMachineId: freezed == activeMachineId ? _self.activeMachineId : activeMachineId // ignore: cast_nullable_to_non_nullable
