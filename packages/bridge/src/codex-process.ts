@@ -555,6 +555,8 @@ export class CodexProcess extends EventEmitter<CodexProcessEvents> {
 
     const pending = this.resolvePendingApproval(toolUseId);
     if (!pending) {
+      // Fallback: McpElicitation lives in pendingUserInputs
+      if (this.approveUserInput(toolUseId, "Accept")) return;
       console.log(
         "[codex-process] approve() called but no pending permission requests",
       );
@@ -576,6 +578,8 @@ export class CodexProcess extends EventEmitter<CodexProcessEvents> {
   approveAlways(toolUseId?: string): void {
     const pending = this.resolvePendingApproval(toolUseId);
     if (!pending) {
+      // Fallback: McpElicitation lives in pendingUserInputs
+      if (this.approveUserInput(toolUseId, "Accept")) return;
       console.log(
         "[codex-process] approveAlways() called but no pending permission requests",
       );
@@ -606,6 +610,8 @@ export class CodexProcess extends EventEmitter<CodexProcessEvents> {
 
     const pending = this.resolvePendingApproval(toolUseId);
     if (!pending) {
+      // Fallback: McpElicitation lives in pendingUserInputs
+      if (this.rejectUserInput(toolUseId, "Decline")) return;
       console.log(
         "[codex-process] reject() called but no pending permission requests",
       );
@@ -703,6 +709,55 @@ export class CodexProcess extends EventEmitter<CodexProcessEvents> {
     if (toolUseId) return this.pendingUserInputs.get(toolUseId);
     const first = this.pendingUserInputs.values().next();
     return first.done ? undefined : first.value;
+  }
+
+  /**
+   * Approve a pending user-input request (McpElicitation fallback).
+   * Called when approve()/approveAlways() cannot find a pendingApproval —
+   * McpElicitation lives in pendingUserInputs but the app routes it through
+   * the permission (approve/reject) path.
+   */
+  private approveUserInput(
+    toolUseId: string | undefined,
+    result: string,
+  ): boolean {
+    const pending = this.resolvePendingUserInput(toolUseId);
+    if (!pending) return false;
+
+    this.pendingUserInputs.delete(pending.toolUseId);
+    this.respondToServerRequest(
+      pending.requestId,
+      buildUserInputResponse(pending, result),
+    );
+    this.emitToolResult(pending.toolUseId, "Approved");
+
+    if (this.pendingApprovals.size === 0 && this.pendingUserInputs.size === 0) {
+      this.setStatus("running");
+    }
+    return true;
+  }
+
+  /**
+   * Reject a pending user-input request (McpElicitation fallback).
+   */
+  private rejectUserInput(
+    toolUseId: string | undefined,
+    result: string,
+  ): boolean {
+    const pending = this.resolvePendingUserInput(toolUseId);
+    if (!pending) return false;
+
+    this.pendingUserInputs.delete(pending.toolUseId);
+    this.respondToServerRequest(
+      pending.requestId,
+      buildUserInputResponse(pending, result),
+    );
+    this.emitToolResult(pending.toolUseId, "Rejected");
+
+    if (this.pendingApprovals.size === 0 && this.pendingUserInputs.size === 0) {
+      this.setStatus("running");
+    }
+    return true;
   }
 
   // ---------------------------------------------------------------------------

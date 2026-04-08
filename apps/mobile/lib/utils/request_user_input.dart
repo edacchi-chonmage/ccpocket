@@ -3,8 +3,6 @@ const mcpApprovalApproveOnce = 'Approve Once';
 const mcpApprovalApproveSession = 'Approve this Session';
 const mcpApprovalDeny = 'Deny';
 const mcpApprovalCancel = 'Cancel';
-const _internalToolNameKey = '_ccpocketToolName';
-
 Map<String, dynamic>? firstRequestUserInputQuestion(
   Map<String, dynamic> input,
 ) {
@@ -33,17 +31,6 @@ String? requestUserInputHeader(Map<String, dynamic> input) {
 
 String? requestUserInputQuestionText(Map<String, dynamic> input) {
   return firstRequestUserInputQuestion(input)?['question'] as String?;
-}
-
-String? requestUserInputToolName(Map<String, dynamic> input) {
-  return input[_internalToolNameKey] as String?;
-}
-
-Map<String, dynamic> withRequestUserInputToolName(
-  Map<String, dynamic> input,
-  String toolName,
-) {
-  return {...input, _internalToolNameKey: toolName};
 }
 
 bool isMcpApprovalRequestUserInput(Map<String, dynamic> input) {

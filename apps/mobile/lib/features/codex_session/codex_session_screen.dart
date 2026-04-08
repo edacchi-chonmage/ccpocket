@@ -22,7 +22,6 @@ import '../../utils/composer_tokens.dart';
 import '../../services/notification_service.dart';
 import '../../widgets/session_name_title.dart';
 import '../../utils/diff_parser.dart';
-import '../../utils/request_user_input.dart';
 import '../../utils/terminal_launcher.dart';
 import '../settings/state/settings_cubit.dart';
 import '../../widgets/new_session_sheet.dart'
@@ -444,7 +443,6 @@ class _CodexChatBody extends HookWidget {
     String? pendingToolUseId;
     PermissionRequestMessage? pendingPermission;
     String? askToolUseId;
-    String? askToolName;
     Map<String, dynamic>? askInput;
 
     switch (approval) {
@@ -452,19 +450,16 @@ class _CodexChatBody extends HookWidget {
         pendingToolUseId = toolUseId;
         pendingPermission = request;
         askToolUseId = null;
-        askToolName = null;
         askInput = null;
-      case ApprovalAskUser(:final toolUseId, :final toolName, :final input):
+      case ApprovalAskUser(:final toolUseId, :final input):
         pendingToolUseId = null;
         pendingPermission = null;
         askToolUseId = toolUseId;
-        askToolName = toolName;
         askInput = input;
       case ApprovalNone():
         pendingToolUseId = null;
         pendingPermission = null;
         askToolUseId = null;
-        askToolName = null;
         askInput = null;
     }
 
@@ -738,43 +733,13 @@ class _CodexChatBody extends HookWidget {
                                 children: [
                                   if (askToolUseId case final askId?
                                       when askInput != null)
-                                    if (askToolName == 'AskUserQuestion' &&
-                                        isMcpApprovalRequestUserInput(askInput))
-                                      ApprovalBar(
-                                        key: ValueKey('approval_ask_$askId'),
-                                        appColors: appColors,
-                                        pendingPermission:
-                                            PermissionRequestMessage(
-                                              toolUseId: askId,
-                                              toolName: 'AskUserQuestion',
-                                              input: askInput,
-                                            ),
-                                        isPlanApproval: false,
-                                        planApprovalUiMode:
-                                            PlanApprovalUiMode.codex,
-                                        planFeedbackController:
-                                            planFeedbackController,
-                                        onApprove: () => answerQuestion(
-                                          askId,
-                                          mcpApprovalApproveOnce,
-                                        ),
-                                        onReject: () => answerQuestion(
-                                          askId,
-                                          mcpApprovalDeny,
-                                        ),
-                                        onApproveAlways: () => answerQuestion(
-                                          askId,
-                                          mcpApprovalApproveSession,
-                                        ),
-                                      )
-                                    else
-                                      AskUserQuestionWidget(
-                                        toolUseId: askId,
-                                        input: askInput,
-                                        agentName: 'Codex',
-                                        onAnswer: answerQuestion,
-                                        scrollable: false,
-                                      ),
+                                    AskUserQuestionWidget(
+                                      toolUseId: askId,
+                                      input: askInput,
+                                      agentName: 'Codex',
+                                      onAnswer: answerQuestion,
+                                      scrollable: false,
+                                    ),
                                   if (pendingToolUseId != null)
                                     ApprovalBar(
                                       key: ValueKey(
@@ -984,10 +949,10 @@ void _executeSideEffects(
 PermissionRequestMessage? _notificationPermissionFor(ApprovalState approval) {
   return switch (approval) {
     ApprovalPermission(:final request) => request,
-    ApprovalAskUser(:final toolUseId, :final toolName, :final input) =>
+    ApprovalAskUser(:final toolUseId, :final input) =>
       PermissionRequestMessage(
         toolUseId: toolUseId,
-        toolName: toolName,
+        toolName: 'AskUserQuestion',
         input: input,
       ),
     ApprovalNone() => null,

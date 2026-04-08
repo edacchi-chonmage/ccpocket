@@ -453,6 +453,7 @@ class _ChatScreenBody extends HookWidget {
         pendingPermission = null;
         askToolUseId = toolUseId;
         askInput = input;
+
       case ApprovalNone():
         pendingToolUseId = null;
         pendingPermission = null;
@@ -963,10 +964,10 @@ void _executeSideEffects(
 PermissionRequestMessage? _notificationPermissionFor(ApprovalState approval) {
   return switch (approval) {
     ApprovalPermission(:final request) => request,
-    ApprovalAskUser(:final toolUseId, :final toolName, :final input) =>
+    ApprovalAskUser(:final toolUseId, :final input) =>
       PermissionRequestMessage(
         toolUseId: toolUseId,
-        toolName: toolName,
+        toolName: 'AskUserQuestion',
         input: input,
       ),
     ApprovalNone() => null,

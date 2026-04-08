@@ -504,12 +504,12 @@ return askUser(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  none,TResult Function( String toolUseId,  PermissionRequestMessage request)?  permission,TResult Function( String toolUseId,  String toolName,  Map<String, dynamic> input)?  askUser,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  none,TResult Function( String toolUseId,  PermissionRequestMessage request)?  permission,TResult Function( String toolUseId,  Map<String, dynamic> input)?  askUser,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case ApprovalNone() when none != null:
 return none();case ApprovalPermission() when permission != null:
 return permission(_that.toolUseId,_that.request);case ApprovalAskUser() when askUser != null:
-return askUser(_that.toolUseId,_that.toolName,_that.input);case _:
+return askUser(_that.toolUseId,_that.input);case _:
   return orElse();
 
 }
@@ -527,12 +527,12 @@ return askUser(_that.toolUseId,_that.toolName,_that.input);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  none,required TResult Function( String toolUseId,  PermissionRequestMessage request)  permission,required TResult Function( String toolUseId,  String toolName,  Map<String, dynamic> input)  askUser,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  none,required TResult Function( String toolUseId,  PermissionRequestMessage request)  permission,required TResult Function( String toolUseId,  Map<String, dynamic> input)  askUser,}) {final _that = this;
 switch (_that) {
 case ApprovalNone():
 return none();case ApprovalPermission():
 return permission(_that.toolUseId,_that.request);case ApprovalAskUser():
-return askUser(_that.toolUseId,_that.toolName,_that.input);case _:
+return askUser(_that.toolUseId,_that.input);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -549,12 +549,12 @@ return askUser(_that.toolUseId,_that.toolName,_that.input);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  none,TResult? Function( String toolUseId,  PermissionRequestMessage request)?  permission,TResult? Function( String toolUseId,  String toolName,  Map<String, dynamic> input)?  askUser,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  none,TResult? Function( String toolUseId,  PermissionRequestMessage request)?  permission,TResult? Function( String toolUseId,  Map<String, dynamic> input)?  askUser,}) {final _that = this;
 switch (_that) {
 case ApprovalNone() when none != null:
 return none();case ApprovalPermission() when permission != null:
 return permission(_that.toolUseId,_that.request);case ApprovalAskUser() when askUser != null:
-return askUser(_that.toolUseId,_that.toolName,_that.input);case _:
+return askUser(_that.toolUseId,_that.input);case _:
   return null;
 
 }
@@ -666,11 +666,10 @@ as PermissionRequestMessage,
 
 
 class ApprovalAskUser implements ApprovalState {
-  const ApprovalAskUser({required this.toolUseId, required this.toolName, required final  Map<String, dynamic> input}): _input = input;
+  const ApprovalAskUser({required this.toolUseId, required final  Map<String, dynamic> input}): _input = input;
   
 
  final  String toolUseId;
- final  String toolName;
  final  Map<String, dynamic> _input;
  Map<String, dynamic> get input {
   if (_input is EqualUnmodifiableMapView) return _input;
@@ -689,16 +688,16 @@ $ApprovalAskUserCopyWith<ApprovalAskUser> get copyWith => _$ApprovalAskUserCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ApprovalAskUser&&(identical(other.toolUseId, toolUseId) || other.toolUseId == toolUseId)&&(identical(other.toolName, toolName) || other.toolName == toolName)&&const DeepCollectionEquality().equals(other._input, _input));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ApprovalAskUser&&(identical(other.toolUseId, toolUseId) || other.toolUseId == toolUseId)&&const DeepCollectionEquality().equals(other._input, _input));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,toolUseId,toolName,const DeepCollectionEquality().hash(_input));
+int get hashCode => Object.hash(runtimeType,toolUseId,const DeepCollectionEquality().hash(_input));
 
 @override
 String toString() {
-  return 'ApprovalState.askUser(toolUseId: $toolUseId, toolName: $toolName, input: $input)';
+  return 'ApprovalState.askUser(toolUseId: $toolUseId, input: $input)';
 }
 
 
@@ -709,7 +708,7 @@ abstract mixin class $ApprovalAskUserCopyWith<$Res> implements $ApprovalStateCop
   factory $ApprovalAskUserCopyWith(ApprovalAskUser value, $Res Function(ApprovalAskUser) _then) = _$ApprovalAskUserCopyWithImpl;
 @useResult
 $Res call({
- String toolUseId, String toolName, Map<String, dynamic> input
+ String toolUseId, Map<String, dynamic> input
 });
 
 
@@ -726,10 +725,9 @@ class _$ApprovalAskUserCopyWithImpl<$Res>
 
 /// Create a copy of ApprovalState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? toolUseId = null,Object? toolName = null,Object? input = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? toolUseId = null,Object? input = null,}) {
   return _then(ApprovalAskUser(
 toolUseId: null == toolUseId ? _self.toolUseId : toolUseId // ignore: cast_nullable_to_non_nullable
-as String,toolName: null == toolName ? _self.toolName : toolName // ignore: cast_nullable_to_non_nullable
 as String,input: null == input ? _self._input : input // ignore: cast_nullable_to_non_nullable
 as Map<String, dynamic>,
   ));

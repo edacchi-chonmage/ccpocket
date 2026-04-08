@@ -377,7 +377,6 @@ class ChatSessionCubit extends Cubit<ChatSessionState> {
     if (update.askToolUseId != null) {
       approval = ApprovalState.askUser(
         toolUseId: update.askToolUseId!,
-        toolName: update.askToolName ?? 'AskUserQuestion',
         input: update.askInput ?? {},
       );
     }
