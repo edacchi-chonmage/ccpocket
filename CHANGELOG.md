@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.57.1] - 2026-04-08
+
+### Fixed
+- Fix file peek detection not working on session screens (context.read → context.watch for FileListCubit)
+- Add bare file path detection without backticks (BareFilePathSyntax)
+- Refresh file list on tool results and pending session resolution
+
 ## [1.57.0] - 2026-04-08
 
 ### Added
