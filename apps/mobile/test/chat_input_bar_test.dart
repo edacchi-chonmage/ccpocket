@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:ccpocket/l10n/app_localizations.dart';
@@ -119,6 +120,21 @@ void main() {
       );
 
       await tester.tap(find.byKey(const ValueKey('send_button')));
+      expect(sent, isTrue);
+    });
+
+    testWidgets('cmd/ctrl+enter fires send callback', (tester) async {
+      var sent = false;
+      await tester.pumpWidget(
+        buildSubject(hasInputText: true, onSend: () => sent = true),
+      );
+
+      await tester.tap(find.byKey(const ValueKey('message_input')));
+      await tester.pump();
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+
       expect(sent, isTrue);
     });
 

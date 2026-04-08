@@ -653,15 +653,19 @@ class _InputTextField extends StatelessWidget {
   /// Tab indents, Shift+Tab dedents.
   /// Cmd/Ctrl+V: attempt image paste, fall back to text paste.
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
-    if (!isDesktopPlatform) return KeyEventResult.ignored;
     if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
       return KeyEventResult.ignored;
     }
 
-    // Cmd+V (macOS) or Ctrl+V (Windows/Linux): try image paste first
     final isModifier =
         HardwareKeyboard.instance.isMetaPressed ||
         HardwareKeyboard.instance.isControlPressed;
+
+    // Cmd+V (macOS) or Ctrl+V (Windows/Linux): try image paste first
+    if (!isDesktopPlatform && event.logicalKey != LogicalKeyboardKey.enter) {
+      return KeyEventResult.ignored;
+    }
+
     if (onPasteImage != null &&
         event.logicalKey == LogicalKeyboardKey.keyV &&
         isModifier &&
@@ -687,6 +691,18 @@ class _InputTextField extends StatelessWidget {
     if (controller.value.composing.isValid) {
       return KeyEventResult.ignored;
     }
+
+    if (isModifier && !HardwareKeyboard.instance.isShiftPressed) {
+      if (hasInputText) {
+        onSend();
+      }
+      return KeyEventResult.handled;
+    }
+
+    if (!isDesktopPlatform) {
+      return KeyEventResult.ignored;
+    }
+
     final isShiftPressed = HardwareKeyboard.instance.isShiftPressed;
     if (isShiftPressed) {
       // Shift+Enter: let TextField handle newline insertion
