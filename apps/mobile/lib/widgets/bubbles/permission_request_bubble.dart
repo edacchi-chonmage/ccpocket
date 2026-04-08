@@ -47,7 +47,7 @@ class _PermissionRequestBubbleState extends State<PermissionRequestBubble> {
                     presentation.title,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                      fontSize: 15,
                     ),
                   ),
                 ),
@@ -62,7 +62,9 @@ class _PermissionRequestBubbleState extends State<PermissionRequestBubble> {
           const SizedBox(height: 4),
           Text(
             presentation.summary,
-            style: TextStyle(fontSize: 12, color: appColors.subtleText),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: appColors.subtleText,
+            ),
           ),
           if (presentation.primaryTarget != null) ...[
             const SizedBox(height: 8),
@@ -80,10 +82,9 @@ class _PermissionRequestBubbleState extends State<PermissionRequestBubble> {
               ),
               child: Text(
                 presentation.primaryTarget!,
-                style: TextStyle(
-                  fontSize: 11,
+                style: const TextStyle(
+                  fontSize: 12,
                   fontFamily: 'monospace',
-                  color: appColors.subtleText,
                 ),
               ),
             ),
@@ -108,7 +109,7 @@ class _PermissionRequestBubbleState extends State<PermissionRequestBubble> {
                       child: Text(
                         line,
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 12,
                           color: appColors.subtleText,
                         ),
                       ),
@@ -122,7 +123,7 @@ class _PermissionRequestBubbleState extends State<PermissionRequestBubble> {
             Text(
               inputStr,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 12,
                 fontFamily: 'monospace',
                 color: appColors.subtleText,
               ),

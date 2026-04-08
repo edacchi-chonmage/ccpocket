@@ -131,6 +131,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       endIndent: 16,
                       color: cs.outlineVariant,
                     ),
+                    ListTile(
+                      leading: Icon(Icons.format_size, color: cs.primary),
+                      title: Text(_textSizeTitle(context)),
+                      subtitle: Text(
+                        _textScalePresetLabel(context, state.textScalePreset),
+                      ),
+                      trailing: const Icon(Icons.chevron_right, size: 20),
+                      onTap: () => _showTextScaleBottomSheet(
+                        context: context,
+                        current: state.textScalePreset,
+                        onChanged: (preset) => context
+                            .read<SettingsCubit>()
+                            .setTextScalePreset(preset),
+                      ),
+                    ),
+                    Divider(
+                      height: 1,
+                      indent: 16,
+                      endIndent: 16,
+                      color: cs.outlineVariant,
+                    ),
                     // Voice Input
                     if (!state.hideVoiceInput) ...[
                       ListTile(
@@ -544,6 +565,60 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  static String _textSizeTitle(BuildContext context) {
+    return Localizations.localeOf(context).languageCode == 'ja'
+        ? '文字サイズ'
+        : 'Text size';
+  }
+
+  static String _textScalePresetLabel(
+    BuildContext context,
+    AppTextScalePreset preset,
+  ) {
+    final isJa = Localizations.localeOf(context).languageCode == 'ja';
+    return switch (preset) {
+      AppTextScalePreset.small => isJa ? '小さめ' : 'Small',
+      AppTextScalePreset.mediumSmall => isJa ? 'やや小さめ' : 'Smaller',
+      AppTextScalePreset.standard => isJa ? '標準' : 'Standard',
+      AppTextScalePreset.large => isJa ? '大きめ' : 'Large',
+      AppTextScalePreset.largest => isJa ? '最大' : 'Largest',
+    };
+  }
+
+  static void _showTextScaleBottomSheet({
+    required BuildContext context,
+    required AppTextScalePreset current,
+    required ValueChanged<AppTextScalePreset> onChanged,
+  }) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              for (final preset in AppTextScalePreset.values)
+                ListTile(
+                  leading: Icon(
+                    preset == current
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_unchecked,
+                  ),
+                  title: Text(_textScalePresetLabel(sheetContext, preset)),
+                  onTap: () {
+                    onChanged(preset);
+                    Navigator.of(sheetContext).pop();
+                  },
+                ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Machine? _activeMachine(BuildContext context, String? activeMachineId) {
     if (activeMachineId == null) return null;
     final machines = context.read<MachineManagerCubit>().state.machines;
@@ -567,8 +642,7 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
       child: Text(
         title,
-        style: TextStyle(
-          fontSize: 12,
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
           fontWeight: FontWeight.w600,
           letterSpacing: 0.8,
           color: cs.onSurfaceVariant,

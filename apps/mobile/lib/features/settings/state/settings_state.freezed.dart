@@ -17,7 +17,8 @@ mixin _$SettingsState {
 /// Theme mode: system, light, or dark.
  ThemeMode get themeMode;/// App display locale ID (e.g. 'ja', 'en').
 /// Empty string means follow the device default.
- String get appLocaleId;/// Locale ID for speech recognition (e.g. 'ja-JP', 'en-US').
+ String get appLocaleId;/// App-level text scaling preset, composed with the OS text scale.
+ AppTextScalePreset get textScalePreset;/// Locale ID for speech recognition (e.g. 'ja-JP', 'en-US').
 /// Empty string means use device default.
  String get speechLocaleId;/// Set of Machine IDs that have push notifications enabled.
  Set<String> get fcmEnabledMachines;/// Set of Machine IDs that have privacy mode enabled for push notifications.
@@ -41,16 +42,16 @@ $SettingsStateCopyWith<SettingsState> get copyWith => _$SettingsStateCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SettingsState&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.appLocaleId, appLocaleId) || other.appLocaleId == appLocaleId)&&(identical(other.speechLocaleId, speechLocaleId) || other.speechLocaleId == speechLocaleId)&&const DeepCollectionEquality().equals(other.fcmEnabledMachines, fcmEnabledMachines)&&const DeepCollectionEquality().equals(other.fcmPrivacyMachines, fcmPrivacyMachines)&&(identical(other.activeMachineId, activeMachineId) || other.activeMachineId == activeMachineId)&&(identical(other.fcmAvailable, fcmAvailable) || other.fcmAvailable == fcmAvailable)&&(identical(other.fcmSyncInProgress, fcmSyncInProgress) || other.fcmSyncInProgress == fcmSyncInProgress)&&(identical(other.fcmStatusKey, fcmStatusKey) || other.fcmStatusKey == fcmStatusKey)&&(identical(other.shorebirdTrack, shorebirdTrack) || other.shorebirdTrack == shorebirdTrack)&&(identical(other.indentSize, indentSize) || other.indentSize == indentSize)&&(identical(other.hideVoiceInput, hideVoiceInput) || other.hideVoiceInput == hideVoiceInput)&&(identical(other.terminalApp, terminalApp) || other.terminalApp == terminalApp)&&const DeepCollectionEquality().equals(other.newSessionTabs, newSessionTabs));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SettingsState&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.appLocaleId, appLocaleId) || other.appLocaleId == appLocaleId)&&(identical(other.textScalePreset, textScalePreset) || other.textScalePreset == textScalePreset)&&(identical(other.speechLocaleId, speechLocaleId) || other.speechLocaleId == speechLocaleId)&&const DeepCollectionEquality().equals(other.fcmEnabledMachines, fcmEnabledMachines)&&const DeepCollectionEquality().equals(other.fcmPrivacyMachines, fcmPrivacyMachines)&&(identical(other.activeMachineId, activeMachineId) || other.activeMachineId == activeMachineId)&&(identical(other.fcmAvailable, fcmAvailable) || other.fcmAvailable == fcmAvailable)&&(identical(other.fcmSyncInProgress, fcmSyncInProgress) || other.fcmSyncInProgress == fcmSyncInProgress)&&(identical(other.fcmStatusKey, fcmStatusKey) || other.fcmStatusKey == fcmStatusKey)&&(identical(other.shorebirdTrack, shorebirdTrack) || other.shorebirdTrack == shorebirdTrack)&&(identical(other.indentSize, indentSize) || other.indentSize == indentSize)&&(identical(other.hideVoiceInput, hideVoiceInput) || other.hideVoiceInput == hideVoiceInput)&&(identical(other.terminalApp, terminalApp) || other.terminalApp == terminalApp)&&const DeepCollectionEquality().equals(other.newSessionTabs, newSessionTabs));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,themeMode,appLocaleId,speechLocaleId,const DeepCollectionEquality().hash(fcmEnabledMachines),const DeepCollectionEquality().hash(fcmPrivacyMachines),activeMachineId,fcmAvailable,fcmSyncInProgress,fcmStatusKey,shorebirdTrack,indentSize,hideVoiceInput,terminalApp,const DeepCollectionEquality().hash(newSessionTabs));
+int get hashCode => Object.hash(runtimeType,themeMode,appLocaleId,textScalePreset,speechLocaleId,const DeepCollectionEquality().hash(fcmEnabledMachines),const DeepCollectionEquality().hash(fcmPrivacyMachines),activeMachineId,fcmAvailable,fcmSyncInProgress,fcmStatusKey,shorebirdTrack,indentSize,hideVoiceInput,terminalApp,const DeepCollectionEquality().hash(newSessionTabs));
 
 @override
 String toString() {
-  return 'SettingsState(themeMode: $themeMode, appLocaleId: $appLocaleId, speechLocaleId: $speechLocaleId, fcmEnabledMachines: $fcmEnabledMachines, fcmPrivacyMachines: $fcmPrivacyMachines, activeMachineId: $activeMachineId, fcmAvailable: $fcmAvailable, fcmSyncInProgress: $fcmSyncInProgress, fcmStatusKey: $fcmStatusKey, shorebirdTrack: $shorebirdTrack, indentSize: $indentSize, hideVoiceInput: $hideVoiceInput, terminalApp: $terminalApp, newSessionTabs: $newSessionTabs)';
+  return 'SettingsState(themeMode: $themeMode, appLocaleId: $appLocaleId, textScalePreset: $textScalePreset, speechLocaleId: $speechLocaleId, fcmEnabledMachines: $fcmEnabledMachines, fcmPrivacyMachines: $fcmPrivacyMachines, activeMachineId: $activeMachineId, fcmAvailable: $fcmAvailable, fcmSyncInProgress: $fcmSyncInProgress, fcmStatusKey: $fcmStatusKey, shorebirdTrack: $shorebirdTrack, indentSize: $indentSize, hideVoiceInput: $hideVoiceInput, terminalApp: $terminalApp, newSessionTabs: $newSessionTabs)';
 }
 
 
@@ -61,7 +62,7 @@ abstract mixin class $SettingsStateCopyWith<$Res>  {
   factory $SettingsStateCopyWith(SettingsState value, $Res Function(SettingsState) _then) = _$SettingsStateCopyWithImpl;
 @useResult
 $Res call({
- ThemeMode themeMode, String appLocaleId, String speechLocaleId, Set<String> fcmEnabledMachines, Set<String> fcmPrivacyMachines, String? activeMachineId, bool fcmAvailable, bool fcmSyncInProgress, FcmStatusKey? fcmStatusKey, String shorebirdTrack, int indentSize, bool hideVoiceInput, TerminalAppConfig terminalApp, List<NewSessionTab> newSessionTabs
+ ThemeMode themeMode, String appLocaleId, AppTextScalePreset textScalePreset, String speechLocaleId, Set<String> fcmEnabledMachines, Set<String> fcmPrivacyMachines, String? activeMachineId, bool fcmAvailable, bool fcmSyncInProgress, FcmStatusKey? fcmStatusKey, String shorebirdTrack, int indentSize, bool hideVoiceInput, TerminalAppConfig terminalApp, List<NewSessionTab> newSessionTabs
 });
 
 
@@ -78,11 +79,13 @@ class _$SettingsStateCopyWithImpl<$Res>
 
 /// Create a copy of SettingsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? themeMode = null,Object? appLocaleId = null,Object? speechLocaleId = null,Object? fcmEnabledMachines = null,Object? fcmPrivacyMachines = null,Object? activeMachineId = freezed,Object? fcmAvailable = null,Object? fcmSyncInProgress = null,Object? fcmStatusKey = freezed,Object? shorebirdTrack = null,Object? indentSize = null,Object? hideVoiceInput = null,Object? terminalApp = null,Object? newSessionTabs = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? themeMode = null,Object? appLocaleId = null,Object? textScalePreset = null,Object? speechLocaleId = null,Object? fcmEnabledMachines = null,Object? fcmPrivacyMachines = null,Object? activeMachineId = freezed,Object? fcmAvailable = null,Object? fcmSyncInProgress = null,Object? fcmStatusKey = freezed,Object? shorebirdTrack = null,Object? indentSize = null,Object? hideVoiceInput = null,Object? terminalApp = null,Object? newSessionTabs = null,}) {
   return _then(_self.copyWith(
 themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
 as ThemeMode,appLocaleId: null == appLocaleId ? _self.appLocaleId : appLocaleId // ignore: cast_nullable_to_non_nullable
-as String,speechLocaleId: null == speechLocaleId ? _self.speechLocaleId : speechLocaleId // ignore: cast_nullable_to_non_nullable
+as String,textScalePreset: null == textScalePreset ? _self.textScalePreset : textScalePreset // ignore: cast_nullable_to_non_nullable
+as AppTextScalePreset,
+speechLocaleId: null == speechLocaleId ? _self.speechLocaleId : speechLocaleId // ignore: cast_nullable_to_non_nullable
 as String,fcmEnabledMachines: null == fcmEnabledMachines ? _self.fcmEnabledMachines : fcmEnabledMachines // ignore: cast_nullable_to_non_nullable
 as Set<String>,fcmPrivacyMachines: null == fcmPrivacyMachines ? _self.fcmPrivacyMachines : fcmPrivacyMachines // ignore: cast_nullable_to_non_nullable
 as Set<String>,activeMachineId: freezed == activeMachineId ? _self.activeMachineId : activeMachineId // ignore: cast_nullable_to_non_nullable
@@ -179,10 +182,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ThemeMode themeMode,  String appLocaleId,  String speechLocaleId,  Set<String> fcmEnabledMachines,  Set<String> fcmPrivacyMachines,  String? activeMachineId,  bool fcmAvailable,  bool fcmSyncInProgress,  FcmStatusKey? fcmStatusKey,  String shorebirdTrack,  int indentSize,  bool hideVoiceInput,  TerminalAppConfig terminalApp,  List<NewSessionTab> newSessionTabs)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ThemeMode themeMode,  String appLocaleId,  AppTextScalePreset textScalePreset,  String speechLocaleId,  Set<String> fcmEnabledMachines,  Set<String> fcmPrivacyMachines,  String? activeMachineId,  bool fcmAvailable,  bool fcmSyncInProgress,  FcmStatusKey? fcmStatusKey,  String shorebirdTrack,  int indentSize,  bool hideVoiceInput,  TerminalAppConfig terminalApp,  List<NewSessionTab> newSessionTabs)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SettingsState() when $default != null:
-return $default(_that.themeMode,_that.appLocaleId,_that.speechLocaleId,_that.fcmEnabledMachines,_that.fcmPrivacyMachines,_that.activeMachineId,_that.fcmAvailable,_that.fcmSyncInProgress,_that.fcmStatusKey,_that.shorebirdTrack,_that.indentSize,_that.hideVoiceInput,_that.terminalApp,_that.newSessionTabs);case _:
+return $default(_that.themeMode,_that.appLocaleId,_that.textScalePreset,_that.speechLocaleId,_that.fcmEnabledMachines,_that.fcmPrivacyMachines,_that.activeMachineId,_that.fcmAvailable,_that.fcmSyncInProgress,_that.fcmStatusKey,_that.shorebirdTrack,_that.indentSize,_that.hideVoiceInput,_that.terminalApp,_that.newSessionTabs);case _:
   return orElse();
 
 }
@@ -200,10 +203,10 @@ return $default(_that.themeMode,_that.appLocaleId,_that.speechLocaleId,_that.fcm
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ThemeMode themeMode,  String appLocaleId,  String speechLocaleId,  Set<String> fcmEnabledMachines,  Set<String> fcmPrivacyMachines,  String? activeMachineId,  bool fcmAvailable,  bool fcmSyncInProgress,  FcmStatusKey? fcmStatusKey,  String shorebirdTrack,  int indentSize,  bool hideVoiceInput,  TerminalAppConfig terminalApp,  List<NewSessionTab> newSessionTabs)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ThemeMode themeMode,  String appLocaleId,  AppTextScalePreset textScalePreset,  String speechLocaleId,  Set<String> fcmEnabledMachines,  Set<String> fcmPrivacyMachines,  String? activeMachineId,  bool fcmAvailable,  bool fcmSyncInProgress,  FcmStatusKey? fcmStatusKey,  String shorebirdTrack,  int indentSize,  bool hideVoiceInput,  TerminalAppConfig terminalApp,  List<NewSessionTab> newSessionTabs)  $default,) {final _that = this;
 switch (_that) {
 case _SettingsState():
-return $default(_that.themeMode,_that.appLocaleId,_that.speechLocaleId,_that.fcmEnabledMachines,_that.fcmPrivacyMachines,_that.activeMachineId,_that.fcmAvailable,_that.fcmSyncInProgress,_that.fcmStatusKey,_that.shorebirdTrack,_that.indentSize,_that.hideVoiceInput,_that.terminalApp,_that.newSessionTabs);case _:
+return $default(_that.themeMode,_that.appLocaleId,_that.textScalePreset,_that.speechLocaleId,_that.fcmEnabledMachines,_that.fcmPrivacyMachines,_that.activeMachineId,_that.fcmAvailable,_that.fcmSyncInProgress,_that.fcmStatusKey,_that.shorebirdTrack,_that.indentSize,_that.hideVoiceInput,_that.terminalApp,_that.newSessionTabs);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -220,10 +223,10 @@ return $default(_that.themeMode,_that.appLocaleId,_that.speechLocaleId,_that.fcm
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ThemeMode themeMode,  String appLocaleId,  String speechLocaleId,  Set<String> fcmEnabledMachines,  Set<String> fcmPrivacyMachines,  String? activeMachineId,  bool fcmAvailable,  bool fcmSyncInProgress,  FcmStatusKey? fcmStatusKey,  String shorebirdTrack,  int indentSize,  bool hideVoiceInput,  TerminalAppConfig terminalApp,  List<NewSessionTab> newSessionTabs)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ThemeMode themeMode,  String appLocaleId,  AppTextScalePreset textScalePreset,  String speechLocaleId,  Set<String> fcmEnabledMachines,  Set<String> fcmPrivacyMachines,  String? activeMachineId,  bool fcmAvailable,  bool fcmSyncInProgress,  FcmStatusKey? fcmStatusKey,  String shorebirdTrack,  int indentSize,  bool hideVoiceInput,  TerminalAppConfig terminalApp,  List<NewSessionTab> newSessionTabs)?  $default,) {final _that = this;
 switch (_that) {
 case _SettingsState() when $default != null:
-return $default(_that.themeMode,_that.appLocaleId,_that.speechLocaleId,_that.fcmEnabledMachines,_that.fcmPrivacyMachines,_that.activeMachineId,_that.fcmAvailable,_that.fcmSyncInProgress,_that.fcmStatusKey,_that.shorebirdTrack,_that.indentSize,_that.hideVoiceInput,_that.terminalApp,_that.newSessionTabs);case _:
+return $default(_that.themeMode,_that.appLocaleId,_that.textScalePreset,_that.speechLocaleId,_that.fcmEnabledMachines,_that.fcmPrivacyMachines,_that.activeMachineId,_that.fcmAvailable,_that.fcmSyncInProgress,_that.fcmStatusKey,_that.shorebirdTrack,_that.indentSize,_that.hideVoiceInput,_that.terminalApp,_that.newSessionTabs);case _:
   return null;
 
 }
@@ -235,7 +238,7 @@ return $default(_that.themeMode,_that.appLocaleId,_that.speechLocaleId,_that.fcm
 
 
 class _SettingsState extends SettingsState {
-  const _SettingsState({this.themeMode = ThemeMode.system, this.appLocaleId = '', this.speechLocaleId = 'ja-JP', final  Set<String> fcmEnabledMachines = const {}, final  Set<String> fcmPrivacyMachines = const {}, this.activeMachineId, this.fcmAvailable = false, this.fcmSyncInProgress = false, this.fcmStatusKey, this.shorebirdTrack = 'stable', this.indentSize = 2, this.hideVoiceInput = false, this.terminalApp = TerminalAppConfig.empty, final  List<NewSessionTab> newSessionTabs = defaultNewSessionTabs}): _fcmEnabledMachines = fcmEnabledMachines,_fcmPrivacyMachines = fcmPrivacyMachines,_newSessionTabs = newSessionTabs,super._();
+  const _SettingsState({this.themeMode = ThemeMode.system, this.appLocaleId = '', this.textScalePreset = AppTextScalePreset.standard, this.speechLocaleId = 'ja-JP', final  Set<String> fcmEnabledMachines = const {}, final  Set<String> fcmPrivacyMachines = const {}, this.activeMachineId, this.fcmAvailable = false, this.fcmSyncInProgress = false, this.fcmStatusKey, this.shorebirdTrack = 'stable', this.indentSize = 2, this.hideVoiceInput = false, this.terminalApp = TerminalAppConfig.empty, final  List<NewSessionTab> newSessionTabs = defaultNewSessionTabs}): _fcmEnabledMachines = fcmEnabledMachines,_fcmPrivacyMachines = fcmPrivacyMachines,_newSessionTabs = newSessionTabs,super._();
   
 
 /// Theme mode: system, light, or dark.
@@ -243,6 +246,8 @@ class _SettingsState extends SettingsState {
 /// App display locale ID (e.g. 'ja', 'en').
 /// Empty string means follow the device default.
 @override@JsonKey() final  String appLocaleId;
+/// App-level text scaling preset, composed with the OS text scale.
+@override@JsonKey() final  AppTextScalePreset textScalePreset;
 /// Locale ID for speech recognition (e.g. 'ja-JP', 'en-US').
 /// Empty string means use device default.
 @override@JsonKey() final  String speechLocaleId;
@@ -300,16 +305,16 @@ _$SettingsStateCopyWith<_SettingsState> get copyWith => __$SettingsStateCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SettingsState&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.appLocaleId, appLocaleId) || other.appLocaleId == appLocaleId)&&(identical(other.speechLocaleId, speechLocaleId) || other.speechLocaleId == speechLocaleId)&&const DeepCollectionEquality().equals(other._fcmEnabledMachines, _fcmEnabledMachines)&&const DeepCollectionEquality().equals(other._fcmPrivacyMachines, _fcmPrivacyMachines)&&(identical(other.activeMachineId, activeMachineId) || other.activeMachineId == activeMachineId)&&(identical(other.fcmAvailable, fcmAvailable) || other.fcmAvailable == fcmAvailable)&&(identical(other.fcmSyncInProgress, fcmSyncInProgress) || other.fcmSyncInProgress == fcmSyncInProgress)&&(identical(other.fcmStatusKey, fcmStatusKey) || other.fcmStatusKey == fcmStatusKey)&&(identical(other.shorebirdTrack, shorebirdTrack) || other.shorebirdTrack == shorebirdTrack)&&(identical(other.indentSize, indentSize) || other.indentSize == indentSize)&&(identical(other.hideVoiceInput, hideVoiceInput) || other.hideVoiceInput == hideVoiceInput)&&(identical(other.terminalApp, terminalApp) || other.terminalApp == terminalApp)&&const DeepCollectionEquality().equals(other._newSessionTabs, _newSessionTabs));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SettingsState&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.appLocaleId, appLocaleId) || other.appLocaleId == appLocaleId)&&(identical(other.textScalePreset, textScalePreset) || other.textScalePreset == textScalePreset)&&(identical(other.speechLocaleId, speechLocaleId) || other.speechLocaleId == speechLocaleId)&&const DeepCollectionEquality().equals(other._fcmEnabledMachines, _fcmEnabledMachines)&&const DeepCollectionEquality().equals(other._fcmPrivacyMachines, _fcmPrivacyMachines)&&(identical(other.activeMachineId, activeMachineId) || other.activeMachineId == activeMachineId)&&(identical(other.fcmAvailable, fcmAvailable) || other.fcmAvailable == fcmAvailable)&&(identical(other.fcmSyncInProgress, fcmSyncInProgress) || other.fcmSyncInProgress == fcmSyncInProgress)&&(identical(other.fcmStatusKey, fcmStatusKey) || other.fcmStatusKey == fcmStatusKey)&&(identical(other.shorebirdTrack, shorebirdTrack) || other.shorebirdTrack == shorebirdTrack)&&(identical(other.indentSize, indentSize) || other.indentSize == indentSize)&&(identical(other.hideVoiceInput, hideVoiceInput) || other.hideVoiceInput == hideVoiceInput)&&(identical(other.terminalApp, terminalApp) || other.terminalApp == terminalApp)&&const DeepCollectionEquality().equals(other._newSessionTabs, _newSessionTabs));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,themeMode,appLocaleId,speechLocaleId,const DeepCollectionEquality().hash(_fcmEnabledMachines),const DeepCollectionEquality().hash(_fcmPrivacyMachines),activeMachineId,fcmAvailable,fcmSyncInProgress,fcmStatusKey,shorebirdTrack,indentSize,hideVoiceInput,terminalApp,const DeepCollectionEquality().hash(_newSessionTabs));
+int get hashCode => Object.hash(runtimeType,themeMode,appLocaleId,textScalePreset,speechLocaleId,const DeepCollectionEquality().hash(_fcmEnabledMachines),const DeepCollectionEquality().hash(_fcmPrivacyMachines),activeMachineId,fcmAvailable,fcmSyncInProgress,fcmStatusKey,shorebirdTrack,indentSize,hideVoiceInput,terminalApp,const DeepCollectionEquality().hash(_newSessionTabs));
 
 @override
 String toString() {
-  return 'SettingsState(themeMode: $themeMode, appLocaleId: $appLocaleId, speechLocaleId: $speechLocaleId, fcmEnabledMachines: $fcmEnabledMachines, fcmPrivacyMachines: $fcmPrivacyMachines, activeMachineId: $activeMachineId, fcmAvailable: $fcmAvailable, fcmSyncInProgress: $fcmSyncInProgress, fcmStatusKey: $fcmStatusKey, shorebirdTrack: $shorebirdTrack, indentSize: $indentSize, hideVoiceInput: $hideVoiceInput, terminalApp: $terminalApp, newSessionTabs: $newSessionTabs)';
+  return 'SettingsState(themeMode: $themeMode, appLocaleId: $appLocaleId, textScalePreset: $textScalePreset, speechLocaleId: $speechLocaleId, fcmEnabledMachines: $fcmEnabledMachines, fcmPrivacyMachines: $fcmPrivacyMachines, activeMachineId: $activeMachineId, fcmAvailable: $fcmAvailable, fcmSyncInProgress: $fcmSyncInProgress, fcmStatusKey: $fcmStatusKey, shorebirdTrack: $shorebirdTrack, indentSize: $indentSize, hideVoiceInput: $hideVoiceInput, terminalApp: $terminalApp, newSessionTabs: $newSessionTabs)';
 }
 
 
@@ -320,7 +325,7 @@ abstract mixin class _$SettingsStateCopyWith<$Res> implements $SettingsStateCopy
   factory _$SettingsStateCopyWith(_SettingsState value, $Res Function(_SettingsState) _then) = __$SettingsStateCopyWithImpl;
 @override @useResult
 $Res call({
- ThemeMode themeMode, String appLocaleId, String speechLocaleId, Set<String> fcmEnabledMachines, Set<String> fcmPrivacyMachines, String? activeMachineId, bool fcmAvailable, bool fcmSyncInProgress, FcmStatusKey? fcmStatusKey, String shorebirdTrack, int indentSize, bool hideVoiceInput, TerminalAppConfig terminalApp, List<NewSessionTab> newSessionTabs
+ ThemeMode themeMode, String appLocaleId, AppTextScalePreset textScalePreset, String speechLocaleId, Set<String> fcmEnabledMachines, Set<String> fcmPrivacyMachines, String? activeMachineId, bool fcmAvailable, bool fcmSyncInProgress, FcmStatusKey? fcmStatusKey, String shorebirdTrack, int indentSize, bool hideVoiceInput, TerminalAppConfig terminalApp, List<NewSessionTab> newSessionTabs
 });
 
 
@@ -337,11 +342,12 @@ class __$SettingsStateCopyWithImpl<$Res>
 
 /// Create a copy of SettingsState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? themeMode = null,Object? appLocaleId = null,Object? speechLocaleId = null,Object? fcmEnabledMachines = null,Object? fcmPrivacyMachines = null,Object? activeMachineId = freezed,Object? fcmAvailable = null,Object? fcmSyncInProgress = null,Object? fcmStatusKey = freezed,Object? shorebirdTrack = null,Object? indentSize = null,Object? hideVoiceInput = null,Object? terminalApp = null,Object? newSessionTabs = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? themeMode = null,Object? appLocaleId = null,Object? textScalePreset = null,Object? speechLocaleId = null,Object? fcmEnabledMachines = null,Object? fcmPrivacyMachines = null,Object? activeMachineId = freezed,Object? fcmAvailable = null,Object? fcmSyncInProgress = null,Object? fcmStatusKey = freezed,Object? shorebirdTrack = null,Object? indentSize = null,Object? hideVoiceInput = null,Object? terminalApp = null,Object? newSessionTabs = null,}) {
   return _then(_SettingsState(
 themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
 as ThemeMode,appLocaleId: null == appLocaleId ? _self.appLocaleId : appLocaleId // ignore: cast_nullable_to_non_nullable
-as String,speechLocaleId: null == speechLocaleId ? _self.speechLocaleId : speechLocaleId // ignore: cast_nullable_to_non_nullable
+as String,textScalePreset: null == textScalePreset ? _self.textScalePreset : textScalePreset // ignore: cast_nullable_to_non_nullable
+as AppTextScalePreset,speechLocaleId: null == speechLocaleId ? _self.speechLocaleId : speechLocaleId // ignore: cast_nullable_to_non_nullable
 as String,fcmEnabledMachines: null == fcmEnabledMachines ? _self._fcmEnabledMachines : fcmEnabledMachines // ignore: cast_nullable_to_non_nullable
 as Set<String>,fcmPrivacyMachines: null == fcmPrivacyMachines ? _self._fcmPrivacyMachines : fcmPrivacyMachines // ignore: cast_nullable_to_non_nullable
 as Set<String>,activeMachineId: freezed == activeMachineId ? _self.activeMachineId : activeMachineId // ignore: cast_nullable_to_non_nullable

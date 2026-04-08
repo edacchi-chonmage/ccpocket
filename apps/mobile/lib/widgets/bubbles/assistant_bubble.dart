@@ -497,7 +497,7 @@ class _ToolUseCollapsed extends StatelessWidget {
               Text(
                 name,
                 style: const TextStyle(
-                  fontSize: 12,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -506,7 +506,9 @@ class _ToolUseCollapsed extends StatelessWidget {
               Expanded(
                 child: Text(
                   inputSummary,
-                  style: TextStyle(fontSize: 11, color: appColors.subtleText),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: appColors.subtleText,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),

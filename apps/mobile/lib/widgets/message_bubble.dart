@@ -137,7 +137,9 @@ class _TimestampWidget extends StatelessWidget {
           ),
           child: Text(
             time,
-            style: TextStyle(fontSize: 10, color: appColors.subtleText),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: appColors.subtleText,
+            ),
           ),
         ),
       ),

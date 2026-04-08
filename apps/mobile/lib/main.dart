@@ -16,6 +16,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:app_links/app_links.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -55,6 +56,13 @@ import 'utils/platform_helper.dart';
 /// Required by firebase_messaging to process messages when app is in background.
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp();
+    }
+  } catch (e, st) {
+    logger.error('[fcm] background Firebase init failed', e, st);
+  }
   // No-op: FCM notification messages are automatically displayed by the OS.
   // This handler is registered to prevent the "no onBackgroundMessage handler"
   // warning on Android.
@@ -74,6 +82,41 @@ Future<void> _checkShorebirdUpdate(SharedPreferences prefs) async {
     }
   } catch (e) {
     logger.warning('[shorebird] Update check failed: $e');
+  }
+}
+
+Future<void> _initializeNotificationService() async {
+  try {
+    await NotificationService.instance.init();
+  } catch (e, st) {
+    logger.error('[main] NotificationService init failed', e, st);
+  }
+}
+
+Future<void> _initializeFirebase() async {
+  if (kIsWeb) return;
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp().timeout(const Duration(seconds: 5));
+    }
+  } catch (e, st) {
+    logger.error('[main] Firebase init failed', e, st);
+  }
+}
+
+Future<void> _initializeMarkdownHighlighter() async {
+  try {
+    await initializeMarkdownSyntaxHighlight();
+  } catch (e, st) {
+    logger.error('[main] syntax_highlight init failed', e, st);
+  }
+}
+
+Future<void> _attachInAppReview(InAppReviewService service, BridgeService bridge) async {
+  try {
+    await service.attachToBridge(bridge);
+  } catch (e, st) {
+    logger.error('[main] InAppReviewService attach failed', e, st);
   }
 }
 
@@ -98,21 +141,6 @@ void main() async {
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   }
 
-  // Initialize notifications eagerly so the Android notification channel is
-  // created before any FCM message arrives. Without this, FCM falls back to
-  // the low-importance fcm_fallback_notification_channel and notifications
-  // appear only in the history drawer instead of as heads-up popups.
-  try {
-    await NotificationService.instance.init();
-  } catch (e) {
-    logger.error('[main] NotificationService init failed', e);
-  }
-  try {
-    await initializeMarkdownSyntaxHighlight();
-  } catch (e) {
-    logger.error('[main] syntax_highlight init failed', e);
-  }
-
   // Initialize SharedPreferences and services
   final prefs = await SharedPreferences.getInstance();
   const secureStorage = FlutterSecureStorage();
@@ -133,7 +161,6 @@ void main() async {
   final bridge = BridgeService();
   final draftService = DraftService(prefs);
   final inAppReviewService = InAppReviewService(prefs: prefs);
-  await inAppReviewService.attachToBridge(bridge);
   StoreScreenshotState.draftService = draftService;
   final dbService = DatabaseService();
   final promptHistoryService = PromptHistoryService(dbService);
@@ -198,6 +225,10 @@ void main() async {
       ),
     ),
   );
+  unawaited(_initializeFirebase());
+  unawaited(_initializeNotificationService());
+  unawaited(_initializeMarkdownHighlighter());
+  unawaited(_attachInAppReview(inAppReviewService, bridge));
 }
 
 class CcpocketApp extends StatefulWidget {
@@ -411,6 +442,18 @@ class _CcpocketAppState extends State<CcpocketApp> {
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: settings.themeMode,
+          builder: (context, child) {
+            final mediaQuery = MediaQuery.of(context);
+            return MediaQuery(
+              data: mediaQuery.copyWith(
+                textScaler: _AppTextScaler(
+                  mediaQuery.textScaler,
+                  settings.textScaleFactor,
+                ),
+              ),
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
           locale: settings.appLocaleId.isEmpty
               ? null
               : Locale(settings.appLocaleId),
@@ -424,4 +467,17 @@ class _CcpocketAppState extends State<CcpocketApp> {
       },
     );
   }
+}
+
+class _AppTextScaler extends TextScaler {
+  const _AppTextScaler(this._base, this._multiplier);
+
+  final TextScaler _base;
+  final double _multiplier;
+
+  @override
+  double scale(double fontSize) => _base.scale(fontSize) * _multiplier;
+
+  @override
+  double get textScaleFactor => _base.scale(1) * _multiplier;
 }

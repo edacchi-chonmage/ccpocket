@@ -27,6 +27,7 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   static const _keyThemeMode = 'settings_theme_mode';
   static const _keyAppLocale = 'settings_app_locale';
+  static const _keyTextScalePreset = 'settings_text_scale_preset';
   static const _keySpeechLocale = 'settings_speech_locale';
   static const _keyFcmMachines = 'settings_fcm_machines';
   static const _keyFcmPrivacyMachines = 'settings_fcm_privacy_machines';
@@ -97,7 +98,12 @@ class SettingsCubit extends Cubit<SettingsState> {
   static SettingsState _load(SharedPreferences prefs) {
     final themeModeIndex = prefs.getInt(_keyThemeMode);
     final appLocale = prefs.getString(_keyAppLocale) ?? '';
+    final textScalePresetName = prefs.getString(_keyTextScalePreset);
     final speechLocale = prefs.getString(_keySpeechLocale);
+    final textScalePreset = AppTextScalePreset.values.firstWhere(
+      (preset) => preset.name == textScalePresetName,
+      orElse: () => AppTextScalePreset.standard,
+    );
 
     // Load per-machine FCM set
     var fcmMachines = <String>{};
@@ -167,6 +173,7 @@ class SettingsCubit extends Cubit<SettingsState> {
           ? ThemeMode.values[themeModeIndex]
           : ThemeMode.system,
       appLocaleId: appLocale,
+      textScalePreset: textScalePreset,
       speechLocaleId: speechLocale ?? 'ja-JP',
       fcmEnabledMachines: fcmMachines,
       fcmPrivacyMachines: fcmPrivacyMachines,
@@ -219,6 +226,11 @@ class SettingsCubit extends Cubit<SettingsState> {
     if (state.fcmEnabled) {
       unawaited(_syncPushRegistration());
     }
+  }
+
+  void setTextScalePreset(AppTextScalePreset preset) {
+    _prefs.setString(_keyTextScalePreset, preset.name);
+    emit(state.copyWith(textScalePreset: preset));
   }
 
   /// Re-register push token with the current locale.

@@ -17,6 +17,18 @@ enum FcmStatusKey {
   disabledPending,
 }
 
+enum AppTextScalePreset {
+  small(0.95),
+  mediumSmall(1.05),
+  standard(1.15),
+  large(1.28),
+  largest(1.42);
+
+  const AppTextScalePreset(this.multiplier);
+
+  final double multiplier;
+}
+
 /// Application-wide user settings.
 @freezed
 abstract class SettingsState with _$SettingsState {
@@ -29,6 +41,9 @@ abstract class SettingsState with _$SettingsState {
     /// App display locale ID (e.g. 'ja', 'en').
     /// Empty string means follow the device default.
     @Default('') String appLocaleId,
+
+    /// App-level text scaling preset, composed with the OS text scale.
+    @Default(AppTextScalePreset.standard) AppTextScalePreset textScalePreset,
 
     /// Locale ID for speech recognition (e.g. 'ja-JP', 'en-US').
     /// Empty string means use device default.
@@ -67,6 +82,8 @@ abstract class SettingsState with _$SettingsState {
     /// Visible tabs (and their order) in the new session sheet.
     @Default(defaultNewSessionTabs) List<NewSessionTab> newSessionTabs,
   }) = _SettingsState;
+
+  double get textScaleFactor => textScalePreset.multiplier;
 
   /// Whether push notifications are enabled for the currently connected machine.
   bool get fcmEnabled =>

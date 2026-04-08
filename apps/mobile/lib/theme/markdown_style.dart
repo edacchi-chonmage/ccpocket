@@ -39,7 +39,7 @@ MarkdownStyleSheet buildMarkdownStyle(BuildContext context) {
     p: baseStyle,
     code: baseStyle.copyWith(
       fontFamily: 'monospace',
-      fontSize: 13,
+      fontSize: 14,
       backgroundColor: appColors.codeBackground,
     ),
     codeblockDecoration: BoxDecoration(
@@ -52,7 +52,7 @@ MarkdownStyleSheet buildMarkdownStyle(BuildContext context) {
       border: Border(left: BorderSide(color: appColors.subtleText, width: 3)),
     ),
     blockquotePadding: const EdgeInsets.only(left: 12, top: 4, bottom: 4),
-    listBullet: baseStyle.copyWith(fontSize: 14),
+    listBullet: baseStyle.copyWith(fontSize: 15),
   );
 }
 
@@ -103,7 +103,7 @@ class ColorCodeBuilder extends MarkdownElementBuilder {
     final appColors = Theme.of(context).extension<AppColors>()!;
     final codeStyle = (preferredStyle ?? const TextStyle()).copyWith(
       fontFamily: 'monospace',
-      fontSize: 13,
+      fontSize: 14,
       backgroundColor: appColors.codeBackground,
     );
 
@@ -168,7 +168,7 @@ class FencedCodeBlockBuilder extends MarkdownElementBuilder {
     final appColors = Theme.of(context).extension<AppColors>()!;
     final baseStyle = (preferredStyle ?? const TextStyle()).copyWith(
       fontFamily: 'monospace',
-      fontSize: 13,
+      fontSize: 14,
       height: 1.45,
       color: Theme.of(context).colorScheme.onSurface,
     );
@@ -215,7 +215,7 @@ class FencedCodeBlockBuilder extends MarkdownElementBuilder {
                   displayLanguage,
                   key: ValueKey('code_block_language_$displayLanguage'),
                   style: baseStyle.copyWith(
-                    fontSize: 10,
+                    fontSize: 11,
                     letterSpacing: 0.2,
                     color: Theme.of(
                       context,

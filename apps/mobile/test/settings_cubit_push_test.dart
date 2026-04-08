@@ -152,6 +152,24 @@ class FakeSecureStorage extends Fake implements FlutterSecureStorage {
 
 void main() {
   group('SettingsCubit push sync', () {
+    test('persists app text scale preset', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final cubit = SettingsCubit(prefs);
+
+      expect(cubit.state.textScalePreset, AppTextScalePreset.standard);
+
+      cubit.setTextScalePreset(AppTextScalePreset.largest);
+      expect(cubit.state.textScalePreset, AppTextScalePreset.largest);
+
+      final reloaded = SettingsCubit(prefs);
+      expect(reloaded.state.textScalePreset, AppTextScalePreset.largest);
+      expect(reloaded.state.textScaleFactor, 1.42);
+
+      await cubit.close();
+      await reloaded.close();
+    });
+
     test('auto registers token on init when machine is enabled', () async {
       SharedPreferences.setMockInitialValues({
         'settings_fcm_machines': '["$_testMachineId"]',
